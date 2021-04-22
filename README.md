@@ -1,6 +1,6 @@
-# Wrapper for hello-world
+# Wrapper for mempool.space
 
-`hello-world` is a simple, minimal project to serve as a template for creating an app for the Embassy.
+`mempool.space` is a simple, minimal project to serve as a template for creating an app for the Embassy.
 
 ## Dependencies
 
@@ -11,7 +11,7 @@
 - [appmgr](https://github.com/Start9Labs/embassy-os/tree/master/appmgr)
 - [make](https://www.gnu.org/software/make/)
 
-## Build enviroment
+## Build environment
 Prepare your EmbassyOS build enviroment. In this example we are using Ubuntu 20.04.
 
 1. Install docker
@@ -53,7 +53,7 @@ cd ~/ && git clone https://github.com/Start9Labs/embassy-os.git
 cd embassy-os/appmgr/
 cargo install --path=. --features=portable --no-default-features && cd ~/
 ```
-Now you are ready to build your first EmbassyOS service
+Now you are ready to build your mempool.space as an EmbassyOS service
 
 ## Cloning
 
