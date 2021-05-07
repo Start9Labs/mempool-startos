@@ -28,7 +28,7 @@ FROM node:12-buster-slim
 WORKDIR /backend
 
 RUN apt-get update
-RUN apt-get install wget netcat jq vim procps -y
+RUN apt-get install wget netcat jq pwgen vim procps -y
 RUN apt-get install nginx -y
 RUN wget https://github.com/mikefarah/yq/releases/download/v4.6.3/yq_linux_arm.tar.gz -O - |\
   tar xz && mv yq_linux_arm /usr/bin/yq
