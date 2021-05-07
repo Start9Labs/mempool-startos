@@ -1,1 +1,30 @@
-{}
+bitcoind:
+  type: object
+  name: Bitcoin Core RPC
+  description: The Bitcoin Core node to connect to over the RPC interface
+  nullable: false
+  nullByDefault: false
+  spec:
+    rpc-host:
+      type: pointer
+      name: Local RPC Address
+      description: The LAN IP address of your Bitcoin Proxy service
+      subtype: app
+      app-id: btc-rpc-proxy
+      target: lan-address
+    rpc-user:
+      type: pointer
+      name: RPC Username
+      description: The username for the RPC user allocated to Mempool
+      subtype: app
+      app-id: btc-rpc-proxy
+      target: config
+      index: 'users.[first(item => ''item.name = "mempool")].name'
+    rpc-password:
+      type: pointer
+      name: RPC Password
+      description: The password for the RPC user allocated to Mempool
+      subtype: app
+      app-id: btc-rpc-proxy
+      target: config
+      index: 'users.[first(item => ''item.name = "mempool")].password'

@@ -1,6 +1,6 @@
-# Wrapper for Mempool
+# Wrapper for mempool.space
 
-[mempool](http://mempool.space/) is a fully featured visualizer, explorer, and API service for the Bitcoin mempool, with a focus on the emerging transaction fee market to help our transition into a multi-layer ecosystem
+`mempool.space` is a simple, minimal project to serve as a template for creating an app for the Embassy.
 
 ## Dependencies
 
@@ -60,8 +60,8 @@ Now you are ready to build your mempool.space as an EmbassyOS service
 Clone the project locally. Note the submodule link to the original project(s). 
 
 ```
-git clone https://github.com/Start9Labs/mempoolwrapper.git
-cd mempool-wrapper
+git clone https://github.com/Start9Labs/hello-world-wrapper.git
+cd hello-world-wrapper
 ```
 
 ## Building
@@ -79,5 +79,5 @@ SSH into an Embassy device.
 Run the following command to determine successful install:
 
 ```
-sudo appmgr install mempool.s9pk
+sudo appmgr install hello-world.s9pk
 ```

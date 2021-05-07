@@ -1,19 +1,51 @@
 compat: v0
-id: hello-world
+id: mempool
 version: 0.1.0
-title: hello-world
+title: Mempool
 description:
-  short: "A simple, minimal project to serve as a template for creating an app for the Embassy."
-  long: "Hello World is a simple, minimal project to serve as a template for creating an app for the Embassy."
+  short: "A Bitcoin node and network visualizer."
+  long: "Mempool is the fully featured visualizer, explorer, and API service running on [mempool.space](https://mempool.space/), an open source project developed and operated for the benefit of the Bitcoin community, with a focus on the emerging transaction fee market to help our transition into a multi-layer ecosystem."
 release-notes: Initial release.
 ports:
-  - internal: 80
+  - internal: 8080
     tor: 80
 image:
   type: tar
-mount: /root
+mount: /datadir
 has-instructions: true
-os-version-required: ">=0.2.4"
-os-version-recommended: ">=0.2.4"
-assets: []
+os-version-required: ">=0.2.12"
+os-version-recommended: ">=0.2.12"
 hidden-service-version: v3
+install-alert: |
+  Currently, this service only functions as a node visualizer for the Bitcoin Core service. Fully explorer and address lookup functionality is coming soon.
+dependencies:
+  btc-rpc-proxy:
+    version: ">=0.2.4 <0.4.0"
+    optional: Can alternatively configure an external bitcoin node.
+    description: Used to fetch validated blocks.
+    config:
+      - rule: '''users.*.name = "mempool"'
+        description: 'Must have an RPC user named "mempool"'
+        suggestions:
+          - PUSH:
+              to: "users"
+              value:
+                name: mempool
+                allowed-calls: []
+          - SET:
+              var: 'users.[first(item => ''item.name = "mempool")].password'
+              to-entropy:
+                charset: "a-z,A-Z,0-9"
+                len: 22
+      - rule: '''users.[first(item => ''item.name = "mempool")].allowed-calls.* = "getblock"'
+        description: 'RPC user "mempool" must have "getblock" enabled'
+        suggestions:
+          - PUSH:
+              to: 'users.[first(item => ''item.name = "mempool")].allowed-calls'
+              value: "getblock"
+      - rule: 'users.[first(item => ''item.name = "mempool")].fetch-blocks?'
+        description: 'RPC user "mempool" must have "Fetch Blocks" enabled'
+        suggestions:
+          - SET:
+              var: 'users.[first(item => ''item.name = "mempool")].fetch-blocks'
+              to-value: true

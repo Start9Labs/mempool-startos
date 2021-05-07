@@ -1,0 +1,1 @@
+git --git-dir=mempool/.git name-rev --tags --name-only $(git --git-dir=mempool/.git rev-parse HEAD) | sed 's|\([^\^]*\)\(\^0\)$|\1|g'
