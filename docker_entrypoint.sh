@@ -35,12 +35,9 @@ export RPC_HOST=$(yq e '.bitcoind.rpc-host' /datadir/start9/config.yaml)
 export RPC_USER=$(yq e '.bitcoind.rpc-user' /datadir/start9/config.yaml)
 export RPC_PASS=$(yq e '.bitcoind.rpc-password' /datadir/start9/config.yaml)
 # configure mempool to use just a bitcoind backend
-sed -i '\/node \/backend\/dist\/index.js/ s/^/jq \x27.MEMPOOL.BACKEND="none"\x27 \/backend\/mempool-config.json > \/backend\/mempool-config.json.tmp && mv \/backend\/mempool-config.json.tmp \/backend\/mempool-config.json\n/' start.sh
-sed -i '\/node \/backend\/dist\/index.js/ s/^/jq \x27del(.. | .ELECTRUM?, .ESPLORA?)\x27 \/backend\/mempool-config.json > \/backend\/mempool-config.json.tmp && mv \/backend\/mempool-config.json.tmp \/backend\/mempool-config.json\n/' start.sh
+sed -i '/^node \/backend\/dist\/index.js/i jq \x27.MEMPOOL.BACKEND="none"\x27 \/backend\/mempool-config.json > \/backend\/mempool-config.json.tmp && mv \/backend\/mempool-config.json.tmp \/backend\/mempool-config.json' start.sh
 
 # DATABASE SETUP
-
-sed -i '1s/^/USE mempool;\n/' /backend/mariadb-structure.sql
 
 if [ -d "/run/mysqld" ]; then
 	echo "[i] mysqld already present, skipping creation"
@@ -71,6 +68,8 @@ else
 	MYSQL_DATABASE=${MYSQL_DATABASE:-"mempool"}
 	MYSQL_USER=${MYSQL_USER:-"mempool"}
 	MYSQL_PASSWORD=${MYSQL_PASSWORD:-"mempool"}
+
+	sed -i "1s/^/USE ${MYSQL_DATABASE};\n/" /docker-entrypoint-initdb.d/mariadb-structure.sql
 
 	tfile=`mktemp`
 	if [ ! -f "$tfile" ]; then
@@ -118,7 +117,7 @@ EOF
 	echo
 fi
 
-/usr/sbin/mysqld --user=mysql --datadir='/var/lib/mysql' &
+/usr/bin/mysqld_safe --user=mysql --datadir='/var/lib/mysql' &
     db_process=$!
 
 # START UP

@@ -8,7 +8,11 @@ description:
 release-notes: Initial release.
 ports:
   - internal: 8080
+    tor: 8080
+  - internal: 80
     tor: 80
+  - internal: 8999
+    tor: 8999
 image:
   type: tar
 mount: /datadir

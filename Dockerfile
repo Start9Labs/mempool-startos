@@ -41,6 +41,7 @@ COPY --from=builder /build/frontend/wait-for /usr/local/bin/wait-for.sh
 COPY --from=builder /build/frontend/dist/mempool /var/www/mempool
 COPY --from=builder /build/nginx.conf /etc/nginx/
 COPY --from=builder /build/nginx-mempool.conf /etc/nginx/conf.d/
+COPY --from=builder /build/nginx-mempool.conf /etc/nginx/nginx-mempool.conf
 RUN cp wait-for-it.sh /usr/local/bin
 
 RUN chmod +x start.sh
@@ -72,6 +73,6 @@ ADD ./mempool/mariadb-structure.sql /docker-entrypoint-initdb.d/
 RUN rm -rf /var/lib/mysql/
 
 # USER 1000
-EXPOSE 80 8999 3306
+EXPOSE 8080 8999 80
 
 ENTRYPOINT ["/usr/local/bin/docker_entrypoint.sh"]
