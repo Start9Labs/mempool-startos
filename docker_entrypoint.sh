@@ -121,14 +121,19 @@ fi
     db_process=$!
 
 # START UP
-wait-for.sh 127.0.0.1:3306 --timeout=60 -- nginx -g 'daemon off;' &
+# wait-for.sh 127.0.0.1:3306 --timeout=720 -- nginx -g 'daemon off;' &
+#     frontend_process=$!
+
+nginx -g 'daemon off;' &
     frontend_process=$!
 
 /backend/wait-for-it.sh 127.0.0.1:3306 --timeout=60 --strict -- /backend/start.sh
 &
     backend_process=$!
 
+echo 'All processes initalized'
 # ERROR HANDLING
 trap _term SIGTERM
 
-wait -n $db_process $backend_process $frontend_process $configure
+wait -n $db_process $backend_process $frontend_process
+# exec "$@"

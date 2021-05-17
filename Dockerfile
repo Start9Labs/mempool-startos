@@ -55,14 +55,13 @@ COPY --from=builder /build/mariadb-structure.sql .
 RUN mkdir /var/cache/nginx
 RUN touch /var/run/nginx.pid
 
-# RUN chown -R 1000:1000 /backend && chmod -R 755 /backend && \
-#         chown -R 1000:1000 /var/cache/nginx && \
-#         chown -R 1000:1000 /var/log/nginx && \
-#         chown -R 1000:1000 /etc/nginx/nginx.conf && \
-#         chown -R 1000:1000 /etc/nginx/conf.d
-# RUN touch /var/run/nginx.pid && \
-#         chown -R 1000:1000 /var/run/nginx.pid
-
+RUN chown -R 1000:1000 /backend && chmod -R 755 /backend && \
+        chown -R 1000:1000 /var/cache/nginx && \
+        chown -R 1000:1000 /var/log/nginx && \
+        chown -R 1000:1000 /etc/nginx/nginx.conf && \
+        chown -R 1000:1000 /etc/nginx/conf.d
+RUN touch /var/run/nginx.pid && \
+        chown -R 1000:1000 /var/run/nginx.pid
 
 # BUILD S9 CUSTOM
 ADD ./docker_entrypoint.sh /usr/local/bin/docker_entrypoint.sh
@@ -76,3 +75,4 @@ RUN rm -rf /var/lib/mysql/
 EXPOSE 8080 8999 80
 
 ENTRYPOINT ["/usr/local/bin/docker_entrypoint.sh"]
+# CMD ["nginx", "-g", "daemon off;"]
