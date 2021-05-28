@@ -121,6 +121,7 @@ fi
     db_process=$!
 
 # START UP
+sed -i "s/user nobody;//g" /etc/nginx/nginx.conf
 # wait-for.sh 127.0.0.1:3306 --timeout=720 -- nginx -g 'daemon off;' &
 #     frontend_process=$!
 
