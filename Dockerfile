@@ -50,7 +50,7 @@ RUN chmod +x /usr/local/bin/wait-for.sh
 
 # initalize db folders
 RUN mkdir -p data mysql/data mysql/db-scripts
-COPY --from=builder /build/mariadb-structure.sql .
+# COPY --from=builder /build/mariadb-structure.sql .
 
 RUN mkdir /var/cache/nginx
 RUN touch /var/run/nginx.pid
@@ -66,9 +66,9 @@ RUN touch /var/run/nginx.pid && \
 # BUILD S9 CUSTOM
 ADD ./docker_entrypoint.sh /usr/local/bin/docker_entrypoint.sh
 
-ADD ./mempool/mariadb-structure.sql /docker-entrypoint-initdb.d/
+# ADD ./mempool/mariadb-structure.sql /docker-entrypoint-initdb.d/
 
-# remove to we can manually handle db initalization
+# remove default mysql so we can manually handle db initalization
 RUN rm -rf /var/lib/mysql/
 
 # USER 1000

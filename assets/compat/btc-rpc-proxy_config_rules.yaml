@@ -1,0 +1,25 @@
+- rule: '''users.*.name = "mempool"'
+  description: 'Must have an RPC user named "mempool"'
+  suggestions:
+    - PUSH:
+        to: "users"
+        value:
+          name: mempool
+          allowed-calls: []
+    - SET:
+        var: 'users.[first(item => ''item.name = "mempool")].password'
+        to-entropy:
+          charset: "a-z,A-Z,0-9"
+          len: 22
+- rule: '''users.[first(item => ''item.name = "mempool")].allowed-calls.* = "getblock"'
+  description: 'RPC user "mempool" must have "getblock" enabled'
+  suggestions:
+    - PUSH:
+        to: 'users.[first(item => ''item.name = "mempool")].allowed-calls'
+        value: "getblock"
+- rule: 'users.[first(item => ''item.name = "mempool")].fetch-blocks?'
+  description: 'RPC user "mempool" must have "Fetch Blocks" enabled'
+  suggestions:
+    - SET:
+        var: 'users.[first(item => ''item.name = "mempool")].fetch-blocks'
+        to-value: true

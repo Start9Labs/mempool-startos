@@ -1,55 +1,125 @@
-compat: v0
 id: mempool
-version: 0.1.0
 title: Mempool
+version: 2.3.1.0
+release-notes: Initial release.
+license: mit
+wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
+upstream-repo: "https://github.com/mempool/mempool"
+support-site: "https://mempool.space/docs/api/rest"
+marketing-site: "https://mempool.space/"
+donation-url: "https://mempool.space/sponsor"
+build: ["make"]
+min-os-version: "0.3.0"
 description:
   short: "A Bitcoin node and network visualizer."
   long: "Mempool is the fully featured visualizer, explorer, and API service running on [mempool.space](https://mempool.space/), an open source project developed and operated for the benefit of the Bitcoin community, with a focus on the emerging transaction fee market to help our transition into a multi-layer ecosystem."
-release-notes: Initial release.
-ports:
-  - internal: 8080
-    tor: 8080
-  - internal: 80
-    tor: 80
-  - internal: 8999
-    tor: 8999
-image:
-  type: tar
-mount: /datadir
-has-instructions: true
-os-version-required: ">=0.2.12"
-os-version-recommended: ">=0.2.12"
-hidden-service-version: v3
-install-alert: |
-  Currently, this service only functions as a node visualizer for the Bitcoin Core service. Fully explorer and address lookup functionality is coming soon.
+assets:
+  license: LICENSE
+  icon: icon.png
+  instructions: docs/instructions.md
+  docker-images: image.tar
+main:
+  type: docker
+  image: main
+  entrypoint: "docker_entrypoint.sh"
+  args: []
+  mounts:
+    main: /root
+    compat: /mnt/assets
+  io-format: yaml
+health-checks: {} 
+config: ~
+properties: ~
 dependencies:
   btc-rpc-proxy:
-    version: ">=0.2.4 <0.4.0"
-    optional: Can alternatively configure an external bitcoin node.
+    version: ">=0.3.2.1 <0.4.0"
+    critical: false
+    requirement:
+      type: "opt-out"
+      how: Can alternatively use the internal full archival bitcoind node or configure an external bitcoin node.
     description: Used to fetch validated blocks.
     config:
-      - rule: '''users.*.name = "mempool"'
-        description: 'Must have an RPC user named "mempool"'
-        suggestions:
-          - PUSH:
-              to: "users"
-              value:
-                name: mempool
-                allowed-calls: []
-          - SET:
-              var: 'users.[first(item => ''item.name = "mempool")].password'
-              to-entropy:
-                charset: "a-z,A-Z,0-9"
-                len: 22
-      - rule: '''users.[first(item => ''item.name = "mempool")].allowed-calls.* = "getblock"'
-        description: 'RPC user "mempool" must have "getblock" enabled'
-        suggestions:
-          - PUSH:
-              to: 'users.[first(item => ''item.name = "mempool")].allowed-calls'
-              value: "getblock"
-      - rule: 'users.[first(item => ''item.name = "mempool")].fetch-blocks?'
-        description: 'RPC user "mempool" must have "Fetch Blocks" enabled'
-        suggestions:
-          - SET:
-              var: 'users.[first(item => ''item.name = "mempool")].fetch-blocks'
-              to-value: true
+      check:
+        type: docker
+        image: compat
+        system: true
+        entrypoint: compat
+        args:
+          - dependency
+          - check
+          - lnd
+          - "btc-rpc-proxy"
+          - /root/.lnd
+          - "/mnt/assets/btc-rpc-proxy_config_rules.yaml"
+        mounts:
+          compat: /mnt/assets
+          main: /root/.lnd
+      auto-configure:
+        type: docker
+        image: compat
+        system: true
+        entrypoint: compat
+        args:
+          - dependency
+          - "auto-configure"
+          - lnd
+          - "btc-rpc-proxy"
+          - /root/.lnd
+          - "/mnt/assets/btc-rpc-proxy_config_rules.yaml"
+        mounts:
+          compat: /mnt/assets
+          main: /root/.lnd
+volumes: 
+  main:
+    type: data 
+  compat:
+    type: assets
+interfaces:
+  main:
+    name: Browser Interface
+    description: Specifies the interface to listen on for HTTP connections.
+    tor-config:
+      port-mapping:
+        8080: "8080"
+    lan-config:
+      8999:
+        ssl: false
+        mapping: 8999
+      80:
+        ssl: false
+        mapping: 80
+    ui: true
+    protocols:
+      - tcp
+      - http
+alerts:
+  install: Currently, this service only functions as a node visualizer for the Bitcoin Core service. Fully explorer and address lookup functionality is coming soon.
+backup:
+  create:
+    type: docker
+    image: compat
+    system: true
+    entrypoint: compat
+    args:
+      - duplicity
+      - create
+      - /mnt/backup
+      - /root
+    mounts:
+      BACKUP: /mnt/backup
+      main: /root
+    io-format: yaml
+  restore:
+    type: docker
+    image: compat
+    system: true
+    entrypoint: compat
+    args:
+      - duplicity
+      - restore
+      - /mnt/backup
+      - /root
+    mounts:
+      BACKUP: /mnt/backup
+      main: /root
+    io-format: yaml

@@ -8,8 +8,8 @@
 - [docker-buildx](https://docs.docker.com/buildx/working-with-buildx/)
 - [yq](https://mikefarah.gitbook.io/yq)
 - [toml](https://crates.io/crates/toml-cli)
-- [appmgr](https://github.com/Start9Labs/embassy-os/tree/master/appmgr)
-- [make](https://www.gnu.org/software/make/)
+- [make](https://www.gnu.org/software/make)
+- [embassy-sdk]
 
 ## Build environment
 Prepare your EmbassyOS build enviroment. In this example we are using Ubuntu 20.04.
@@ -76,8 +76,14 @@ make
 
 SSH into an Embassy device.
 `scp` the `.s9pk` to any directory from your local machine.
+
+```
+scp mempool.s9pk root@<LAN ID>:/root
+```
+
 Run the following command to determine successful install:
 
 ```
-sudo appmgr install mempool.s9pk
+embassy-cli auth login
+embassy-cli package install mempool.s9pk
 ```
