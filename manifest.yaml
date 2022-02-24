@@ -1,7 +1,7 @@
 id: mempool
-title: Mempool
+title: mempool.space
 version: 2.3.1.0
-release-notes: Initial release.
+release-notes: Initial release for Embassy 0.3.0.
 license: mit
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
@@ -28,15 +28,54 @@ main:
     compat: /mnt/assets
   io-format: yaml
 health-checks: {} 
-config: ~
-properties: ~
+config:
+  get:
+    type: docker
+    image: compat
+    system: true
+    entrypoint: compat
+    args:
+      - config
+      - get
+      - /root
+      - /mnt/assets/config_spec.yaml
+    mounts:
+      main: /root
+      compat: /mnt/assets
+    io-format: yaml
+  set:
+    type: docker
+    image: compat
+    system: true
+    entrypoint: compat
+    args:
+      - config
+      - set
+      - mempool
+      - /root
+      - /mnt/assets/config_rules.yaml
+    mounts:
+      main: /root
+      compat: /mnt/assets
+    io-format: yaml
+properties:
+  type: docker
+  image: compat
+  system: true
+  entrypoint: compat
+  args:
+    - properties
+    - /root
+  mounts:
+    main: /root
+  io-format: yaml
 dependencies:
   btc-rpc-proxy:
     version: ">=0.3.2.1 <0.4.0"
-    critical: false
     requirement:
-      type: "opt-out"
-      how: Can alternatively use the internal full archival bitcoind node or configure an external bitcoin node.
+      type: "opt-in"
+      how: Can alternatively configure an external bitcoind node.
+    critical: false
     description: Used to fetch validated blocks.
     config:
       check:
@@ -47,13 +86,14 @@ dependencies:
         args:
           - dependency
           - check
-          - lnd
+          - mempool
           - "btc-rpc-proxy"
-          - /root/.lnd
+          - /root
           - "/mnt/assets/btc-rpc-proxy_config_rules.yaml"
         mounts:
+          main: /root
           compat: /mnt/assets
-          main: /root/.lnd
+        io-format: yaml
       auto-configure:
         type: docker
         image: compat
@@ -62,13 +102,14 @@ dependencies:
         args:
           - dependency
           - "auto-configure"
-          - lnd
+          - mempool
           - "btc-rpc-proxy"
-          - /root/.lnd
+          - /root
           - "/mnt/assets/btc-rpc-proxy_config_rules.yaml"
         mounts:
+          main: /root
           compat: /mnt/assets
-          main: /root/.lnd
+        io-format: yaml
 volumes: 
   main:
     type: data 
@@ -92,8 +133,6 @@ interfaces:
     protocols:
       - tcp
       - http
-alerts:
-  install: Currently, this service only functions as a node visualizer for the Bitcoin Core service. Fully explorer and address lookup functionality is coming soon.
 backup:
   create:
     type: docker

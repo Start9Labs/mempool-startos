@@ -29,11 +29,11 @@ cat /backend/nginx.conf > /etc/nginx/nginx.conf
 
 #  BACKEND SETUP
 
-# # read bitcoin proxy creds from start9 config
-# export HOST_IP=$(ip -4 route list match 0/0 | awk '{print $3}')
-# export RPC_HOST=$(yq e '.bitcoind.rpc-host' /root/mempool/start9/config.yaml)
-# export RPC_USER=$(yq e '.bitcoind.rpc-user' /root/mempool/start9/config.yaml)
-# export RPC_PASS=$(yq e '.bitcoind.rpc-password' /root/mempool/start9/config.yaml)
+# read bitcoin proxy creds from start9 config
+export HOST_IP=$(ip -4 route list match 0/0 | awk '{print $3}')
+export RPC_HOST=$(yq e '.bitcoin.rpc-host' /root/mempool/start9/config.yaml)
+export RPC_USER=$(yq e '.bitcoin.rpc-user' /root/mempool/start9/config.yaml)
+export RPC_PASS=$(yq e '.bitcoin.rpc-password' /root/mempool/start9/config.yaml)
 
 # configure mempool to use just a bitcoind backend
 sed -i '/^node \/backend\/dist\/index.js/i jq \x27.MEMPOOL.BACKEND="none"\x27 \/backend\/mempool-config.json > \/backend\/mempool-config.json.tmp && mv \/backend\/mempool-config.json.tmp \/backend\/mempool-config.json' start.sh
@@ -70,11 +70,7 @@ else
 	MYSQL_USER=${MYSQL_USER:-"mempool"}
 	MYSQL_PASSWORD=${MYSQL_PASSWORD:-"mempool"}
 
-	# sed -i "1s/^/USE ${MYSQL_DATABASE};\n/" /docker-entrypoint-initdb.d/mariadb-structure.sql
-
-MariaDB [(none)]> drop database mempool;
-MariaDB [(none)]> create database mempool;
-MariaDB [(none)]> grant all privileges on mempool.* to 'mempool'@'%' identified by 'mempool';
+	sed -i "1s/^/USE ${MYSQL_DATABASE};\n/" /docker-entrypoint-initdb.d/mariadb-structure.sql
 
 	tfile=`mktemp`
 	if [ ! -f "$tfile" ]; then
