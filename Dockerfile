@@ -1,4 +1,4 @@
-FROM node:12-buster-slim AS builder
+FROM node:16-buster-slim AS builder
 
 WORKDIR /build
 COPY mempool/ .
@@ -24,7 +24,7 @@ RUN npm run build
 WORKDIR /build
 RUN cp docker/backend/mempool-config.json backend/
 
-FROM node:12-buster-slim
+FROM node:16-buster-slim
 
 WORKDIR /backend
 

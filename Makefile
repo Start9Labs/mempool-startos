@@ -16,7 +16,7 @@ S9PK_PATH=$(shell find . -name mempool.s9pk -print)
 all: verify
 
 verify:  mempool.s9pk $(S9PK_PATH)
-	embassy-sdk verify $(S9PK_PATH)
+	embassy-sdk verify s9pk $(S9PK_PATH)
 
 install: mempool.s9pk
 	embassy-cli package install mempool.s9pk

@@ -9,7 +9,6 @@ support-site: "https://mempool.space/docs/api/rest"
 marketing-site: "https://mempool.space/"
 donation-url: "https://mempool.space/sponsor"
 build: ["make"]
-min-os-version: "0.3.0"
 description:
   short: "A Bitcoin node and network visualizer."
   long: "Mempool is the fully featured visualizer, explorer, and API service running on [mempool.space](https://mempool.space/), an open source project developed and operated for the benefit of the Bitcoin community, with a focus on the emerging transaction fee market to help our transition into a multi-layer ecosystem."
@@ -75,7 +74,6 @@ dependencies:
     requirement:
       type: "opt-in"
       how: Can alternatively configure an external bitcoind node.
-    critical: false
     description: Used to fetch validated blocks.
     config:
       check:
@@ -125,10 +123,10 @@ interfaces:
     lan-config:
       8999:
         ssl: false
-        mapping: 8999
+        internal: 8999
       80:
         ssl: false
-        mapping: 80
+        internal: 80
     ui: true
     protocols:
       - tcp
