@@ -115,18 +115,15 @@ volumes:
     type: assets
 interfaces:
   main:
-    name: Browser Interface
-    description: Specifies the interface to listen on for HTTP connections.
+    name: Mempool Interface
+    description: Specifies the mempool interface to listen on for HTTP connections.
     tor-config:
       port-mapping:
-        8080: "8080"
+        80: "8999"
     lan-config:
-      8999:
-        ssl: false
+      443:
+        ssl: true
         internal: 8999
-      80:
-        ssl: false
-        internal: 80
     ui: true
     protocols:
       - tcp
