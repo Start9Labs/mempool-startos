@@ -6,14 +6,6 @@ tor-address:
   package-id: mempool
   target: tor-address
   interface: main
-lan-address:
-  name: Network LAN Address
-  description: The LAN address for the network interface. 
-  type: pointer
-  subtype: package
-  package-id: mempool
-  target: lan-address
-  interface: main
 bitcoin:
   type: object
   name: Bitcoin Core

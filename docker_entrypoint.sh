@@ -31,7 +31,6 @@ cat /backend/nginx.conf > /etc/nginx/nginx.conf
 
 # read bitcoin proxy creds from start9 config
 export HOST_IP=$(ip -4 route list match 0/0 | awk '{print $3}')
-export RPC_HOST=$(yq e '.lan-address' /root/start9/config.yaml)
 export RPC_USER=$(yq e '.bitcoin.bitcoind-rpc.rpc-user' /root/start9/config.yaml)
 export RPC_PASS=$(yq e '.bitcoin.bitcoind-rpc.rpc-password' /root/start9/config.yaml)
 # configure mempool to use just a bitcoind backend

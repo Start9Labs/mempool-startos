@@ -1,5 +1,5 @@
 id: mempool
-title: mempool.space
+title: Mempool
 version: 2.3.1
 release-notes: Initial release for Embassy 0.3.0.
 license: mit
@@ -74,7 +74,7 @@ dependencies:
     requirement:
       type: "opt-in"
       how: Can alternatively configure an external bitcoind node.
-    description: Used to fetch validated blocks.
+    description: Used for RPC permissioning.
     config:
       check:
         type: docker
@@ -109,11 +109,11 @@ dependencies:
           compat: /mnt/assets
         io-format: yaml
   bitcoind:
-    version: "^0.21.1.2"
+    version: "^0.21.1.2 <23.0.0"
     requirement:
       type: "opt-out"
       how: Can alternatively configure an external bitcoin node.
-    description: Used to subscribe to new block events.
+    description: Used to subscribe to new block events from a full archival node.
     config:
       check: 
         type: docker
