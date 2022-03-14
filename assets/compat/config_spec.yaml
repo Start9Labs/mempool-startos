@@ -16,13 +16,13 @@ lan-address:
   interface: main
 bitcoin:
   type: object
-  name: Bitcoin Core RPC
+  name: Bitcoin Core
   description: The Bitcoin Core node to connect to over the RPC interface
   nullable: false
   spec:
     bitcoind-rpc:
       type: union
-      name: Bitcoin Core RPC
+      name: Bitcoin Core RPC Credentials for Mempool
       description: The Bitcoin Core node to connect to over the RPC interface
       tag:
         id: type

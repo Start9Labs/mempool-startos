@@ -1,6 +1,6 @@
 id: mempool
 title: mempool.space
-version: 2.3.1.0
+version: 2.3.1
 release-notes: Initial release for Embassy 0.3.0.
 license: mit
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
@@ -108,6 +108,42 @@ dependencies:
           main: /root
           compat: /mnt/assets
         io-format: yaml
+  bitcoind:
+    version: "^0.21.1.2"
+    requirement:
+      type: "opt-out"
+      how: Can alternatively configure an external bitcoin node.
+    description: Used to subscribe to new block events.
+    config:
+      check: 
+        type: docker
+        image: compat
+        system: true
+        entrypoint: compat
+        args:
+          - dependency
+          - check
+          - mempool
+          - bitcoind
+          - /root
+          - "/mnt/assets/bitcoind_config_rules.yaml"
+        mounts:
+          compat: /mnt/assets
+          main: /root
+      auto-configure:
+        type: docker
+        image: compat
+        system: true
+        entrypoint: compat
+        args:
+          - dependency
+          - "auto-configure"
+          - mempool
+          - bitcoind
+          - /root
+          - "/mnt/assets/bitcoind_config_rules.yaml"
+        mounts:
+          compat: /mnt/assets
 volumes: 
   main:
     type: data 
@@ -119,11 +155,11 @@ interfaces:
     description: Specifies the mempool interface to listen on for HTTP connections.
     tor-config:
       port-mapping:
-        80: "8999"
+        80: "80"
     lan-config:
       443:
         ssl: true
-        internal: 8999
+        internal: 80
     ui: true
     protocols:
       - tcp

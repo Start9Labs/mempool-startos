@@ -1,0 +1,6 @@
+- rule: "txindex?"
+  description: "Must have transaction indexing enabled"
+  suggestions:
+    - SET:
+        var: "txindex"
+        to-value: true
