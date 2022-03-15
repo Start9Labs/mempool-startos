@@ -23,7 +23,7 @@ cp /etc/nginx/conf.d/nginx-mempool.conf /etc/nginx/nginx-mempool.conf
 # /etc/init.d/nginx restart
 
 cp /etc/nginx/nginx.conf /backend/nginx.conf
-sed -i "s/__MEMPOOL_FRONTEND_HTTP_PORT__/${__MEMPOOL_FRONTEND_HTTP_PORT__}/g" /backend/nginx.conf
+sed -i -e "s/__MEMPOOL_FRONTEND_HTTP_PORT__/${__MEMPOOL_FRONTEND_HTTP_PORT__}/g" -e "s/127.0.0.1://" -e "/listen/a\                server_name localhost;" /backend/nginx.conf
 cat /backend/nginx.conf > /etc/nginx/nginx.conf
 # echo "daemon off;" >> /etc/nginx/nginx.conf
 
