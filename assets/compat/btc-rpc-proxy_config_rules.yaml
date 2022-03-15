@@ -35,3 +35,18 @@
     - PUSH:
         to: 'users.[first(item => ''item.name = "mempool")].allowed-calls'
         value: "getblockhash"
+- rule: '''users.[first(item => ''item.name = "mempool")].allowed-calls.* = "getblock"'
+  description: 'RPC user "mempool" must have "getblock" enabled'
+  suggestions:
+    - PUSH:
+        to: 'users.[first(item => ''item.name = "mempool")].allowed-calls'
+        value: "getblock"
+- rule: '''users.[first(item => ''item.name = "mempool")].allowed-calls.* = "getrawtransaction"'
+  description: 'RPC user "mempool" must have "getrawtransaction" enabled'
+  suggestions:
+    - PUSH:
+        to: 'users.[first(item => ''item.name = "mempool")].allowed-calls'
+        value: "getrawtransaction"
+
+
+        
