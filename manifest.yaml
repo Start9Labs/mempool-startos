@@ -112,7 +112,7 @@ dependencies:
   bitcoind:
     version: "^0.21.1.2 <23.0.0"
     requirement:
-      type: "opt-out"
+      type: "opt-in"
       how: Can alternatively configure an external bitcoin node.
     description: Used to subscribe to new block events from a full archival node.
     config:

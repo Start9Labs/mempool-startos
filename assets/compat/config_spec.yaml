@@ -91,13 +91,15 @@ bitcoind-rpc:
               nullable: false
               pattern: 'btcstandup://[^:]*:[^@]*@[a-zA-Z0-9.-]+:[0-9]+(/(\?(label=.+)?)?)?'
               patternDescription: Must be a valid Quick Connect URL. For help, check out https://github.com/BlockchainCommons/Gordian/blob/master/Docs/Quick-Connect-API.md
-electrs:
-  type: object
-  name: Electrum
-  description: The Electrum Rust Server used to index Mempool
-  spec:
-      enabled:
-        type: boolean
-        name: Enable
-        description: Whether to enable the electrum rust server (placeholder)
-        default: true
+# This could be used as a template for the Electrum Rust of external Electrum Server connections 
+#
+# electrs:
+#   type: object
+#   name: Electrum
+#   description: The Electrum Rust Server used to index Mempool
+#   spec:
+#       enabled:
+#         type: boolean
+#         name: Enable
+#         description: Whether to enable the electrum rust server (placeholder)
+#         default: true
