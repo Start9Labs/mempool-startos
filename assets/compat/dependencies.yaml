@@ -1,0 +1,6 @@
+bitcoind:
+  condition: 'txindex?'
+  health_checks: []
+bitcoind-rpc:
+  condition: '''bitcoind-rpc.type = "internal"'
+  health_checks: []

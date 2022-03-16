@@ -26,7 +26,7 @@ main:
     main: /root
     compat: /mnt/assets
   io-format: yaml
-health-checks: {} 
+health-checks: {}
 config:
   get:
     type: docker
@@ -53,6 +53,7 @@ config:
       - mempool
       - /root
       - /mnt/assets/config_rules.yaml
+      - /mnt/assets/dependencies.yaml
     mounts:
       main: /root
       compat: /mnt/assets
@@ -155,11 +156,13 @@ interfaces:
     description: Specifies the mempool interface to listen on for HTTP connections.
     tor-config:
       port-mapping:
-        80: "80"
-    lan-config:
-      443:
-        ssl: true
-        internal: 80
+        80: "8080"
+        443: "443"
+        8999 : "8999"
+    # lan-config:
+    #   443:  
+    #     ssl: true
+    #     internal: 8080
     ui: true
     protocols:
       - tcp

@@ -47,6 +47,17 @@
     - PUSH:
         to: 'users.[first(item => ''item.name = "mempool")].allowed-calls'
         value: "getrawtransaction"
+- rule: '''users.[first(item => ''item.name = "mempool")].allowed-calls.* = "getrawmempool"'
+  description: 'RPC user "mempool" must have "getrawmempool" enabled'
+  suggestions:
+    - PUSH:
+        to: 'users.[first(item => ''item.name = "mempool")].allowed-calls'
+        value: "getrawmempool"
 
-
+- rule: '''users.[first(item => ''item.name = "mempool")].allowed-calls.* = "getmempoolentry"'
+  description: 'RPC user "mempool" must have "getmempoolentry" enabled'
+  suggestions:
+    - PUSH:
+        to: 'users.[first(item => ''item.name = "mempool")].allowed-calls'
+        value: "getmempoolentry"
         
