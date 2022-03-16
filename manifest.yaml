@@ -159,10 +159,10 @@ interfaces:
         80: "8080"
         443: "443"
         8999 : "8999"
-    # lan-config:
-    #   443:  
-    #     ssl: true
-    #     internal: 8080
+    lan-config:
+      443:  
+        ssl: true
+        internal: 8080
     ui: true
     protocols:
       - tcp
