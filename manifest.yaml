@@ -125,7 +125,7 @@ dependencies:
           - dependency
           - check
           - mempool
-          - bitcoind
+          - "bitcoind"
           - /root
           - "/mnt/assets/bitcoind_config_rules.yaml"
         mounts:
@@ -140,7 +140,7 @@ dependencies:
           - dependency
           - "auto-configure"
           - mempool
-          - bitcoind
+          - "bitcoind"
           - /root
           - "/mnt/assets/bitcoind_config_rules.yaml"
         mounts:
