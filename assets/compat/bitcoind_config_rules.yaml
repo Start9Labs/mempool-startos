@@ -4,3 +4,9 @@
     - SET:
         var: "txindex"
         to-value: true
+- rule: "rpc.enable?"
+  description: "Must have an RPC enabled"
+  suggestions:
+    - SET:
+        var: "rpc.enable"
+        to-value: true

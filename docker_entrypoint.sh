@@ -23,23 +23,34 @@ cp /etc/nginx/conf.d/nginx-mempool.conf /etc/nginx/nginx-mempool.conf
 # /etc/init.d/nginx restart
 
 cp /etc/nginx/nginx.conf /backend/nginx.conf
-sed -i -e "s/__MEMPOOL_FRONTEND_HTTP_PORT__/${__MEMPOOL_FRONTEND_HTTP_PORT__}/g" -e "s/127.0.0.1://" -e "/listen/a\                server_name localhost;" -e "s/listen 80/listen 8080/g" /backend/nginx.conf
+sed -i -e "s/__MEMPOOL_FRONTEND_HTTP_PORT__/${__MEMPOOL_FRONTEND_HTTP_PORT__}/g" -e "s/127.0.0.1://" -e "/listen/a\                server_name 127.0.0.1;" -e "s/listen 80/listen 8080/g" /backend/nginx.conf
 cat /backend/nginx.conf > /etc/nginx/nginx.conf
 # echo "daemon off;" >> /etc/nginx/nginx.conf
 
 #  BACKEND SETUP
 
 # read bitcoin proxy creds from start9 config
-export HOST_IP=$(ip -4 route list match 0/0 | awk '{print $3}')
-export RPC_USER=$(yq e '.bitcoind-rpc.rpc-user' /root/start9/config.yaml)
-export RPC_PASS=$(yq e '.bitcoind-rpc.rpc-password' /root/start9/config.yaml)
-export ELECTRS=$(yq e '.electrs.enabled' /root/start9/config.yaml)
+HOST_IP=$(ip -4 route list match 0/0 | awk '{print $3}')
+# export ELECTRS=$(yq e '.electrs.enabled' /root/start9/config.yaml)
+bitcoind_type=$(yq e '.bitcoind.type' /root/start9/config.yaml)
+bitcoind_user=$(yq e '.bitcoind.user' /root/start9/config.yaml)
+bitcoind_pass=$(yq e '.bitcoind.password' /root/start9/config.yaml)
 # configure mempool to use just a bitcoind backend
 sed -i '/^node \/backend\/dist\/index.js/i jq \x27.MEMPOOL.BACKEND="none"\x27 \/backend\/mempool-config.json > \/backend\/mempool-config.json.tmp && mv \/backend\/mempool-config.json.tmp \/backend\/mempool-config.json' start.sh
-sed -i 's/CORE_RPC_HOST:=127.0.0.1/CORE_RPC_HOST:=btc-rpc-proxy.embassy/' start.sh
+if [ "$bitcoind_type" = "internal-proxy" ]; then
+	bitcoind_host="btc-rpc-proxy.embassy"
+	echo "Running on Bitcoin Proxy..."
+elif [ "$bitcoind_type" = "internal" ]; then
+	bitcoind_host="bitcoind.embassy"
+	echo "Running on Bitcoin Core..."
+else
+	bitcoind_host=$(yq e '.bitcoind.host' /root/start9/config.yaml)
+	echo "Running on an External Node..."
+fi
+sed -i "s/CORE_RPC_HOST:=127.0.0.1/CORE_RPC_HOST:=$bitcoind_host/" start.sh
+sed -i "s/CORE_RPC_USERNAME:=mempool/CORE_RPC_USERNAME:=$bitcoind_user/" start.sh
+sed -i "s/CORE_RPC_PASSWORD:=mempool/CORE_RPC_PASSWORD:=$bitcoind_pass/" start.sh
 sed -i 's/MEMPOOL_BACKEND:=electrum/MEMPOOL_BACKEND:=none/' start.sh
-sed -i 's/CORE_RPC_USERNAME:=mempool/CORE_RPC_USERNAME:='$RPC_USER'/' start.sh
-sed -i 's/CORE_RPC_PASSWORD:=mempool/CORE_RPC_PASSWORD:='$RPC_PASS'/' start.sh
 # DATABASE SETUP
 
 if [ -d "/run/mysqld" ]; then

@@ -21,13 +21,13 @@ verify:  mempool.s9pk $(S9PK_PATH)
 install: mempool.s9pk
 	embassy-cli package install mempool.s9pk
 
-mempool.s9pk: manifest.yaml assets/compat/config_spec.yaml assets/compat/config_rules.yaml image.tar docs/instructions.md
+mempool.s9pk: manifest.yaml assets/* image.tar docs/instructions.md
 	embassy-sdk pack
 
 instructions.md: README.md
 	cp README.md instructions.md
 
-image.tar: Dockerfile docker_entrypoint.sh $(MEMPOOL_GIT_FILE) Dockerfile
+image.tar: Dockerfile docker_entrypoint.sh assets/utils/* $(MEMPOOL_GIT_FILE)
 	docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --tag start9/mempool/main:${EMVER} --platform=linux/arm64/v8 -o type=docker,dest=image.tar -f ./Dockerfile .
 

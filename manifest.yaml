@@ -1,7 +1,7 @@
 id: mempool
 title: Mempool
 version: 2.3.1
-release-notes: Initial release for Embassy 0.3.0.
+release-notes: "Initial release for Embassy 0.3.0."
 license: mit
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
@@ -24,9 +24,26 @@ main:
   args: []
   mounts:
     main: /root
-    compat: /mnt/assets
   io-format: yaml
-health-checks: {}
+health-checks:
+  web-ui:
+    name: Web Interface
+    success-message: The Mempool UI is ready to visit in a web browser
+    type: docker
+    image: main
+    entrypoint: health-check.sh
+    args: ["web"]
+    io-format: json
+    inject: true
+  api:
+    name: API
+    success-message: The Mempool API is reachable and responsive.
+    type: docker
+    image: main
+    entrypoint: health-check.sh
+    args: ["api"]
+    io-format: json
+    inject: true
 config:
   get:
     type: docker
@@ -37,10 +54,10 @@ config:
       - config
       - get
       - /root
-      - /mnt/assets/config_spec.yaml
+      - "/mnt/assets/config_spec.yaml"
     mounts:
-      main: /root
       compat: /mnt/assets
+      main: /root
     io-format: yaml
   set:
     type: docker
@@ -50,13 +67,13 @@ config:
     args:
       - config
       - set
-      - mempool
+      - "mempool"
       - /root
-      - /mnt/assets/config_rules.yaml
-      - /mnt/assets/dependencies.yaml
+      - "/mnt/assets/config_rules.yaml"
+      - "/mnt/assets/dependencies.yaml"
     mounts:
-      main: /root
       compat: /mnt/assets
+      main: /root
     io-format: yaml
 properties:
   type: docker
@@ -68,8 +85,48 @@ properties:
     - /root
   mounts:
     main: /root
+    compat: /mnt/assets
   io-format: yaml
 dependencies:
+  bitcoind:
+    version: ">=0.21.1.2 <23.0.0"
+    requirement:
+      type: "opt-out"
+      how: Can alternatively configure an external bitcoin node.
+    description: Used to subscribe to new block events from a full archival node.
+    config:
+      check: 
+        type: docker
+        image: compat
+        system: true
+        entrypoint: compat
+        args:
+          - dependency
+          - check
+          - "mempool"
+          - bitcoind
+          - /root
+          - "/mnt/assets/bitcoind_config_rules.yaml"
+        mounts:
+          compat: /mnt/assets
+          main: /root
+        io-format: yaml
+      auto-configure:
+        type: docker
+        image: compat
+        system: true
+        entrypoint: compat
+        args:
+          - dependency
+          - "auto-configure"
+          - "mempool"
+          - bitcoind
+          - /root
+          - "/mnt/assets/bitcoind_config_rules.yaml"
+        mounts:
+          compat: /mnt/assets
+          main: /root
+        io-format: yaml
   btc-rpc-proxy:
     version: ">=0.3.2.1 <0.4.0"
     requirement:
@@ -109,42 +166,6 @@ dependencies:
           main: /root
           compat: /mnt/assets
         io-format: yaml
-  bitcoind:
-    version: "^0.21.1.2 <23.0.0"
-    requirement:
-      type: "opt-in"
-      how: Can alternatively configure an external bitcoin node.
-    description: Used to subscribe to new block events from a full archival node.
-    config:
-      check: 
-        type: docker
-        image: compat
-        system: true
-        entrypoint: compat
-        args:
-          - dependency
-          - check
-          - mempool
-          - "bitcoind"
-          - /root
-          - "/mnt/assets/bitcoind_config_rules.yaml"
-        mounts:
-          compat: /mnt/assets
-          main: /root
-      auto-configure:
-        type: docker
-        image: compat
-        system: true
-        entrypoint: compat
-        args:
-          - dependency
-          - "auto-configure"
-          - mempool
-          - "bitcoind"
-          - /root
-          - "/mnt/assets/bitcoind_config_rules.yaml"
-        mounts:
-          compat: /mnt/assets
 volumes: 
   main:
     type: data 
@@ -157,8 +178,6 @@ interfaces:
     tor-config:
       port-mapping:
         80: "8080"
-        443: "443"
-        8999 : "8999"
     lan-config:
       443:  
         ssl: true
@@ -177,10 +196,10 @@ backup:
       - duplicity
       - create
       - /mnt/backup
-      - /root
+      - /root/data
     mounts:
       BACKUP: /mnt/backup
-      main: /root
+      main: /root/data
     io-format: yaml
   restore:
     type: docker
@@ -191,8 +210,8 @@ backup:
       - duplicity
       - restore
       - /mnt/backup
-      - /root
+      - /root/data
     mounts:
       BACKUP: /mnt/backup
-      main: /root
+      main: /root/data
     io-format: yaml
