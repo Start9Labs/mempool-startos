@@ -50,7 +50,9 @@ RUN cp wait-for-it.sh /usr/local/bin && chmod +x start.sh && chmod +x /backend/w
 # BUILD S9 CUSTOM
 ADD ./docker_entrypoint.sh /usr/local/bin/docker_entrypoint.sh
 ADD assets/utils/health-check.sh /usr/local/bin/health-check.sh
+ADD assets/utils/health-check.sh /usr/local/bin/check-synced.sh
 RUN chmod +x /usr/local/bin/health-check.sh
+RUN chmod +x /usr/local/bin/check-synced.sh
 
 # remove to we can manually handle db initalization
 RUN rm -rf /var/lib/mysql/

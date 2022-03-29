@@ -31,8 +31,10 @@ health-checks:
     success-message: The Mempool UI is ready to visit in a web browser
     type: docker
     image: main
+    system: false
     entrypoint: health-check.sh
     args: ["web"]
+    mounts: {}
     io-format: json
     inject: true
   api:
@@ -40,9 +42,22 @@ health-checks:
     success-message: The Mempool API is reachable and responsive.
     type: docker
     image: main
+    system: false
     entrypoint: health-check.sh
     args: ["api"]
+    mounts: {}
     io-format: json
+    inject: true
+  synced:
+    name: Synced
+    success-message: Synced to chain and ready to perform on-chain operations
+    type: docker
+    image: main
+    system: false
+    entrypoint: check-synced.sh
+    args: []
+    mounts: {}
+    io-format: yaml
     inject: true
 config:
   get:
