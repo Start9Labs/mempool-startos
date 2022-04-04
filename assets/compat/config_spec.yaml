@@ -16,11 +16,9 @@ bitcoind:
     description: |
       - Internal: The Bitcoin Core service installed to your Embassy
       - Internal Proxy: The Bitcoin Proxy service installed on your Embassy
-      - External: A Bitcoin Core node running on a different device
     variant-names:
       internal: Internal
       internal-proxy: Internal (Bitcoin Proxy)
-      external: External
   default: internal
   variants:
     internal:
@@ -61,20 +59,12 @@ bitcoind:
         target: config
         multi: false
         selector: '$.users.[?(@.name == "mempool")].password'
-    external:
-      host:
-        type: string
-        name: Public Address
-        description: The public address of your Bitcoin Core RPC server
-        nullable: false
-      user:
-        type: string
-        name: RPC Username
-        description: The username for the RPC user on your Bitcoin Core RPC server
-        nullable: false
-      password:
-        type: string
-        name: RPC Password
-        description: The password for the RPC user on your Bitcoin Core RPC server
-        nullable: false
-
+      txindex:
+        type: pointer
+        name: Transaction Indexer
+        description: The Transaction Indexer for Bitcoin Core
+        subtype: package
+        package-id: bitcoind
+        target: config
+        multi: false
+        selector: '$.txindex'

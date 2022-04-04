@@ -96,7 +96,7 @@ dependencies:
     version: ">=0.21.1.2 <23.0.0"
     requirement:
       type: "opt-out"
-      how: Can alternatively configure an external bitcoin node.
+      how: Can alternatively configure proxy or bitcoin core  node.
     description: Used to subscribe to new block events from a full archival node.
     config:
       check: 
@@ -135,7 +135,7 @@ dependencies:
     version: ">=0.3.2.1 <0.4.0"
     requirement:
       type: "opt-in"
-      how: Can alternatively configure an external bitcoind node.
+      how: Can alternatively configure proxy or bitcoin core  node.
     description: Used for RPC permissioning.
     config:
       check:
@@ -175,6 +175,9 @@ volumes:
     type: data 
   compat:
     type: assets
+alerts:
+  install: |
+    READ CAREFULLY! When first running Mempool, previous block fee estimates will show as zero values until the service is able to catch up. This is expected behaviour. We hope you enjoy using Mempool!
 interfaces:
   main:
     name: Mempool Interface

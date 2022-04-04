@@ -40,12 +40,9 @@ sed -i '/^node \/backend\/dist\/index.js/i jq \x27.MEMPOOL.BACKEND="none"\x27 \/
 if [ "$bitcoind_type" = "internal-proxy" ]; then
 	bitcoind_host="btc-rpc-proxy.embassy"
 	echo "Running on Bitcoin Proxy..."
-elif [ "$bitcoind_type" = "internal" ]; then
+else
 	bitcoind_host="bitcoind.embassy"
 	echo "Running on Bitcoin Core..."
-else
-	bitcoind_host=$(yq e '.bitcoind.host' /root/start9/config.yaml)
-	echo "Running on an External Node..."
 fi
 sed -i "s/CORE_RPC_HOST:=127.0.0.1/CORE_RPC_HOST:=$bitcoind_host/" start.sh
 sed -i "s/CORE_RPC_USERNAME:=mempool/CORE_RPC_USERNAME:=$bitcoind_user/" start.sh
