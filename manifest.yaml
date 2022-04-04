@@ -176,7 +176,7 @@ volumes:
   compat:
     type: assets
 alerts:
-  install: |
+  start: |
     READ CAREFULLY! When first running Mempool, previous block fee estimates will show as zero values until the service is able to catch up. This is expected behaviour. We hope you enjoy using Mempool!
 interfaces:
   main:
