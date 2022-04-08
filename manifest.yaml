@@ -1,7 +1,7 @@
 id: mempool
 title: Mempool
 version: 2.3.1
-release-notes: "Initial release for Embassy 0.3.0."
+release-notes: "Initial release for Embassy 0.3.0.1"
 license: mit
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
@@ -9,7 +9,6 @@ support-site: "https://mempool.space/docs/api/rest"
 marketing-site: "https://mempool.space/"
 donation-url: "https://mempool.space/sponsor"
 build: ["make"]
-min-os-version: "0.3.0.1"
 description:
   short: "A Bitcoin node and network visualizer."
   long: "Mempool is the fully featured visualizer, explorer, and API service running on [mempool.space](https://mempool.space/), an open source project developed and operated for the benefit of the Bitcoin community, with a focus on the emerging transaction fee market to help our transition into a multi-layer ecosystem."

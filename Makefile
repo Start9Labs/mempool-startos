@@ -28,14 +28,7 @@ instructions.md: README.md
 	cp README.md instructions.md
 
 image.tar: Dockerfile docker_entrypoint.sh assets/utils/* $(MEMPOOL_GIT_FILE)
-	docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --tag start9/mempool/main:${EMVER} --platform=linux/arm64/v8 -o type=docker,dest=image.tar -f ./Dockerfile .
-
-manifest-version: $(MEMPOOL_GIT_FILE)
-	$(info TAG VERSION is $(VERSION))
-	$(info S9 VERSION is $(S9_VERSION))
-	yq eval -i ".version = \"$(S9_VERSION)\"" manifest.yaml
-	yq eval -i ".release-notes = \"https://github.com/mempool/mempool/releases/tag/$(VERSION_TAG)\" manifest.yaml
 
 clean:
 	rm -f mempool.s9pk
