@@ -48,6 +48,16 @@ health-checks:
     mounts: {}
     io-format: json
     inject: true
+  # synced:
+  #   name: Synced
+  #   success-message: Bitcoin Core is fully synced. You may now connect a wallet.
+  #   type: docker
+  #   image: main
+  #   entrypoint: "check-synced.sh"
+  #   args: []
+  #   inject: true
+  #   system: false
+  #   io-format: json
 config:
   get:
     type: docker
@@ -177,7 +187,7 @@ volumes:
     type: assets
 alerts:
   start: |
-    READ CAREFULLY! When first running Mempool, previous block fee estimates will show as zero values until the service is able to catch up. This is expected behaviour. We hope you enjoy using Mempool!
+    READ CAREFULLY! When first running Mempool, previous block fee estimates will show as zero values until the service is able to catch up. This is expected behaviour.
 interfaces:
   main:
     name: Mempool Interface
