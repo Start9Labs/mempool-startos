@@ -48,16 +48,17 @@ health-checks:
     mounts: {}
     io-format: json
     inject: true
-  # synced:
-  #   name: Synced
-  #   success-message: Bitcoin Core is fully synced. You may now connect a wallet.
-  #   type: docker
-  #   image: main
-  #   entrypoint: "check-synced.sh"
-  #   args: []
-  #   inject: true
-  #   system: false
-  #   io-format: json
+  synced:
+    name: Synced
+    success-message: Bitcoin Core is fully synced. You may now launch Mempool.
+    type: docker
+    image: main
+    system: false
+    entrypoint: check-synced.sh
+    args: ["sync"]
+    mounts: {}
+    io-format: json
+    inject: true
 config:
   get:
     type: docker
