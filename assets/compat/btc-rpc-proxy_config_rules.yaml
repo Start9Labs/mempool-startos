@@ -11,6 +11,12 @@
         to-entropy:
           charset: "a-z,A-Z,0-9"
           len: 22
+- rule: '''users.[first(item => ''item.name = "mempool")].allowed-calls.* = "getindexinfo"'
+  description: 'RPC user "mempool" must have "getindexinfo" enabled'
+  suggestions:
+    - PUSH:
+        to: 'users.[first(item => ''item.name = "mempool")].allowed-calls'
+        value: "getindexinfo"
 - rule: '''users.[first(item => ''item.name = "mempool")].allowed-calls.* = "getblockcount"'
   description: 'RPC user "mempool" must have "getblockcount" enabled'
   suggestions:

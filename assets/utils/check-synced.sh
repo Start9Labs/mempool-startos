@@ -2,7 +2,6 @@
 
 set -e
 
-CURRENT_HEIGHT=$(wget -q -O- https://blockchain.info/q/getblockcount; echo)
 b_type=$(yq e '.bitcoind.type' /root/start9/config.yaml)
 if [ "$b_type" = "internal" ]; then
     b_host="bitcoind.embassy"
@@ -13,26 +12,15 @@ else
     b_username=$(yq e '.bitcoind.user' /root/start9/config.yaml)
     b_password=$(yq e '.bitcoind.password' /root/start9/config.yaml)
 fi
-TXINDEX_CHECK=$(curl -sS --user $b_username:$b_password --data-binary '{"jsonrpc": "1.0", "id": "sync-hck", "method": "getrawtransaction", "params": [00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048]}' -H 'content-type: text/plain;' $b_host:8332 | sed 's/[^0-9]*//g') 
-SYNC_HEIGHT=$(curl -sS --user $b_username:$b_password --data-binary '{"jsonrpc": "1.0", "id": "sync-hck", "method": "getblockcount", "params": []}' -H 'content-type: text/plain;' $b_host:8332 | sed 's/[^0-9]*//g') 
-        
+TXINDEX_CHECK=$(curl -sS --user $b_username:$b_password --data-binary '{"jsonrpc": "1.0", "id": "sync-hck", "method": "getindexinfo", "params": ["txindex"]}' -H 'content-type: text/plain;' $b_host:8332 | sed -n 's/.*\("synced":true\).*/1/p') 
+
 check_sync(){
     DURATION=$(</dev/stdin)
     if (($DURATION <= 5000 )); then
         exit 60
-    else
-        curl --silent --fail -sS --user $b_username:$b_password --data-binary '{"jsonrpc": "1.0", "id": "sync-hck", "method": "getblockcount", "params": []}' -H 'content-type: text/plain;' $b_host:8332 | sed 's/[^0-9]*//g' &>/dev/null
-        RES=$?
-        if test "$RES" != 0; then
-            echo "The Bitcoin Core is unreachable" >&2
-            exit 1
-        elif test "$SYNC_HEIGHT" -lt "$CURRENT_HEIGHT"; then
-            echo "Bitcoin Core is still syncing, Mempool will not display completely until syncing is complete. Current block height: $SYNC_HEIGHT of $CURRENT_HEIGHT" >&2
-            exit 61
-        elif test "$TXINDEX_CHECK" != 32700181; then
-            echo "Transaction Indexer is either not enabled or has not yet synced. Mempool will not display completely." >&2
-            exit 61
-        fi
+    elif test "$TXINDEX_CHECK" != 1; then
+        echo "Transaction Indexer is either not enabled or has not yet synced. Mempool will not display completely." >&2
+        exit 1
     fi
 }
 
@@ -46,5 +34,3 @@ case "$1" in
         echo "Commands:"
         echo "         sync"
 esac
-
-# curl -sS --user mempool:mempool --data-binary '{"jsonrpc": "1.0", "id": "sync-hck", "method": "getrawtransaction", "params": ["00000000839a8e6886ab5951d76f411475428afc90947ee320161bbf18eb6048"]}' -H 'content-type: text/plain;' btc-rpc-proxy.embassy:8332 | sed 's/[^0-9]*//g'
