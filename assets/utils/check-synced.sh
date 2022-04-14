@@ -12,22 +12,22 @@ else
     b_username=$(yq e '.bitcoind.user' /root/start9/config.yaml)
     b_password=$(yq e '.bitcoind.password' /root/start9/config.yaml)
 fi
-TXINDEX_CHECK=$(curl -sS --user $b_username:$b_password --data-binary '{"jsonrpc": "1.0", "id": "sync-hck", "method": "getindexinfo", "params": ["txindex"]}' -H 'content-type: text/plain;' $b_host:8332 | sed -n 's/.*\("synced":true\).*/1/p') 
-TXINDEX_SYNC=$(curl -sS --user $b_username:$b_password --data-binary '{"jsonrpc": "1.0", "id": "sync-hck", "method": "getindexinfo", "params": ["txindex"]}' -H 'content-type: text/plain;' $b_host:8332 | sed -n 's/.*\("synced":false\).*/1/p')
+TXINDEX_CHECK=$(curl -sS --user $b_username:$b_password --data-binary '{"jsonrpc": "1.0", "id": "sync-hck", "method": "getindexinfo", "params": ["txindex"]}' -H 'content-type: text/plain;' $b_host:8332 | sed -n 's/.*\("synced":\).*/1/p') 
+TXINDEX_SYNC=$(curl -sS --user $b_username:$b_password --data-binary '{"jsonrpc": "1.0", "id": "sync-hck", "method": "getindexinfo", "params": ["txindex"]}' -H 'content-type: text/plain;' $b_host:8332 | sed -n 's/.*\("synced":true\).*/1/p')
 IBD_STATE=$(curl -sS --user $b_username:$b_password --data-binary '{"jsonrpc": "1.0", "id": "sync-hck", "method": "getblockchaininfo", "params": []}' -H 'content-type: text/plain;' $b_host:8332 | sed -n 's/.*\("initialblockdownload":false\).*/1/p')
 
 check_sync(){
     DURATION=$(</dev/stdin)
     if (($DURATION <= 5000 )); then
         exit 60
-    elif test "$TXINDEX_SYNC" != 1; then
-        echo "Transaction Indexer is still syncing. Mempool will not display correctly until sync is complete." >&2
-        exit 61
-    elif test "$TXINDEX_CHECK" != 1; then
-        echo "Transaction Indexer is either not enabled. Mempool will not display completely." >&2
-        exit 1
     elif test "$IBD_STATE" != 1; then
         echo "Initial blockchain download still in progress. Mempool will not display correctly until this is complete." >&2
+        exit 61
+    elif test "$TXINDEX_CHECK" != 1; then
+        echo "Transaction Indexer is not enabled. Mempool will not display properly." >&2
+        exit 1
+    elif test "$TXINDEX_SYNC" != 1; then
+        echo "Transaction Indexer is still syncing. Mempool will not display correctly until sync is complete." >&2
         exit 61
     fi
 }
