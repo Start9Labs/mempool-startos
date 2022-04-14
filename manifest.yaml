@@ -188,7 +188,7 @@ volumes:
     type: assets
 alerts:
   start: |
-    READ CAREFULLY! When first running Mempool, previous block fee estimates will show as zero values until the service is able to catch up. This is expected behaviour.
+    READ CAREFULLY! Mempool requires Electrum Server in order to see address detail. This feature will soon be available with ElectRS. 
 interfaces:
   main:
     name: Mempool Interface
