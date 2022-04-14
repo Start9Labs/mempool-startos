@@ -13,7 +13,9 @@ else
     b_password=$(yq e '.bitcoind.password' /root/start9/config.yaml)
 fi
 TXINDEX_CHECK=$(curl -sS --user $b_username:$b_password --data-binary '{"jsonrpc": "1.0", "id": "sync-hck", "method": "getindexinfo", "params": ["txindex"]}' -H 'content-type: text/plain;' $b_host:8332 | sed -n 's/.*\("synced":true\).*/1/p') 
-TXINDEX_SYNC=$(curl -sS --user mempool:mempool --data-binary '{"jsonrpc": "1.0", "id": "sync-hck", "method": "getindexinfo", "params": ["txindex"]}' -H 'content-type: text/plain;' btc-rpc-proxy.embassy:8332 | sed -n 's/.*\("synced":false\).*/1/p')
+TXINDEX_SYNC=$(curl -sS --user $b_username:$b_password --data-binary '{"jsonrpc": "1.0", "id": "sync-hck", "method": "getindexinfo", "params": ["txindex"]}' -H 'content-type: text/plain;' $b_host:8332 | sed -n 's/.*\("synced":false\).*/1/p')
+IBD_STATE=$(curl -sS --user $b_username:$b_password --data-binary '{"jsonrpc": "1.0", "id": "sync-hck", "method": "getblockchaininfo", "params": []}' -H 'content-type: text/plain;' $b_host:8332 | sed -n 's/.*\("initialblockdownload":false\).*/1/p')
+TXINDEX_SYNC=$TXINDEX_SYNC+$IBD_STATE
 check_sync(){
     DURATION=$(</dev/stdin)
     if (($DURATION <= 5000 )); then
@@ -37,6 +39,3 @@ case "$1" in
         echo "Commands:"
         echo "         sync"
 esac
-
-# Below is an example of the curl command being used to pull the txindex information from bitcoind. 
-## curl -sS --user mempool:mempool --data-binary '{"jsonrpc": "1.0", "id": "sync-hck", "method": "getindexinfo", "params": ["txindex"]}' -H 'content-type: text/plain;' btc-rpc-proxy.embassy:8332 | sed -n 's/.*\("synced":false\).*/2/p'
