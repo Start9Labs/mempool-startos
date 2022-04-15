@@ -1,9 +1,3 @@
 bitcoind:
   condition: 'txindex?'
   health_checks: []
-bitcoind:
-  condition: '''bitcoind.type = "internal-proxy"'
-  health_checks: ["synced"]
-bitcoind:
-  condition: '''bitcoind.type = "internal"'
-  health_checks: ["synced"]
