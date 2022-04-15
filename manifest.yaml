@@ -1,6 +1,6 @@
 id: mempool
 title: Mempool
-version: 2.3.1.1
+version: 2.3.1.2
 release-notes: "Initial release for Embassy 0.3.0.2"
 license: mit
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
