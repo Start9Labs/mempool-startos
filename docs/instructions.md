@@ -7,6 +7,12 @@ Mempool on the Embassy requires a fully synced archival Bitcoin Core node to fun
 
 This implementation of Mempool on Embassy enables you to connect to your own Bitcoin Core node.
 
+## Address Lookups
+
+To enable address lookups, toggle on the "Enable Electrs Address Lookups" option in the configuration menu.
+
+You will need electrs to be installed and synced before this feature will work. Also, lookups may be slow or time out altogether while the service is still warming up, or if there are too many other things running on your system.
+
 ## Support
 
 For additional support, please visit the mempool.space matrix support room.

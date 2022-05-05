@@ -6,7 +6,7 @@ _term() {
   kill -TERM "$backend_process" 2>/dev/null
   kill -TERM "$db_process" 2>/dev/null
   kill -TERM "$frontend_process" 2>/dev/null
-  kill -TERM "$configure" 2>/dev/null
+#   kill -TERM "$configure" 2>/dev/null
 }
 
 # FRONTEND SETUP
@@ -35,8 +35,7 @@ HOST_IP=$(ip -4 route list match 0/0 | awk '{print $3}')
 bitcoind_type=$(yq e '.bitcoind.type' /root/start9/config.yaml)
 bitcoind_user=$(yq e '.bitcoind.user' /root/start9/config.yaml)
 bitcoind_pass=$(yq e '.bitcoind.password' /root/start9/config.yaml)
-# configure mempool to use just a bitcoind backend
-# sed -i '/^node \/backend\/dist\/index.js/i jq \x27.MEMPOOL.BACKEND="none"\x27 \/backend\/mempool-config.json > \/backend\/mempool-config.json.tmp && mv \/backend\/mempool-config.json.tmp \/backend\/mempool-config.json' start.sh
+
 if [ "$bitcoind_type" = "internal-proxy" ]; then
 	bitcoind_host="btc-rpc-proxy.embassy"
 	echo "Running on Bitcoin Proxy..."
@@ -51,6 +50,8 @@ if [ "$(yq ".enable-electrs" /root/start9/config.yaml)" = "true" ]; then
 	sed -i 's/ELECTRUM_HOST:=127.0.0.1/ELECTRUM_HOST:=electrs.embassy/' start.sh
 	sed -i 's/ELECTRUM_PORT:=50002/ELECTRUM_PORT:=50001/' start.sh
 else
+	# configure mempool to use just a bitcoind backend
+	sed -i '/^node \/backend\/dist\/index.js/i jq \x27.MEMPOOL.BACKEND="none"\x27 \/backend\/mempool-config.json > \/backend\/mempool-config.json.tmp && mv \/backend\/mempool-config.json.tmp \/backend\/mempool-config.json' start.sh
 	sed -i 's/MEMPOOL_BACKEND:=electrum/MEMPOOL_BACKEND:=none/' start.sh
 fi
 # DATABASE SETUP
@@ -152,7 +153,7 @@ nginx -g 'daemon off;' &
 echo 'All processes initalized'
 
 
-# ERROR HANDLING
+# SIGTERM HANDLING
 trap _term SIGTERM
 
 wait -n $db_process $backend_process $frontend_process

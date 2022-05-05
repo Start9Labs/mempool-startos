@@ -70,6 +70,6 @@ bitcoind:
         selector: '$.txindex'
 enable-electrs:
   type: boolean
-  name: "Enable Electrs"
+  name: "Enable Electrs Address Lookups"
   description: Enables address lookups via an internal electrs instance
-  default: false
+  default: true
