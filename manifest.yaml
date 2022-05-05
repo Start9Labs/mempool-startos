@@ -181,6 +181,12 @@ dependencies:
           main: /root
           compat: /mnt/assets
         io-format: yaml
+  electrs:
+    version: ">=0.9.6 <0.10.0"
+    requirement:
+      type: "opt-out"
+      how: Set Enable Electrs to Disabled in the config
+    description: Used to provide an index for address lookups
 volumes: 
   main:
     type: data 

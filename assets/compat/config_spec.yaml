@@ -68,3 +68,8 @@ bitcoind:
         target: config
         multi: false
         selector: '$.txindex'
+enable-electrs:
+  type: boolean
+  name: "Enable Electrs"
+  description: Enables address lookups via an internal electrs instance
+  default: false
