@@ -23,7 +23,7 @@ FROM node:16-buster-slim
 WORKDIR /backend
 
 RUN apt-get update && apt-get install wget netcat jq pwgen vim procps nginx curl mariadb-server mariadb-client -y \
-        && wget https://github.com/mikefarah/yq/releases/download/v4.6.3/yq_linux_arm.tar.gz -O - |\
+        && wget https://github.com/mikefarah/yq/releases/download/v4.25.1/yq_linux_arm.tar.gz -O - |\
         tar xz && mv yq_linux_arm /usr/bin/yq
 
 USER root

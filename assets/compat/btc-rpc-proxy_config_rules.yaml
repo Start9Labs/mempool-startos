@@ -53,6 +53,12 @@
     - PUSH:
         to: 'users.[first(item => ''item.name = "mempool")].allowed-calls'
         value: "getblock"
+- rule: '''users.[first(item => ''item.name = "mempool")].allowed-calls.* = "getmempoolentry"'
+  description: 'RPC user "mempool" must have "getmempoolentry" enabled'
+  suggestions:
+    - PUSH:
+        to: 'users.[first(item => ''item.name = "mempool")].allowed-calls'
+        value: "getmempoolentry"
 - rule: '''users.[first(item => ''item.name = "mempool")].allowed-calls.* = "getrawtransaction"'
   description: 'RPC user "mempool" must have "getrawtransaction" enabled'
   suggestions:
@@ -65,11 +71,15 @@
     - PUSH:
         to: 'users.[first(item => ''item.name = "mempool")].allowed-calls'
         value: "getrawmempool"
-
-- rule: '''users.[first(item => ''item.name = "mempool")].allowed-calls.* = "getmempoolentry"'
-  description: 'RPC user "mempool" must have "getmempoolentry" enabled'
+- rule: '''users.[first(item => ''item.name = "mempool")].allowed-calls.* = "gettxout"'
+  description: 'RPC user "mempool" must have "gettxout" enabled'
   suggestions:
     - PUSH:
         to: 'users.[first(item => ''item.name = "mempool")].allowed-calls'
-        value: "getmempoolentry"
-        
+        value: "gettxout"
+- rule: '''users.[first(item => ''item.name = "mempool")].allowed-calls.* = "validateaddress"'
+  description: 'RPC user "mempool" must have "validateaddress" enabled'
+  suggestions:
+    - PUSH:
+        to: 'users.[first(item => ''item.name = "mempool")].allowed-calls'
+        value: "validateaddress"

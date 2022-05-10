@@ -1,7 +1,7 @@
 id: mempool
 title: Mempool
-version: 2.3.1.3
-release-notes: Bug fix for invalid dependency health check error on Bitcoin Core
+version: 2.3.1.4
+release-notes: Add electrs for address lookups
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
@@ -181,6 +181,12 @@ dependencies:
           main: /root
           compat: /mnt/assets
         io-format: yaml
+  electrs:
+    version: ">=0.9.6 <0.10.0"
+    requirement:
+      type: "opt-out"
+      how: Set Enable Electrs to Disabled in the config
+    description: Used to provide an index for address lookups
 volumes: 
   main:
     type: data 
@@ -189,8 +195,7 @@ volumes:
 alerts:
   start: |
     READ CAREFULLY! When first running Mempool, previous block fee estimates will show as zero values until the service is able to catch up. This is expected behaviour.
-
-    ALSO: Mempool requires an electrum server in order to see address detail. This feature will soon be available with electrs.
+    ALSO: Lookups may be slow or time out altogether while the service is still warming up, or if there are too many other things running on your system. If address lookups aren't working, try restarting electrs and try the lookup again.
 interfaces:
   main:
     name: Mempool Interface
