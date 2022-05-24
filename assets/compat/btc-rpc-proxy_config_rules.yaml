@@ -83,3 +83,9 @@
     - PUSH:
         to: 'users.[first(item => ''item.name = "mempool")].allowed-calls'
         value: "validateaddress"
+- rule: '''users.[first(item => ''item.name = "mempool")].allowed-calls.* = "getnetworkhashps"'
+  description: 'RPC user "mempool" must have "getnetworkhashps" enabled'
+  suggestions:
+    - PUSH:
+        to: 'users.[first(item => ''item.name = "mempool")].allowed-calls'
+        value: "getnetworkhashps"
