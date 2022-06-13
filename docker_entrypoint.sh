@@ -128,7 +128,7 @@ EOF
 fi
 
 /usr/bin/mysqld_safe --user=mysql --datadir='/var/lib/mysql' &
-    db_process=$!
+db_process=$!
 
 # Properties 
 echo 'Mempool Open Source Project.' > /root/start9/stats.yaml
@@ -137,11 +137,10 @@ echo 'Mempool Open Source Project.' > /root/start9/stats.yaml
 sed -i "s/user nobody;//g" /etc/nginx/nginx.conf
 
 nginx -g 'daemon off;' &
-    frontend_process=$!
+frontend_process=$!
 
-/backend/wait-for-it.sh 127.0.0.1:3306 --timeout=60 --strict -- /backend/start.sh
-&
-    backend_process=$!
+/backend/wait-for-it.sh 127.0.0.1:3306 --timeout=60 --strict -- /backend/start.sh &
+backend_process=$!
 
 echo 'All processes initalized'
 
