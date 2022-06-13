@@ -1,6 +1,6 @@
 id: mempool
 title: Mempool
-version: 2.3.1.4
+version: 2.4.0
 release-notes: Add electrs for address lookups
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
@@ -104,7 +104,7 @@ properties:
   io-format: yaml
 dependencies:
   bitcoind:
-    version: ">=0.21.1.2 <=23.0.0"
+    version: ">=0.21.1.2 <24.0.0"
     requirement:
       type: "opt-out"
       how: Can alternatively configure proxy or bitcoin core  node.
