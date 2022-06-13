@@ -10,3 +10,9 @@
     - SET:
         var: "rpc.enable"
         to-value: true
+- rule: '''advanced.pruning.mode = "disabled"'
+  description: 'Pruning must be disabled to use Bitcoin Core directly. To use with a pruned node, set Bitcoin Core to "Internal (Bitcoin Proxy)" instead.'
+  suggestions:
+    - SET:
+        var: "advanced.pruning.mode"
+        to-value: "disabled"

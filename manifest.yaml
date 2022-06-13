@@ -1,7 +1,7 @@
 id: mempool
 title: Mempool
 version: 2.4.0
-release-notes: Add electrs for address lookups
+release-notes: Update to Mempool v2.4.0 - added mining tab and additional reporting
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
