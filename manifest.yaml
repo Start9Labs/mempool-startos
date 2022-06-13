@@ -104,7 +104,7 @@ properties:
   io-format: yaml
 dependencies:
   bitcoind:
-    version: ">=0.21.1.2 <=23.0.0"
+    version: ">=0.21.1.2 <=24.0.0"
     requirement:
       type: "opt-out"
       how: Can alternatively configure proxy or bitcoin core  node.
@@ -143,7 +143,7 @@ dependencies:
           main: /root
         io-format: yaml
   btc-rpc-proxy:
-    version: ">=0.3.2.1 <0.4.0"
+    version: ">=0.3.2.1 <0.5.0"
     requirement:
       type: "opt-in"
       how: Can alternatively configure proxy or bitcoin core  node.
