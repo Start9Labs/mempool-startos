@@ -240,3 +240,20 @@ backup:
       BACKUP: /mnt/backup
       main: /root/data
     io-format: yaml
+migrations:
+  from:
+    "<=2.4.0":
+        type: docker
+        image: main
+        entrypoint: sh
+        args: ["-c", 'json=''{"configured": true }'' && echo "$json"']
+        io-format: json
+        inject: true
+  to:
+    "<=2.4.0":
+        type: docker
+        image: main
+        entrypoint: sh
+        args: ["-c", 'json=''{"configured": true }'' && echo "$json"']
+        io-format: json
+        inject: true
