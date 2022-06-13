@@ -8,18 +8,18 @@ tor-address:
   interface: main
 bitcoind:
   type: union
-  name: Bitcoin Core
-  description: The Bitcoin Core node to connect to
+  name: Bitcoin
+  description: The Bitcoin node to connect to
   tag:
     id: type
     name: Type
     description: |
-      - Internal: The Bitcoin Core service installed to your Embassy
-      - Internal Proxy: The Bitcoin Proxy service installed on your Embassy
+      - Bitcoin Core: The Bitcoin Core service installed to your Embassy
+      - Bitcoin Proxy: The Bitcoin Proxy service installed on your Embassy
     variant-names:
-      internal: Internal
-      internal-proxy: Internal (Bitcoin Proxy)
-  default: internal
+      internal: Bitcoin Core
+      internal-proxy: Bitcoin Proxy
+  default: internal-proxy
   variants:
     internal:
       user:
