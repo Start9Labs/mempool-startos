@@ -95,4 +95,10 @@
     - PUSH:
         to: 'users.[first(item => ''item.name = "mempool")].allowed-calls'
         value: "getnetworkhashps"
+- rule: '''users.[first(item => ''item.name = "mempool")].allowed-calls.* = "getdifficulty"'
+  description: 'RPC user "mempool" must have "getdifficulty" enabled'
+  suggestions:
+    - PUSH:
+        to: 'users.[first(item => ''item.name = "mempool")].allowed-calls'
+        value: "getdifficulty"
 
