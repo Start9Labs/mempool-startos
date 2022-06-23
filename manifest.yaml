@@ -61,35 +61,9 @@ health-checks:
     inject: true
 config:
   get:
-    type: docker
-    image: compat
-    system: true
-    entrypoint: compat
-    args:
-      - config
-      - get
-      - /root
-      - "/mnt/assets/config_spec.yaml"
-    mounts:
-      compat: /mnt/assets
-      main: /root
-    io-format: yaml
+    type: script
   set:
-    type: docker
-    image: compat
-    system: true
-    entrypoint: compat
-    args:
-      - config
-      - set
-      - "mempool"
-      - /root
-      - "/mnt/assets/config_rules.yaml"
-      - "/mnt/assets/dependencies.yaml"
-    mounts:
-      compat: /mnt/assets
-      main: /root
-    io-format: yaml
+    type: script
 properties:
   type: docker
   image: compat

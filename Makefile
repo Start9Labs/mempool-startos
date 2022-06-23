@@ -14,7 +14,7 @@ verify:  mempool.s9pk $(S9PK_PATH)
 install: mempool.s9pk
 	embassy-cli package install mempool.s9pk
 
-mempool.s9pk: manifest.yaml assets/* image.tar docs/instructions.md
+mempool.s9pk: manifest.yaml assets/* image.tar docs/instructions.md scripts/embassy.js 
 	embassy-sdk pack
 
 instructions.md: README.md
@@ -27,3 +27,6 @@ clean:
 	rm -f mempool.s9pk
 	rm -f image.tar
 
+scripts/embassy.js: scripts/**/*.ts
+	deno cache --reload scripts/embassy.ts
+	deno bundle scripts/embassy.ts scripts/embassy.js
