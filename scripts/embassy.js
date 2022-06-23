@@ -4151,11 +4151,8 @@ const matchProxyConfig = shape1({
     users: arrayOf1(shape1({
         name: string2,
         "allowed-calls": arrayOf1(string2),
-        password: string2,
-        "fetch-blocks": __boolean1
-    }, [
-        "fetch-blocks"
-    ]))
+        password: string2
+    }))
 });
 function times(fn, amount) {
     const answer = new Array(amount);
@@ -4169,7 +4166,7 @@ function randomItemString(input) {
 }
 const serviceName = "mempool";
 const fullChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-const checks = [
+const proxyChecks = [
     {
         currentError (config) {
             if (!matchProxyConfig.test(config)) {
@@ -4228,28 +4225,7 @@ const checks = [
                     operator
                 ];
             }
-        })),
-    {
-        currentError (config) {
-            if (!matchProxyConfig.test(config)) {
-                return "Config is not the correct shape";
-            }
-            if (config.users.find((x)=>x.name === serviceName)?.["fetch-blocks"] ?? false) {
-                return;
-            }
-            return `RPC user "mempool" must have "Fetch Blocks" enabled`;
-        },
-        fix (config) {
-            if (!matchProxyConfig.test(config)) {
-                throw new Error("Config is not the correct shape");
-            }
-            const found = config.users.find((x)=>x.name === serviceName);
-            if (!found) {
-                throw new Error("Users for mempool should exist");
-            }
-            found["fetch-blocks"] = true;
-        }
-    }, 
+        })), 
 ];
 const dependencies = {
     bitcoind: {
@@ -4289,7 +4265,7 @@ const dependencies = {
     "btc-rpc-proxy": {
         async check (effects, configInput) {
             effects.info("check btc-rpc-proxy");
-            for (const checker of checks){
+            for (const checker of proxyChecks){
                 const error = checker.currentError(configInput);
                 if (error) {
                     effects.error(`throwing error: ${error}`);
@@ -4303,13 +4279,15 @@ const dependencies = {
             };
         },
         async autoConfigure (effects, configInput) {
-            effects.info("autoconfigure bitcoind");
-            const config = matchBitcoindConfig.unsafeCast(configInput);
-            config.rpc.enable = true;
-            config.txindex = true;
-            config.advanced.pruning.mode = "disabled";
+            effects.info("autoconfigure btc-rpc-proxy");
+            for (const checker of proxyChecks){
+                const error = checker.currentError(configInput);
+                if (error) {
+                    checker.fix(configInput);
+                }
+            }
             return {
-                result: config
+                result: configInput
             };
         }
     }
