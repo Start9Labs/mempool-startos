@@ -21,6 +21,9 @@ export const setConfig: ExpectedExports.setConfig = async (
     toWrite: YAML.stringify(newConfig),
     volumeId: "main",
   });
+  
+  const dependsOnElectrs = !!config?.['enable-electrs'] ? {electrs: ['synced']} : {}
+  const dependsOnBitcoind =  !!config?.txindex ? {bitcoind: []} : {}
 
   const result: SetResult = {
     signal: "SIGTERM",
