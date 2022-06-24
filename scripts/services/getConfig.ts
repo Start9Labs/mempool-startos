@@ -82,7 +82,7 @@ export const getConfig: ExpectedExports.getConfig = async (effects) => {
             "package-id": "btc-rpc-proxy",
             "target": "config",
             "multi": false,
-            "selector": "$.users[?(@.name == \"mmepool\")].password"
+            "selector": "$.users[?(@.name == \"mempool\")].password"
           },
           "txindex": {
             "name": "Transaction Indexer",
