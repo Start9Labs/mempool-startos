@@ -27,7 +27,10 @@ export const setConfig: ExpectedExports.setConfig = async (
 
   const result: SetResult = {
     signal: "SIGTERM",
-    "depends-on": {},
+    "depends-on": {
+       ...dependsOnElectrs,
+       ...dpenedsOnBitcoind,
+    },
   };
   return { result };
 };
