@@ -22,14 +22,14 @@ export const setConfig: ExpectedExports.setConfig = async (
     volumeId: "main",
   });
   
-  const dependsOnElectrs = !!config?.['enable-electrs'] ? {electrs: ['synced']} : {}
-  const dependsOnBitcoind =  !!config?.txindex ? {bitcoind: []} : {}
+  const dependsOnElectrs: {[key: string]: string[]} = !!newConfig?.['enable-electrs'] ? {electrs: ['synced']} : {}
+  const dependsOnBitcoind: {[key: string]: string[]} =  !!newConfig?.txindex ? {bitcoind: []} : {}
 
   const result: SetResult = {
     signal: "SIGTERM",
     "depends-on": {
        ...dependsOnElectrs,
-       ...dpenedsOnBitcoind,
+       ...dependsOnBitcoind,
     },
   };
   return { result };
