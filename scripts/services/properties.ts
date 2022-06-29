@@ -4,9 +4,9 @@ export const properties: ExpectedExports.properties = async (
   effects: Effects,
 ) => {
   try {
-    effects.metadata({
+    await effects.metadata({
       path: "start9/stats.yaml",
-        volumeId: "main",
+      volumeId: "main",
     })
   } catch {
     return {
