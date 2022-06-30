@@ -1,7 +1,7 @@
 id: mempool
 title: Mempool
-version: 2.4.0
-release-notes: Update to Mempool v2.4.0 - added mining tab and additional reporting
+version: 2.4.0.1
+release-notes: Update to Mempool v2.4.0.1 - added js procedures for EOS performance improvements
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
@@ -61,87 +61,23 @@ health-checks:
     inject: true
 config:
   get:
-    type: docker
-    image: compat
-    system: true
-    entrypoint: compat
-    args:
-      - config
-      - get
-      - /root
-      - "/mnt/assets/config_spec.yaml"
-    mounts:
-      compat: /mnt/assets
-      main: /root
-    io-format: yaml
+    type: script
   set:
-    type: docker
-    image: compat
-    system: true
-    entrypoint: compat
-    args:
-      - config
-      - set
-      - "mempool"
-      - /root
-      - "/mnt/assets/config_rules.yaml"
-      - "/mnt/assets/dependencies.yaml"
-    mounts:
-      compat: /mnt/assets
-      main: /root
-    io-format: yaml
+    type: script
 properties:
-  type: docker
-  image: compat
-  system: true
-  entrypoint: compat
-  args:
-    - properties
-    - /root
-  mounts:
-    main: /root
-    compat: /mnt/assets
-  io-format: yaml
+  type: script
 dependencies:
   bitcoind:
     version: ">=0.21.1.2 <24.0.0"
     requirement:
       type: "opt-out"
       how: Can alternatively configure proxy or bitcoin core  node.
-    description: Used to subscribe to new block events from a full archival node.
+    description: Used to subscribe to new block events from a full archival node
     config:
-      check: 
-        type: docker
-        image: compat
-        system: true
-        entrypoint: compat
-        args:
-          - dependency
-          - check
-          - "mempool"
-          - bitcoind
-          - /root
-          - "/mnt/assets/bitcoind_config_rules.yaml"
-        mounts:
-          compat: /mnt/assets
-          main: /root
-        io-format: yaml
+      check:
+        type: script
       auto-configure:
-        type: docker
-        image: compat
-        system: true
-        entrypoint: compat
-        args:
-          - dependency
-          - "auto-configure"
-          - "mempool"
-          - bitcoind
-          - /root
-          - "/mnt/assets/bitcoind_config_rules.yaml"
-        mounts:
-          compat: /mnt/assets
-          main: /root
-        io-format: yaml
+        type: script
   btc-rpc-proxy:
     version: ">=0.3.2.1 <0.4.0"
     requirement:
@@ -150,37 +86,9 @@ dependencies:
     description: Used for RPC permissioning.
     config:
       check:
-        type: docker
-        image: compat
-        system: true
-        entrypoint: compat
-        args:
-          - dependency
-          - check
-          - mempool
-          - "btc-rpc-proxy"
-          - /root
-          - "/mnt/assets/btc-rpc-proxy_config_rules.yaml"
-        mounts:
-          main: /root
-          compat: /mnt/assets
-        io-format: yaml
+        type: script
       auto-configure:
-        type: docker
-        image: compat
-        system: true
-        entrypoint: compat
-        args:
-          - dependency
-          - "auto-configure"
-          - mempool
-          - "btc-rpc-proxy"
-          - /root
-          - "/mnt/assets/btc-rpc-proxy_config_rules.yaml"
-        mounts:
-          main: /root
-          compat: /mnt/assets
-        io-format: yaml
+        type: script
   electrs:
     version: ">=0.9.6 <0.10.0"
     requirement:
