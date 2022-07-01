@@ -1,36 +1,18 @@
-import {
-  Config,
-  Effects,
-  ExpectedExports,
-  matches,
-  SetResult,
-  YAML,
-} from "../deps.ts";
-const { number } = matches;
+import { compat, types as T } from "../deps.ts";
 
-export const setConfig: ExpectedExports.setConfig = async (
-  effects: Effects,
-  newConfig: Config,
+// deno-lint-ignore require-await
+export const setConfig: T.ExpectedExports.setConfig = async (
+  effects: T.Effects,
+  newConfig: T.Config,
 ) => {
-  await effects.createDir({
-    path: "start9",
-    volumeId: "main",
-  });
-  await effects.writeFile({
-    path: "start9/config.yaml",
-    toWrite: YAML.stringify(newConfig),
-    volumeId: "main",
-  });
-  
-  const dependsOnElectrs: {[key: string]: string[]} = !!newConfig?.['enable-electrs'] ? {electrs: ['synced']} : {}
-  const dependsOnBitcoind: {[key: string]: string[]} =  !!newConfig?.txindex ? {bitcoind: []} : {}
+  const dependsOnElectrs: { [key: string]: string[] } =
+    newConfig?.["enable-electrs"] ? { electrs: ["synced"] } : {};
+  const dependsOnBitcoind: { [key: string]: string[] } = newConfig?.txindex
+    ? { bitcoind: [] }
+    : {};
 
-  const result: SetResult = {
-    signal: "SIGTERM",
-    "depends-on": {
-       ...dependsOnElectrs,
-       ...dependsOnBitcoind,
-    },
-  };
-  return { result };
+  return compat.setConfig(effects, newConfig, {
+    ...dependsOnElectrs,
+    ...dependsOnBitcoind,
+  });
 };
