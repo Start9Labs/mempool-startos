@@ -29,7 +29,7 @@ export const getConfig: ExpectedExports.getConfig = async (effects) => {
     "bitcoind": {
       "type": "union",
       "name": "Bitcoin Core",
-      "description": "The Bitcoin Core node to connect to:\n  - internal: The Bitcoin Core or Proxy services installed to your Embassy\n",
+      "description": "The Bitcoin Core node to connect to",
       "tag": {
         "id": "type",
         "name": "Type",
@@ -37,7 +37,7 @@ export const getConfig: ExpectedExports.getConfig = async (effects) => {
           "internal": "Bitcoin Core",
           "internal-proxy": "Bitcoin Proxy"
         },
-        "description": "The Bitcoin Core node to connect to:\n  - internal: The Bitcoin Core and Proxy services installed to your Embassy\n"
+        "description": "The Bitcoin Core node to connect to"
       },
       "default": "internal-proxy",
       "variants": {
