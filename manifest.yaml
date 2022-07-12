@@ -1,8 +1,7 @@
 id: mempool
 title: Mempool
-version: 2.4.0.1
-release-notes: |
-  * Switch to using new EOS APIs for faster configuration and properties
+version: 2.4.0.2
+release-notes: Fix migrations
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
