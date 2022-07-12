@@ -150,13 +150,18 @@ backup:
     io-format: yaml
 migrations:
   from:
+    "<2.3.1.4": # enable-electrs added in 2.3.1.4
+      type: docker
+      image: main
+      entrypoint: sh
+      args: ["-c", 'json=''{"configured": false }'' && echo "$json"']
+      io-format: json
     "*":
       type: docker
       image: main
       entrypoint: sh
       args: ["-c", 'json=''{"configured": true }'' && echo "$json"']
       io-format: json
-      inject: true
   to:
     "*":
       type: docker
@@ -164,4 +169,3 @@ migrations:
       entrypoint: sh
       args: ["-c", 'json=''{"configured": true }'' && echo "$json"']
       io-format: json
-      inject: true
