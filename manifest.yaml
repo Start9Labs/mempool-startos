@@ -97,8 +97,6 @@ dependencies:
 volumes: 
   main:
     type: data 
-  compat:
-    type: assets
 alerts:
   start: |
     READ CAREFULLY! When first running Mempool, previous block fee estimates will show as zero values until the service is able to catch up. This is expected behaviour.

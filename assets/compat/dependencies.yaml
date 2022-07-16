@@ -1,6 +1,0 @@
-bitcoind:
-  condition: 'txindex?'
-  health_checks: []
-electrs:
-  condition: 'enable-electrs?'
-  health_checks: ["synced"]
