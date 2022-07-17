@@ -53,6 +53,9 @@ ADD assets/utils/health-check.sh /usr/local/bin/health-check.sh
 RUN chmod +x /usr/local/bin/health-check.sh
 ADD assets/utils/check-synced.sh /usr/local/bin/check-synced.sh
 RUN chmod +x /usr/local/bin/check-synced.sh
+RUN mkdir -p /usr/local/bin/migrations
+ADD ./scripts/migrations/2_3_1_4_down_temp.sh /usr/local/bin/migrations
+RUN chmod a+x /usr/local/bin/migrations/*
 
 # remove to we can manually handle db initalization
 RUN rm -rf /var/lib/mysql/

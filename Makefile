@@ -26,6 +26,7 @@ image.tar: Dockerfile docker_entrypoint.sh assets/utils/* $(MEMPOOL_GIT_FILE)
 clean:
 	rm -f mempool.s9pk
 	rm -f image.tar
+	rm scripts/embassy.js
 
 scripts/embassy.js: scripts/**/*.ts
 	deno cache --reload scripts/embassy.ts

@@ -1,7 +1,7 @@
 id: mempool
 title: Mempool
 version: 2.4.0.2
-release-notes: Fix migrations
+release-notes: Fix migrations to ensure successful updates to the latest version
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
@@ -147,22 +147,25 @@ backup:
     io-format: yaml
 migrations:
   from:
-    "<2.3.1.4": # enable-electrs added in 2.3.1.4
-      type: docker
-      image: main
-      entrypoint: sh
-      args: ["-c", 'json=''{"configured": false }'' && echo "$json"']
-      io-format: json
     "*":
-      type: docker
-      image: main
-      entrypoint: sh
-      args: ["-c", 'json=''{"configured": true }'' && echo "$json"']
-      io-format: json
+      type: script
+  # @TODO the reason this migration is here and not in scripts is due to this possible OS bug: https://github.com/Start9Labs/embassy-os/pull/1663. When an eOS version is released with this fix, adjust this migration to type:script, uncomment the downgrade code in  scripts/migrations.ts, delete scripts/migrations/2_3_1_4_down_temp.sh and remove it from the Dockerfile.
   to:
-    "*":
+    "<2.3.1.4":
+      type: docker
+      image: main
+      entrypoint: /usr/local/bin/migrations/2_3_1_4_down_temp.sh
+      args: []
+      io-format: json
+      mounts:
+        main: /root
+      inject: false
+    ">=2.3.1.4":
       type: docker
       image: main
       entrypoint: sh
       args: ["-c", 'json=''{"configured": true }'' && echo "$json"']
       io-format: json
+      mounts:
+        main: /root
+      inject: false
