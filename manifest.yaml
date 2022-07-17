@@ -1,8 +1,7 @@
 id: mempool
 title: Mempool
-version: 2.4.0.1
-release-notes: |
-  * Switch to using new EOS APIs for faster configuration and properties
+version: 2.4.0.2
+release-notes: Fix migrations to ensure successful updates to the latest version
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
@@ -98,8 +97,6 @@ dependencies:
 volumes: 
   main:
     type: data 
-  compat:
-    type: assets
 alerts:
   start: |
     READ CAREFULLY! When first running Mempool, previous block fee estimates will show as zero values until the service is able to catch up. This is expected behaviour.
@@ -151,17 +148,24 @@ backup:
 migrations:
   from:
     "*":
-      type: docker
-      image: main
-      entrypoint: sh
-      args: ["-c", 'json=''{"configured": true }'' && echo "$json"']
-      io-format: json
-      inject: true
+      type: script
+  # @TODO the reason this migration is here and not in scripts is due to this possible OS bug: https://github.com/Start9Labs/embassy-os/pull/1663. When an eOS version is released with this fix, adjust this migration to type:script, uncomment the downgrade code in  scripts/migrations.ts, delete scripts/migrations/2_3_1_4_down_temp.sh and remove it from the Dockerfile.
   to:
-    "*":
+    "<2.3.1.4":
+      type: docker
+      image: main
+      entrypoint: /usr/local/bin/migrations/2_3_1_4_down_temp.sh
+      args: []
+      io-format: json
+      mounts:
+        main: /root
+      inject: false
+    ">=2.3.1.4":
       type: docker
       image: main
       entrypoint: sh
       args: ["-c", 'json=''{"configured": true }'' && echo "$json"']
       io-format: json
-      inject: true
+      mounts:
+        main: /root
+      inject: false

@@ -14,7 +14,7 @@ verify:  mempool.s9pk $(S9PK_PATH)
 install: mempool.s9pk
 	embassy-cli package install mempool.s9pk
 
-mempool.s9pk: manifest.yaml assets/* image.tar docs/instructions.md scripts/embassy.js 
+mempool.s9pk: manifest.yaml assets/utils/* image.tar docs/instructions.md scripts/embassy.js 
 	embassy-sdk pack
 
 instructions.md: README.md
@@ -26,6 +26,7 @@ image.tar: Dockerfile docker_entrypoint.sh assets/utils/* $(MEMPOOL_GIT_FILE)
 clean:
 	rm -f mempool.s9pk
 	rm -f image.tar
+	rm scripts/embassy.js
 
 scripts/embassy.js: scripts/**/*.ts
 	deno cache --reload scripts/embassy.ts
