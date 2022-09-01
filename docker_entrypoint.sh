@@ -130,9 +130,6 @@ fi
 /usr/bin/mysqld_safe --user=mysql --datadir='/var/lib/mysql' &
 db_process=$!
 
-# Properties 
-echo 'Mempool Open Source Project.' > /root/start9/stats.yaml
-
 # START UP
 sed -i "s/user nobody;//g" /etc/nginx/nginx.conf
 
