@@ -1,5 +1,10 @@
 FROM node:16-buster-slim AS builder
 
+# arm64 or amd64
+ARG PLATFORM
+# aarch64 or x86_64
+ARG ARCH
+
 WORKDIR /build
 COPY mempool/ .
 # because just a submodule in wrapper project
@@ -20,11 +25,16 @@ RUN cp docker/backend/mempool-config.json backend/
 
 FROM node:16-buster-slim
 
+# arm64 or amd64
+ARG PLATFORM
+# aarch64 or x86_64
+ARG ARCH
+
 WORKDIR /backend
 
-RUN apt-get update && apt-get install wget netcat jq pwgen vim procps nginx curl mariadb-server mariadb-client -y \
-        && wget https://github.com/mikefarah/yq/releases/download/v4.25.1/yq_linux_arm.tar.gz -O - |\
-        tar xz && mv yq_linux_arm /usr/bin/yq
+RUN apt-get update && apt-get install wget netcat jq pwgen vim procps nginx curl mariadb-server mariadb-client -y
+RUN wget https://github.com/mikefarah/yq/releases/download/v4.6.3/yq_linux_${PLATFORM}.tar.gz -O - |\
+  tar xz && mv yq_linux_${PLATFORM} /usr/bin/yq
 
 USER root
 
@@ -50,18 +60,8 @@ RUN cp wait-for-it.sh /usr/local/bin && chmod +x start.sh && chmod +x /backend/w
 # BUILD S9 CUSTOM
 ADD ./docker_entrypoint.sh /usr/local/bin/docker_entrypoint.sh
 ADD assets/utils/health-check.sh /usr/local/bin/health-check.sh
-RUN chmod +x /usr/local/bin/health-check.sh
 ADD assets/utils/check-synced.sh /usr/local/bin/check-synced.sh
-RUN chmod +x /usr/local/bin/check-synced.sh
-RUN mkdir -p /usr/local/bin/migrations
-ADD ./scripts/migrations/2_3_1_4_down_temp.sh /usr/local/bin/migrations
-RUN chmod a+x /usr/local/bin/migrations/*
+RUN chmod +x /usr/local/bin/*.sh
 
 # remove to we can manually handle db initalization
 RUN rm -rf /var/lib/mysql/
-
-# USER 1000
-EXPOSE 8080 8999 80
-
-ENTRYPOINT ["/usr/local/bin/docker_entrypoint.sh"]
-# CMD ["nginx", "-g", "daemon off;"]

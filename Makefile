@@ -1,33 +1,35 @@
-EMVER := $(shell yq e ".version" manifest.yaml)
-MEMPOOL_SRC := $(shell find ./mempool)
-MEMPOOL_GIT_REF := $(shell cat .git/modules/mempool/HEAD)
-MEMPOOL_GIT_FILE := $(addprefix .git/modules/mempool/,$(if $(filter ref:%,$(MEMPOOL_GIT_REF)),$(lastword $(MEMPOOL_GIT_REF)),HEAD))
-S9PK_PATH=$(shell find . -name mempool.s9pk -print)
+PKG_ID := $(shell yq e ".id" manifest.yaml)
+PKG_VERSION := $(shell yq e ".version" manifest.yaml)
+TS_FILES := $(shell find ./ -name \*.ts)
 
+# delete the target of a rule if it has changed and its recipe exits with a nonzero exit status
 .DELETE_ON_ERROR:
 
 all: verify
 
-verify:  mempool.s9pk $(S9PK_PATH)
-	embassy-sdk verify s9pk $(S9PK_PATH)
+verify: $(PKG_ID).s9pk
+	embassy-sdk verify s9pk $(PKG_ID).s9pk
 
-install: mempool.s9pk
-	embassy-cli package install mempool.s9pk
-
-mempool.s9pk: manifest.yaml assets/utils/* image.tar docs/instructions.md scripts/embassy.js 
-	embassy-sdk pack
-
-instructions.md: README.md
-	cp README.md instructions.md
-
-image.tar: Dockerfile docker_entrypoint.sh assets/utils/* $(MEMPOOL_GIT_FILE)
-	DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --tag start9/mempool/main:${EMVER} --platform=linux/arm64/v8 -o type=docker,dest=image.tar -f ./Dockerfile .
+install: $(PKG_ID).s9pk
+	embassy-cli package install $(PKG_ID).s9pk
 
 clean:
-	rm -f mempool.s9pk
+	rm -rf docker-images
 	rm -f image.tar
-	rm scripts/embassy.js
+	rm -f $(PKG_ID).s9pk
+	rm -f scripts/*.js
 
-scripts/embassy.js: scripts/**/*.ts
-	deno cache --reload scripts/embassy.ts
+scripts/embassy.js: $(TS_FILES)
 	deno bundle scripts/embassy.ts scripts/embassy.js
+
+docker-images/x86_64.tar: Dockerfile docker_entrypoint.sh assets/utils/*
+	mkdir -p docker-images
+	docker buildx build --tag start9/$(PKG_ID)/main:$(PKG_VERSION) --platform=linux/amd64 --build-arg PLATFORM=amd64 -o type=docker,dest=docker-images/x86_64.tar .
+
+docker-images/aarch64.tar: Dockerfile docker_entrypoint.sh assets/utils/*
+	mkdir -p docker-images
+	docker buildx build --tag start9/$(PKG_ID)/main:$(PKG_VERSION) --platform=linux/arm64 --build-arg PLATFORM=arm64 -o type=docker,dest=docker-images/aarch64.tar .
+
+$(PKG_ID).s9pk: manifest.yaml instructions.md LICENSE icon.png scripts/embassy.js docker-images/aarch64.tar docker-images/x86_64.tar
+	if ! [ -z "$(ARCH)" ]; then cp docker-images/$(ARCH).tar image.tar; fi
+	embassy-sdk pack

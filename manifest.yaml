@@ -1,7 +1,8 @@
 id: mempool
 title: Mempool
-version: 2.4.0.2
-release-notes: Fix migrations to ensure successful updates to the latest version
+version: 2.4.0.3
+release-notes: | 
+  * Updated Mempool to run x86_64 architecture
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
@@ -15,27 +16,19 @@ description:
 assets:
   license: LICENSE
   icon: icon.png
-  instructions: docs/instructions.md
-  docker-images: image.tar
+  instructions: instructions.md
+containers:
+  main:
+    image: main
+    mounts:
+      main: /root
 main:
-  type: docker
-  image: main
-  entrypoint: "docker_entrypoint.sh"
-  args: []
-  mounts:
-    main: /root
+  type: script
 health-checks:
   web-ui:
     name: Web Interface
     success-message: The Mempool UI is ready to visit in a web browser
-    type: docker
-    image: main
-    system: false
-    entrypoint: health-check.sh
-    args: ["web"]
-    mounts: {}
-    io-format: json
-    inject: true
+    type: script
   api:
     name: API
     success-message: The Mempool API is reachable and responsive.
@@ -46,7 +39,6 @@ health-checks:
     args: ["api"]
     mounts: {}
     io-format: json
-    inject: true
   synced:
     name: Transaction Indexer
     success-message: Bitcoin is fully indexed. You may now launch Mempool.
@@ -57,7 +49,6 @@ health-checks:
     args: ["sync"]
     mounts: {}
     io-format: json
-    inject: true
 config:
   get:
     type: script
@@ -78,7 +69,7 @@ dependencies:
       auto-configure:
         type: script
   btc-rpc-proxy:
-    version: ">=0.3.2.1 <0.4.0"
+    version: ">=0.3.2.5 <0.4.0"
     requirement:
       type: "opt-in"
       how: Can alternatively configure proxy or bitcoin core  node.
@@ -149,23 +140,6 @@ migrations:
   from:
     "*":
       type: script
-  # @TODO the reason this migration is here and not in scripts is due to this possible OS bug: https://github.com/Start9Labs/embassy-os/pull/1663. When an eOS version is released with this fix, adjust this migration to type:script, uncomment the downgrade code in  scripts/migrations.ts, delete scripts/migrations/2_3_1_4_down_temp.sh and remove it from the Dockerfile.
   to:
-    "<2.3.1.4":
-      type: docker
-      image: main
-      entrypoint: /usr/local/bin/migrations/2_3_1_4_down_temp.sh
-      args: []
-      io-format: json
-      mounts:
-        main: /root
-      inject: false
-    ">=2.3.1.4":
-      type: docker
-      image: main
-      entrypoint: sh
-      args: ["-c", 'json=''{"configured": true }'' && echo "$json"']
-      io-format: json
-      mounts:
-        main: /root
-      inject: false
+    "*":
+      type: script
