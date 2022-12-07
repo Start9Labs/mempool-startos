@@ -2,6 +2,8 @@
 
 set -e
 
+sleep 15
+
 b_type=$(yq e '.bitcoind.type' /root/start9/config.yaml)
 if [ "$b_type" = "internal" ]; then
     b_host="bitcoind.embassy"

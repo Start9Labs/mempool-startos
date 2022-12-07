@@ -10,12 +10,11 @@ export const migration: T.ExpectedExports.migration = async (effects, version) =
     return result
   }
 
-  // @TODO uncomment below and change to migration in manifest to type: script when eOS bugfix is released to production: https://github.com/Start9Labs/embassy-os/pull/1663
   // to migrations (downgrades)
-  // if (rangeOf('>2.3.1.4').check(version)) {
-  //   const result = await migration_down_2_3_1_4(effects, version)
-  //   return result
-  // }
+  if (rangeOf('>2.3.1.4').check(version)) {
+    const result = await migration_down_2_3_1_4(effects, version)
+    return result
+  }
 
   return { result: { configured: true } }
 
