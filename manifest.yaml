@@ -1,6 +1,6 @@
 id: mempool
 title: Mempool
-version: 2.4.0.4
+version: 2.4.0.3
 release-notes: | 
   * Updated Mempool to run x86_64 architecture
 license: AGPL
