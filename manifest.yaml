@@ -1,8 +1,8 @@
 id: mempool
 title: Mempool
-version: 2.4.0.3
+version: 2.4.0.4
 release-notes: | 
-  * Updated Mempool to run x86_64 architecture
+  * Added support for Fulcrum
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
@@ -84,8 +84,14 @@ dependencies:
   electrs:
     version: ">=0.9.6 <0.10.0"
     requirement:
-      type: "opt-out"
-      how: Set Enable Electrs to Disabled in the config
+      type: "opt-in"
+      how: Set Address Lookups to Disabled in the config
+    description: Used to provide an index for address lookups
+  fulcrum:
+    version: ">=1.9.0 <2.0.0"
+    requirement:
+      type: "opt-in"
+      how: Set Address Lookups to Disabled in the config
     description: Used to provide an index for address lookups
 volumes: 
   main:

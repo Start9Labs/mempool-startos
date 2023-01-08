@@ -9,11 +9,11 @@ This implementation of Mempool on Embassy enables you to connect to your own Bit
 
 ## Address Lookups
 
-To enable address lookups, toggle on the "Enable Electrs Address Lookups" option in the configuration menu.
+To enable address lookups, select either electrs or fulcrum from the "Enable Address Lookups" drop-down list in the configuration menu.
 
-You will need electrs to be installed and synced before this feature will work. Also, lookups may be slow or time out altogether while the service is still warming up, or if there are too many other things running on your system.
+You will need electrs or fulcrum to be installed and synced before this feature will work. Also, lookups may be slow or time out altogether while the service is still warming up, or if there are too many other things running on your system.
 
-**ATTENTION: Address lookups are an alpha feature. If electrs' health check is failing consistently even after it's fully synced, or if address lookups in mempool are timing out consistently, try restarting electrs, wait for it to finish syncing, and then try looking up an address again.**
+**ATTENTION: Address lookups on electrs are an alpha feature. If electrs' health check is failing consistently even after it's fully synced, or if address lookups in mempool are timing out consistently, try restarting electrs, wait for it to finish syncing, and then try looking up an address again.**
 
 ## Support
 

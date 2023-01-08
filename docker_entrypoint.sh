@@ -41,13 +41,20 @@ fi
 sed -i "s/CORE_RPC_HOST:=127.0.0.1/CORE_RPC_HOST:=$bitcoind_host/" start.sh
 sed -i "s/CORE_RPC_USERNAME:=mempool/CORE_RPC_USERNAME:=$bitcoind_user/" start.sh
 sed -i "s/CORE_RPC_PASSWORD:=mempool/CORE_RPC_PASSWORD:=$bitcoind_pass/" start.sh
-if [ "$(yq e ".enable-electrs" /root/start9/config.yaml)" = "true" ]; then
+
+if [ "$(yq e ".address-lookups" /root/start9/config.yaml)" = "electrs" ]; then
 	sed -i 's/ELECTRUM_HOST:=127.0.0.1/ELECTRUM_HOST:=electrs.embassy/' start.sh
 	sed -i 's/ELECTRUM_PORT:=50002/ELECTRUM_PORT:=50001/' start.sh
+	echo 'Starting with electrs address lookups...'
+elif [ "$(yq e ".address-lookups" /root/start9/config.yaml)" = "fulcrum" ]; then
+	sed -i 's/ELECTRUM_HOST:=127.0.0.1/ELECTRUM_HOST:=fulcrum.embassy/' start.sh
+	sed -i 's/ELECTRUM_PORT:=50002/ELECTRUM_PORT:=50001/' start.sh
+	echo 'starting with fulcrum address lookups...'
 else
 	# configure mempool to use just a bitcoind backend
 	sed -i '/^node \/backend\/dist\/index.js/i jq \x27.MEMPOOL.BACKEND="none"\x27 \/backend\/mempool-config.json > \/backend\/mempool-config.json.tmp && mv \/backend\/mempool-config.json.tmp \/backend\/mempool-config.json' start.sh
 	sed -i 's/MEMPOOL_BACKEND:=electrum/MEMPOOL_BACKEND:=none/' start.sh
+	echo 'starting with address lookups disabled...'
 fi
 # DATABASE SETUP
 
