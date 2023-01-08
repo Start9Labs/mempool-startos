@@ -25,7 +25,7 @@ export const getConfig: T.ExpectedExports.getConfig = compat.getConfig({
       "description":
         "The Bitcoin Core node to connect to",
     },
-    "default": "internal-proxy",
+    "default": "internal",
     "variants": {
       "internal": {
         "user": {
@@ -53,7 +53,7 @@ export const getConfig: T.ExpectedExports.getConfig = compat.getConfig({
         "user": {
           "type": "pointer",
           "name": "RPC Username",
-          "description": "The username for the RPC user allocated to electrs",
+          "description": "The username for the RPC user allocated to mempool",
           "subtype": "package",
           "package-id": "btc-rpc-proxy",
           "target": "config",
@@ -63,7 +63,7 @@ export const getConfig: T.ExpectedExports.getConfig = compat.getConfig({
         "password": {
           "type": "pointer",
           "name": "RPC Password",
-          "description": "The password for the RPC user allocated to electrs",
+          "description": "The password for the RPC user allocated to mempool",
           "subtype": "package",
           "package-id": "btc-rpc-proxy",
           "target": "config",
@@ -83,10 +83,17 @@ export const getConfig: T.ExpectedExports.getConfig = compat.getConfig({
       },
     },
   },
-  "enable-electrs": {
-    "name": "Enable Electrs Address Lookups",
-    "description": "Enables address lookups via an internal electrs instance",
-    "type": "boolean",
-    "default": true,
-  },
+  "address-lookups": {
+    "type": "enum",
+    "name": "Enable Address Lookups",
+    "description": "Enable Electrs or Fulcrum Address Lookups on Mempool",
+    "values": ["disabled", "electrs", "fulcrum"],
+    "value-names": {
+      "disabled": "Disabled",
+      "electrs": "Electrs",
+      "fulcrum": "Fulcrum"
+    },
+    "default": "disabled"
+  }
+
 });

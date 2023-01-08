@@ -1,6 +1,5 @@
 image.tar
 *.s9pk
-tri-push.sh
 .vscode/
 scripts/embassy.js
 docker-images/
