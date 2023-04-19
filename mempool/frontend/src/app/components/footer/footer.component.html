@@ -1,0 +1,34 @@
+<footer class="footer">
+  <div class="container-xl">
+    <div class="row text-center" *ngIf="mempoolInfoData$ | async as mempoolInfoData">
+      <div class="col d-none d-sm-block">
+        <span class="txPerSecond" i18n="dashboard.incoming-transactions">Incoming transactions</span>&nbsp;
+        <ng-template [ngIf]="(isLoadingWebSocket$ | async) === false && mempoolInfoData" [ngIfElse]="loadingTransactions">
+          <span *ngIf="(mempoolLoadingStatus$ | async) !== 100; else inSync">
+            &nbsp;<span class="badge badge-pill badge-warning"><ng-container i18n="dashboard.backend-is-synchronizing">Backend is synchronizing</ng-container> ({{ mempoolLoadingStatus$ | async }}%)</span>
+          </span>
+          <ng-template #inSync>
+            <div class="progress inc-tx-progress-bar">
+              <div class="progress-bar" role="progressbar" [ngStyle]="{'width': mempoolInfoData.progressWidth, 'background-color': mempoolInfoData.progressColor}">&nbsp;</div>
+              <div class="progress-text">&lrm;{{ mempoolInfoData.vBytesPerSecond | ceil | number }} <ng-container i18n="shared.vbytes-per-second|vB/s">vB/s</ng-container></div>
+            </div>
+          </ng-template>
+        </ng-template>  
+      </div>
+      <div class="col">
+        <span class="unconfirmedTx"><ng-container i18n="dashboard.unconfirmed|Unconfirmed count">Unconfirmed</ng-container>:</span>
+        <div class="sub-text">{{ mempoolInfoData.memPoolInfo.size | number }}</div>
+      </div>
+      <div class="col">
+        <span class="mempoolSize"><ng-container i18n="dashboard.mempool-size|Mempool size">Mempool size</ng-container>:</span>
+        <div class="sub-text" *ngIf="(mempoolBlocksData$ | async) as mempoolBlocksData"><span [innerHtml]="mempoolBlocksData.size | bytes"></span> (<ng-container *ngTemplateOutlet="mempoolBlocksData.blocks === 1 ? blocksSingular : blocksPlural; context: {$implicit: mempoolBlocksData.blocks }"></ng-container>)</div>
+        <ng-template #blocksPlural let-i i18n="shared.blocks">{{ i }} <span class="shared-block">blocks</span></ng-template>
+        <ng-template #blocksSingular let-i i18n="shared.block">{{ i }} <span class="shared-block">block</span></ng-template>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<ng-template #loadingTransactions>
+  <div class="skeleton-loader skeleton-loader-transactions"></div>
+</ng-template>

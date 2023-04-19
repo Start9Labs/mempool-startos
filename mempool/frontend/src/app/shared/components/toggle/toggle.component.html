@@ -1,0 +1,8 @@
+<div class="d-flex align-items-center">
+  <span>{{ textLeft }}</span>&nbsp;
+  <label class="switch" style="margin-bottom: 0;">
+    <input type="checkbox" [checked]="checked" (change)="onToggleStatusChanged($event)">
+    <span class="slider round" [class.animate]="animate"></span>
+  </label>
+  &nbsp;<span>{{ textRight }}</span>
+</div>

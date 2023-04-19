@@ -1,0 +1,79 @@
+.preview-wrapper {
+  position: relative;
+  display: block;
+  margin: auto;
+  max-width: 1200px;
+  max-height: 600px;
+  padding-top: 80px;
+
+  header {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    z-index: 100;
+    min-height: 80px;
+    padding: 0rem 3rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background: #11131f;
+    text-align: start;
+    font-size: 1.8em;
+  }
+
+  .header-brand {
+    width: 60%;
+  }
+
+  .network {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  ::ng-deep .preview-header {
+    position: absolute;
+    top: -80px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    padding: 0 220px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 101;
+    line-height: 80px;
+    text-transform: capitalize;
+    font-size: 2.4rem;
+  }
+
+  ::ng-deep .title {
+    font-size: 52px;
+  }
+  ::ng-deep .subtitle {
+    font-size: 28px;
+  }
+
+  ::ng-deep .title, ::ng-deep .subtitle {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin: 0;
+    display: inline-block;
+  }
+
+  ::ng-deep .title-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    margin: 0;
+    width: 0;
+    flex-grow: 1;
+    flex-shrink: 1;
+  }
+}

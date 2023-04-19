@@ -1,0 +1,195 @@
+li.nav-item.active {
+  background-color: #653b9c;
+}
+
+fa-icon {
+  font-size: 1.66em;
+}
+
+.navbar {
+  z-index: 100;
+  min-height: 64px;
+  width: 100%;
+}
+
+li.nav-item {
+  margin: auto 10px;
+  padding-left: 10px;
+  padding-right: 10px;
+  @media (max-width: 992px) {
+    margin: auto 7px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+@media (min-width: 992px) {
+  .navbar {
+    padding: 0rem 2rem;
+  }
+  fa-icon {
+    font-size: 1.2em;
+  }
+  .dropdown-container {
+    margin-right: 16px;
+  }
+  li.nav-item {
+    margin: auto 0px;
+    padding: 10px;
+  }
+}
+
+.navbar-nav {
+  background: #212121;
+  bottom: 0;
+  box-shadow: 0px 0px 15px 0px #000;
+  flex-direction: row;
+  left: 0;
+  justify-content: center;
+  position: fixed;
+  width: 100%;
+  @media (min-width: 992px) {
+    background: transparent;
+    box-shadow: none;
+    position: relative;
+    width: auto;
+  }
+  a {
+    font-size: 0.8em;
+    @media (min-width: 375px) {
+      font-size: 1em;
+    }
+  }
+}
+
+
+.navbar-collapse {
+  flex-basis: auto;
+  justify-content: flex-end;
+}
+
+@media (min-width: 992px) {
+  .navbar-collapse {
+    justify-content: space-between;
+  }
+}
+
+.navbar {
+  .dropdown {
+    .dropdown-toggle {
+      width: 62px;
+    }
+  }
+}
+
+.navbar-brand {
+  position: relative;
+  height: 65px;
+}
+
+.navbar-brand.dual-logos {
+  justify-content: space-between;
+  @media (max-width: 767.98px) {
+    width: 100%;
+  }
+}
+
+nav {
+  box-shadow: 0px 0px 15px 0px #000;
+}
+
+.connection-badge {
+  position: absolute;
+  top: 22px;
+  width: 100%;
+}
+
+.badge {
+  margin: 0 auto;
+  display: table;
+}
+
+.mainnet.active {
+  background-color: #653b9c;
+}
+
+.liquid.active {
+  background-color: #116761;
+}
+
+.liquidtestnet.active {
+  background-color: #494a4a;
+}
+
+.testnet.active {
+  background-color: #1d486f;
+}
+
+.signet.active {
+  background-color: #6f1d5d;
+}
+
+.dropdown-divider {
+  border-top: 1px solid #121420;
+}
+
+.dropdown-toggle::after {
+  vertical-align: 0.1em;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+}
+
+@media (min-width: 992px) {
+  .search-form-container {
+    width: 100%;
+    max-width: 500px;
+    padding-left: 15px;
+  }
+}
+.navbar-dark .navbar-nav .nav-link {
+  color: #f1f1f1;
+}
+
+.subdomain_logo {
+  max-height: 45px;
+  max-width: 140px;
+  margin: auto;
+  align-self: center;
+}
+
+.subdomain_container {
+  width: 140px;
+  margin-right: 15px;
+  text-align: center;
+  align-self: center;
+}
+
+.logo-holder {
+  display: flex;
+  flex-direction: row;
+}
+
+.navbar-brand {
+  flex-direction: row;
+  display: flex;
+}
+
+.mempool-logo, app-svg-images {
+  align-self: center;
+  width: 140px;
+  height: 35px;
+}
+
+.beta {
+  display: inline;
+  position: absolute;
+  margin: 24px 0px 0px -15px;
+  font-size: 8px;
+  @media (max-width: 767.98px) {
+    margin: 33px 0px 0px -19px;
+    font-size: 7px;
+  }
+}

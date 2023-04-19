@@ -15,7 +15,6 @@ install: $(PKG_ID).s9pk
 
 clean:
 	rm -rf docker-images
-	rm -f image.tar
 	rm -f $(PKG_ID).s9pk
 	rm -f scripts/*.js
 

@@ -1,0 +1,13 @@
+.td-name {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.title-asset {
+  h1 {
+    line-height: 1;
+    margin: 0px;
+    padding-bottom: 10px;
+  }
+}

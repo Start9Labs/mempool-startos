@@ -1,0 +1,37 @@
+<div *ngIf="group$ | async as group; else loading;">
+  
+  <ng-container *ngTemplateOutlet="title; context: group.group"></ng-container>
+
+  <ng-template #title>
+    <div class="main-title">
+      <h2>{{ group.name }}</h2>
+      <div class="sub-title" i18n>Group of {{ group.assets.length | number }} assets</div>
+    </div>
+  </ng-template>
+
+  <div class="clearfix"></div>
+
+  <br>
+
+  <div class="featuredBox">
+    <div *ngFor="let asset of group.assets">
+      <div class="card">
+        <a [routerLink]="['/assets/asset' | relativeUrl, asset.asset_id]">
+          <img class="assetIcon" [src]="'/api/v1/asset/' + asset.asset_id + '/icon'">
+        </a>
+        <div class="title">
+          <a [routerLink]="['/assets/asset/' | relativeUrl, asset.asset_id]">{{ asset.name }}</a>
+        </div>
+        <div class="ticker">{{ asset.ticker }}</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<ng-template #loading>
+  <br>
+  <div class="text-center loadingGraphs">
+    <div class="spinner-border text-light"></div>
+  </div>
+</ng-template>

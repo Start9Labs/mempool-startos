@@ -1,0 +1,172 @@
+.container-graph {
+  padding: 0px 15px 60px;
+}
+
+.card-header {
+  border-bottom: 0;
+  font-size: 18px;
+  @media (min-width: 465px) {
+    font-size: 20px;
+  }
+}
+
+.card {
+  background-color: transparent;
+  border: 0;
+}
+
+.bootstrap-spinner {
+  width: 22px;
+  height: 22px;
+  margin-left: 10px;
+  position: absolute;
+  top: 17px;
+  right: 25px;
+  @media (min-width: 830px) {
+    position: relative;
+    top: 0px;
+    right: 0px;
+  }
+}
+
+.card-body {
+  @media (max-width: 767.98px) {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+.formRadioGroup {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  @media (min-width: 830px) {
+    flex-direction: row;
+    float: right;
+    margin-top: 0px;
+  }
+  .btn-sm {
+    font-size: 9px;
+    @media (min-width: 830px) {
+      font-size: 14px;
+    }
+  }
+}
+.formRadioGroup.mining {
+  @media (min-width: 991px) {
+    position: relative;
+    top: -100px;
+  }
+  @media (min-width: 830px) and (max-width: 991px) {
+    position: relative;
+    top: 0px;
+  }
+}
+.formRadioGroup.no-menu {
+  @media (min-width: 991px) {
+    position: relative;
+    top: -33px;
+  }
+}
+
+.loading{
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  height: 80vh;
+  justify-content: center;
+}
+
+.incoming-transactions-graph {
+  height: 600px;
+}
+
+
+.dropdown-fees {
+  padding: 10px 0px;
+  min-width: 130px;
+  padding: 2px ​20px 0px;
+  left: -38px !important;
+  position: absolute !important;
+
+  ul {
+    list-style: none;
+    padding: 0px;
+    margin-bottom: 0px;
+  }
+  li {
+    width: 100%;
+    font-size: 14px;
+    padding: 0px 0px;
+    padding-left: 20px;
+    transition: 200ms all ease-in-out;
+    &:hover {
+      background-color: #10121e;
+      cursor: pointer;
+    }
+  }
+  .square {
+    transition: 200ms all ease-in-out;
+    height: 12px;
+    width: 12px;
+    margin-right: 10px;
+    border-radius: 1px;
+    display: inline-block;
+    position: relative;
+    top: 1px;
+  }
+  .inactive {
+    .square {
+      background-color: #ffffff66 !important;
+    }
+    .fee-text {
+      text-decoration: line-through;
+      color: #777;
+    }
+  }
+}
+
+.btn-group-toggle {
+  display: inline-flex;
+  @media (min-width: 830px) {
+    display: block;
+  }
+}
+
+.small-buttons {
+  width: 100%;
+  display: flex;
+  font-size: 14px;
+  margin: 7px 0px;
+  justify-content: space-between;
+  flex-direction: row-reverse;
+
+  @media (min-width: 830px) {
+    margin: 2px 0px;
+    width: auto;
+    flex-direction: row;
+  }
+  @media (min-width: 830px) {
+    margin: 0px 0px;
+  }
+  .btn {
+    width: 49.25%;
+    @media (min-width: 830px) {
+      width: auto;
+    }
+  }
+  .dropdown {
+    width: 49.25%;
+    display: flex;
+    @media (min-width: 830px) {
+      width: auto;
+      margin: 0px 5px;
+    }
+  }
+  #dropdownFees {
+    width: 100%;
+    @media (min-width: 830px) {
+      width: auto;
+    }
+  }
+}

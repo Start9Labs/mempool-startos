@@ -2,7 +2,7 @@
 FROM mempool/frontend:latest AS frontend
 FROM mempool/backend:latest AS backend
 FROM mariadb:10.5.8 AS db
-FROM node:16.16.0-buster-slim AS builder
+FROM node:16.16.0-buster-slim AS runner
 
 USER root
 # arm64 or amd64
@@ -11,12 +11,13 @@ ARG PLATFORM
 ARG ARCH
 # Install necessary packages
 RUN apt-get update && \
-    apt-get install -y nginx wait-for-it wget curl pwgen \
+    apt-get install -y nginx wait-for-it wget curl netcat \
     build-essential python3 pkg-config rsync gettext \
+    mariadb-server mariadb-client libaio1 iproute2 pwgen \
     && wget https://github.com/mikefarah/yq/releases/download/v4.6.3/yq_linux_${PLATFORM}.tar.gz -O - |\
       tar xz && mv yq_linux_${PLATFORM} /usr/bin/yq \
     && apt-get clean
-RUN groupadd -r mysql && useradd -r -g mysql mysql
+# RUN groupadd -r mysql && useradd -r -g mysql mysql
 
 WORKDIR /patch
 
@@ -34,23 +35,11 @@ COPY --from=backend /backend/package ./package/
 COPY --from=backend /backend/GeoIP ./GeoIP/
 COPY --from=backend /backend/mempool-config.json /backend/start.sh /backend/wait-for-it.sh ./
 
-# Copy database files
-COPY --from=db /var/lib/mysql /build/db
-COPY --from=db /usr/bin/mysql_install_db /usr/bin/mysql_install_db
-COPY --from=db /usr/share/mysql /usr/share/mysql
-COPY --from=db /usr/bin/my_print_defaults /usr/bin/my_print_defaults
-
-# Copy MySQL server binary and libraries
-COPY --from=db /usr/sbin/mysqld /usr/sbin/mysqld
-COPY --from=db /usr/lib/mysql /usr/lib/mysql
-
-
-
 # Create data folder for cache and MySQL data
-RUN mkdir -p /build/data/cache /build/mysql/data
+RUN mkdir -p /build/data/cache /var/lib/mysql/data
 
 # Set user and group for the folders
-RUN chown -R 1000:1000 /build/data /build/mysql/data
+RUN chown -R mysql:mysql /build/data /var/lib/mysql/data
 
 # BUILD S9 CUSTOM
 ADD ./docker_entrypoint.sh /usr/local/bin/docker_entrypoint.sh

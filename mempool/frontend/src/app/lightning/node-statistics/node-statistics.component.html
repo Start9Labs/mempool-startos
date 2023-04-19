@@ -1,0 +1,67 @@
+<div class="fee-estimation-wrapper" *ngIf="statistics$ | async as statistics; else loadingReward">
+  <div class="fee-estimation-container">
+    <div class="item" [class]="!statistics.previous ? 'more-padding' : ''">
+      <h5 class="card-title" i18n="lightning.capacity">Capacity</h5>
+      <div class="card-text" i18n-ngbTooltip="mining.percentage-change-last-week" ngbTooltip="Percentage change past week"
+        [disableTooltip]="!statistics.previous" placement="bottom">
+        <div class="fee-text" [class]="!statistics.previous ? 'no-border' : ''">
+          <app-amount [satoshis]="statistics.latest?.total_capacity" digitsInfo="1.2-2" [noFiat]="true"></app-amount>
+        </div>
+        <span class="fiat" *ngIf="statistics.previous">
+          <app-fiat [value]="statistics.latest?.total_capacity" digitsInfo="1.0-0" ></app-fiat>
+        </span>
+      </div>
+    </div>
+    <div class="item" [class]="!statistics.previous ? 'more-padding' : ''">
+      <h5 class="card-title" i18n="lightning.nodes">Nodes</h5>
+      <div class="card-text" i18n-ngbTooltip="mining.percentage-change-last-week" ngbTooltip="Percentage change past week"
+      [disableTooltip]="!statistics.previous">
+        <div class="fee-text" [class]="!statistics.previous ? 'no-border' : ''">
+          {{ statistics.latest?.node_count || 0 | number }}
+        </div>
+        <span class="fiat" *ngIf="statistics.previous">
+          <app-change [current]="statistics.latest?.node_count" [previous]="statistics.previous?.node_count"></app-change>
+        </span>
+      </div>
+    </div>
+    <div class="item" [class]="!statistics.previous ? 'more-padding' : ''">
+      <h5 class="card-title" i18n="lightning.channels">Channels</h5>
+      <div class="card-text" i18n-ngbTooltip="mining.percentage-change-last-week" ngbTooltip="Percentage change past week"
+      [disableTooltip]="!statistics.previous">
+        <div class="fee-text" [class]="!statistics.previous ? 'no-border' : ''">
+          {{ statistics.latest?.channel_count || 0 | number }}
+        </div>
+        <span class="fiat" *ngIf="statistics.previous">
+          <app-change [current]="statistics.latest?.channel_count" [previous]="statistics.previous?.channel_count">
+          </app-change>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #loadingReward>
+  <div class="fee-estimation-container loading-container">
+    <div class="item">
+      <h5 class="card-title" i18n="lightning.capacity">Capacity</h5>
+      <div class="card-text">
+        <div class="skeleton-loader"></div>
+        <div class="skeleton-loader"></div>
+      </div>
+    </div>
+    <div class="item">
+      <h5 class="card-title" i18n="lightning.nodes">Nodes</h5>
+      <div class="card-text">
+        <div class="skeleton-loader"></div>
+        <div class="skeleton-loader"></div>
+      </div>
+    </div>
+    <div class="item">
+      <h5 class="card-title" i18n="lightning.channels">Channels</h5>
+      <div class="card-text">
+        <div class="skeleton-loader"></div>
+        <div class="skeleton-loader"></div>
+      </div>
+    </div>
+  </div>
+</ng-template>

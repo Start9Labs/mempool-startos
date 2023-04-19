@@ -1,0 +1,356 @@
+<div class="container-xl" *ngIf="(node$ | async) as node; else skeletonLoader">
+
+  <ng-container *ngIf="!error">
+    <h5 class="mb-0" style="color: #ffffff66" i18n="lightning.node">Lightning node</h5>
+    <div class="title-container mb-2">
+      <h1 class="mb-0 text-truncate">{{ node.alias }}</h1>
+      <span class="tx-link">
+        <span class="node-id">
+          <app-truncate [text]="node.public_key" [lastChars]="8" [link]="['/lightning/node' | relativeUrl, node.public_key]">
+            <app-clipboard [text]="node.public_key"></app-clipboard>
+          </app-truncate>
+        </span>
+      </span>
+    </div>
+  </ng-container>
+
+  <div class="clearfix"></div>
+
+  <div *ngIf="error" class="d-flex flex-column justify-content-around align-items-center mt-5 w-100" style="min-height: 100px">
+    <span class="text-center">No node found for public key "{{ node.public_key | shortenString : 12}}"</span>
+  </div>
+
+  <div class="box" *ngIf="!error">
+
+    <div class="row">
+      <div class="col-md">
+        <table class="table table-borderless table-striped table-fixed">
+          <tbody>
+            <tr>
+              <td i18n="lightning.active-capacity" class="text-truncate label">Active capacity</td>
+              <td>
+                <app-sats [satoshis]="node.capacity"></app-sats>
+                <app-fiat [value]="node.capacity" digitsInfo="1.0-0"></app-fiat>
+              </td>
+            </tr>
+            <tr>
+              <td i18n="lightning.active-channels" class="text-truncate label">Active channels</td>
+              <td>
+                {{ node.active_channel_count }}
+              </td>
+            </tr>
+            <tr>
+              <td i18n="lightning.active-channels-avg" class="text-wrap label">Average channel size</td>
+              <td>
+                <app-sats [satoshis]="node.avgCapacity"></app-sats>
+                <app-fiat [value]="node.avgCapacity" digitsInfo="1.0-0"></app-fiat>
+              </td>
+            </tr>
+            <tr>
+              <td i18n="lightning.location" class="text-truncate">Location</td>
+              <td *ngIf="node.geolocation">
+                <app-geolocation [data]="node.geolocation" [type]="'node'"></app-geolocation>
+              </td>
+              <td *ngIf="!node.geolocation">
+                <span i18n="unknown">Unknown</span>
+              </td>
+            </tr>
+            <tr *ngIf="(avgChannelDistance$ | async) as avgDistance;">
+              <td i18n="lightning.avg-distance" class="text-truncate">Avg channel distance</td>
+              <td class="direction-ltr">{{ avgDistance | amountShortener: 1 }} <span class="symbol">km</span> <span class="separator">·</span>{{ kmToMiles(avgDistance) | amountShortener: 1 }} <span class="symbol">mi</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="w-100 d-block d-md-none"></div>
+      <div class="col-md">
+        <table class="table table-borderless table-striped table-fixed">
+          <tbody>
+            <tr>
+              <td i18n="transaction.first-seen|Transaction first seen" class="text-truncate label">First seen</td>
+              <td>
+                <app-timestamp [unixTime]="node.first_seen"></app-timestamp>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-truncate label" i18n="lightning.last_update">Last update</td>
+              <td>
+                <app-timestamp [unixTime]="node.updated_at"></app-timestamp>
+              </td>
+            </tr>
+            <tr>
+              <td i18n="lightning.color" class="text-truncate label">Color</td>
+              <td>
+                <div [ngStyle]="{'color': node.color}">{{ node.color }}</div>
+              </td>
+            </tr>
+            <tr>
+              <td i18n="isp" class="text-truncate label">ISP</td>
+              <td *ngIf="node.as_number else unknownAS">
+                <a class="d-block text-wrap" [routerLink]="['/lightning/nodes/isp' | relativeUrl, node.as_number]">
+                  {{ node.as_organization }} [ASN {{node.as_number}}]
+                </a>                
+              </td>
+              <ng-template #unknownAS>
+                <td *ngIf="clearnetSocketCount === 0 && torSocketCount > 0">
+                  <span class="badge badge-success" placement="bottom" i18n="tor">Exclusively on Tor</span>
+                </td>
+                <td *ngIf="node.sockets.length === 0">
+                  <span i18n="unknown">Unknown</span>
+                </td>
+              </ng-template>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="input-group mt-3" *ngIf="!error && node.socketsObject.length">
+    <div class="d-inline-block" ngbDropdown #myDrop="ngbDropdown"
+      *ngIf="node.socketsObject.length > 1; else noDropdown">
+      <button class="btn btn-secondary dropdown-toggle" type="button" aria-expanded="false" ngbDropdownAnchor
+        (focus)="myDrop.open()">
+        <div class="dropdownLabel">{{ node.socketsObject[selectedSocketIndex].label }}</div>
+      </button>
+      <div ngbDropdownMenu aria-labelledby="dropdownManual">
+        <button *ngFor="let socket of node.socketsObject; let i = index;" ngbDropdownItem (click)="changeSocket(i)">{{
+          socket.label }}</button>
+      </div>
+    </div>
+    <ng-template #noDropdown>
+      <span class="input-group-text" id="basic-addon3">{{ node.socketsObject[selectedSocketIndex].label }}</span>
+    </ng-template>
+    <input type="text" class="form-control" aria-label="Text input with dropdown button"
+      [value]="node.socketsObject[selectedSocketIndex].socket">
+    <button class="btn btn-secondary ml-1" type="button" id="inputGroupFileAddon04" (mouseover)="qrCodeVisible = true"
+      (mouseout)="qrCodeVisible = false">
+      <fa-icon [icon]="['fas', 'qrcode']" [fixedWidth]="true"></fa-icon>
+      <div class="qr-wrapper" [hidden]="!qrCodeVisible">
+        <app-qrcode [size]="200" [data]="node.socketsObject[selectedSocketIndex].socket"></app-qrcode>
+      </div>
+    </button>
+    <app-clipboard [button]="true" [text]="node.socketsObject[selectedSocketIndex].socket" [leftPadding]="false"></app-clipboard>
+  </div>
+
+  <div *ngIf="hasDetails" [hidden]="!showDetails" id="details" class="details mt-3">
+    <div class="box">
+      <ng-template [ngIf]="liquidityAd">
+        <div class="detail-section">
+          <h5 class="mb-3" i18n="node.liquidity-ad">Liquidity ad</h5>
+          <div class="row">
+            <div class="col-md">
+              <table class="table table-borderless table-striped">
+                <tbody>
+                  <tr>
+                    <td class="label" i18n="liquidity-ad.lease-fee-rate|Liquidity ad lease fee rate">Lease fee rate</td>
+                    <td>
+                      <span class="d-inline-block">
+                        {{ liquidityAd.lease_fee_basis !== null ? ((liquidityAd.lease_fee_basis * 1000) | amountShortener : 2 : undefined : true) : '-' }} <span class="symbol">ppm {{ liquidityAd.lease_fee_basis !== null ? '(' + (liquidityAd.lease_fee_basis / 10 | amountShortener : 2 : undefined : true) + '%)' : '' }}</span>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="label" i18n="liquidity-ad.lease-base-fee">Lease base fee</td>
+                    <td>
+                      <app-sats [valueOverride]="liquidityAd.lease_fee_base_sat === null ? '- ' : undefined" [satoshis]="liquidityAd.lease_fee_base_sat"></app-sats>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="label" i18n="liquidity-ad.funding-weight">Funding weight</td>
+                    <td [innerHTML]="'&lrm;' + (liquidityAd.funding_weight | wuBytes: 2)"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="col-md">
+              <table class="table table-borderless table-striped">
+                <tbody>
+                  <tr>
+                    <td class="label" i18n="liquidity-ad.channel-fee-rate|Liquidity ad channel fee rate">Channel fee rate</td>
+                    <td>
+                      <span class="d-inline-block">
+                        {{ liquidityAd.channel_fee_max_rate !== null ? ((liquidityAd.channel_fee_max_rate * 1000) | amountShortener : 2 : undefined : true) : '-' }} <span class="symbol">ppm {{ liquidityAd.channel_fee_max_rate !== null ? '(' + (liquidityAd.channel_fee_max_rate / 10 | amountShortener : 2 : undefined : true) + '%)' : '' }}</span>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="label" i18n="liquidity-ad.channel-base-fee">Channel base fee</td>
+                    <td>
+                      <span *ngIf="liquidityAd.channel_fee_max_base !== null">
+                        {{ liquidityAd.channel_fee_max_base | amountShortener : 0 }}
+                        <span class="symbol" i18n="shared.m-sats">mSats</span>
+                      </span>
+                      <span *ngIf="liquidityAd.channel_fee_max_base === null">
+                        -
+                      </span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="label" i18n="liquidity-ad.compact-lease">Compact lease</td>
+                    <td class="compact-lease">{{ liquidityAd.compact_lease }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+      <ng-template [ngIf]="tlvRecords?.length">
+        <div class="detail-section">
+          <h5 class="mb-3" i18n="node.tlv.records">TLV extension records</h5>
+          <div class="row">
+            <div class="col">
+              <table class="table table-borderless table-striped">
+                <tbody>
+                  <tr *ngFor="let recordItem of tlvRecords">
+                    <td class="tlv-type">{{ recordItem.type }}</td>
+                    <td class="tlv-payload">{{ recordItem.payload }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+
+  <div *ngIf="hasDetails" class="text-right mt-3">
+    <button type="button" class="btn btn-outline-info btn-sm btn-details" (click)="toggleShowDetails()" i18n="transaction.details|Transaction Details">Details</button>
+  </div>
+
+  <div *ngIf="!error">
+    <div class="row" *ngIf="node.as_number && node.active_channel_count">
+      <div class="col-sm">
+        <app-nodes-channels-map [style]="'nodepage'" [publicKey]="node.public_key" [hasLocation]="!!node.as_number"></app-nodes-channels-map>
+      </div>
+      <div class="col-sm">
+        <app-node-statistics-chart [publicKey]="node.public_key"></app-node-statistics-chart>
+      </div>
+    </div>
+    <div *ngIf="!node.as_number || !node.active_channel_count">
+      <app-node-statistics-chart [publicKey]="node.public_key"></app-node-statistics-chart>
+    </div>
+
+    <app-node-channels style="display:block;margin-bottom: 40px" [publicKey]="node.public_key"></app-node-channels>
+
+    <app-node-fee-chart style="display:block;margin-bottom: 40px"></app-node-fee-chart>
+
+    <div class="d-flex">
+      <h2 *ngIf="channelsListStatus === 'open'">
+        <span i18n="lightning.open-channels">Open channels</span>
+        <span> ({{ node.opened_channel_count }})</span>
+      </h2>
+      <h2 *ngIf="channelsListStatus === 'closed'">
+        <span i18n="lightning.open-channels">Closed channels</span>
+        <span> ({{ node.closed_channel_count }})</span>
+      </h2>
+      <div *ngIf="channelListLoading" class="spinner-border ml-3" role="status"></div>
+    </div>
+
+    <app-channels-list [publicKey]="node.public_key"
+      (channelsStatusChangedEvent)="onChannelsListStatusChanged($event)"
+      (loadingEvent)="onLoadingEvent($event)"
+    ></app-channels-list>
+  </div>
+    
+</div>
+
+<ng-template #skeletonLoader>
+  <div class="container-xl">
+    <h5 class="mb-0" style="color: #ffffff66" i18n="lightning.node">Lightning node</h5>
+    <div class="title-container mb-2">
+      <h1 class="mb-0"><span class="skeleton-loader" style="width: 250px; height: 36px; margin-top: 5px; margin-bottom: 5px;"></span></h1>
+      <span class="tx-link">
+        <span class="skeleton-loader" style="margin-bottom: 3px; width: 80%;"></span>
+      </span>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <div class="box">
+
+      <div class="row">
+        <div class="col-md">
+          <table class="table table-borderless table-striped">
+            <tbody>
+              <tr>
+                <td><span class="skeleton-loader"></span></td>
+                <td><span class="skeleton-loader"></span></td>
+              </tr>
+              <tr>
+                <td><span class="skeleton-loader"></span></td>
+                <td><span class="skeleton-loader"></span></td>
+              </tr>
+              <tr>
+                <td><span class="skeleton-loader"></span></td>
+                <td><span class="skeleton-loader"></span></td>
+              </tr>
+              <tr>
+                <td><span class="skeleton-loader"></span></td>
+                <td><span class="skeleton-loader"></span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="w-100 d-block d-md-none"></div>
+        <div class="col-md">
+          <table class="table table-borderless table-striped">
+            <tbody>
+              <tr>
+                <td><span class="skeleton-loader"></span></td>
+                <td><span class="skeleton-loader"></span></td>
+              </tr>
+              <tr>
+                <td><span class="skeleton-loader"></span></td>
+                <td><span class="skeleton-loader"></span></td>
+              </tr>
+              <tr>
+                <td><span class="skeleton-loader"></span></td>
+                <td><span class="skeleton-loader"></span></td>
+              </tr>
+              <tr>
+                <td><span class="skeleton-loader"></span></td>
+                <td><span class="skeleton-loader"></span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+  
+    </div>
+
+    <div class="input-group mt-3" >
+    <span class="input-group-text" id="basic-addon3"><span class="skeleton-loader" style="width: 75px;"></span></span>
+      <input type="text" class="form-control" disabled style="opacity: 0.3;">
+      <button class="btn btn-secondary ml-1" type="button" id="inputGroupFileAddon04" [disabled]="true">
+        <fa-icon [icon]="['fas', 'qrcode']" [fixedWidth]="true"></fa-icon>
+      </button>
+      <app-clipboard [button]="true" [text]="''"></app-clipboard>
+    </div>
+
+    <br>
+
+    <div class="row">
+      <div class="col-sm">
+        <div style="height: 400px;">
+          <div class="text-center loadingGraphs">
+            <div class="spinner-border text-light"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm">
+        <div style="height: 400px;">
+          <div class="text-center loadingGraphs">
+            <div class="spinner-border text-light"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</ng-template>
+
+<br>

@@ -1,0 +1,97 @@
+.text-small {
+  font-size: 12px;
+}
+
+code {
+  background-color: #1d1f31;
+  font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New;
+}
+
+tr {
+  white-space: inherit;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+li.nav-item {
+  width: 100%;
+  @media (min-width: 676px){
+    width: auto;
+  }
+}
+
+.nav-tabs .nav-link.active {
+  border-bottom: 1px solid #fff;
+  @media (min-width: 676px){
+    border-bottom: 1px solid #11131f;
+  }
+}
+
+.code-tab { 
+  width: auto;
+  margin: 20px auto 10px;
+  li.nav-item {
+    width: auto;
+  }
+
+}
+
+.code {
+  .tab-content {
+    padding: 0px;
+  }
+  .nav-tabs .nav-link.active {
+    border-bottom: 1px solid #11131f;
+  }
+  .subtitle {
+    display: flex;
+    justify-content: space-between;
+  }
+}
+.description {
+  margin-top: 20px;
+}
+.title {
+  font-weight: bold;
+  color: #ffffff;
+  font-size: 1.25rem;
+}
+.subtitle {
+  font-weight: bold;
+}
+.divider {
+  width: 100%;
+  margin: 30px auto;
+  height: 1px;
+  background: #333;
+}
+.websocket {
+  padding: 15px;
+}
+
+.difficulty {
+  padding: 15px;
+}
+
+.links {
+  margin-bottom: 5px;
+  a {
+    font-size: 14px;
+    margin: 0px 10px 0px 0px;
+  }
+}
+
+pre {
+  display: block;
+  font-size: 87.5%;
+  color: #f18920;
+  background-color: #1d1f31;
+  padding: 30px;
+  code{
+    background-color: transparent;
+    white-space: break-spaces;
+    word-break: break-all;
+  }
+}

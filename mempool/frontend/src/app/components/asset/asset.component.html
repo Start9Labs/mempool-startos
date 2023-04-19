@@ -1,0 +1,162 @@
+<div class="container-xl">
+  <div class="title-asset">
+    <h1 i18n="asset|Liquid Asset page title">Asset</h1>
+    <div class="tx-link">
+      <app-truncate [text]="assetString" [lastChars]="8" [link]="['/assets/asset/' | relativeUrl, assetString]">
+        <app-clipboard [text]="assetString"></app-clipboard>
+      </app-truncate>
+    </div>
+  </div>
+
+  <div class="clearfix"></div>
+
+  <ng-template [ngIf]="!isLoadingAsset && !error && assetContract">
+    <div class="box">
+
+      <div class="row">
+        <div class="col">
+          <table class="table table-borderless table-striped">
+            <tbody>
+              <tr>
+                <td i18n="Asset name header">Name</td>
+                <td class="assetName">{{ assetContract[2] }} ({{ assetContract[1] }})</td>
+              </tr>
+              <tr>
+                <td i18n="asset.precision|Liquid Asset precision">Precision</td>
+                <td>{{ assetContract[3] }}</td>
+              </tr>
+              <tr *ngIf="!isNativeAsset && assetContract[0]">
+                <td i18n="asset.issuer|Liquid Asset issuer">Issuer</td>
+                <td><a target="_blank" href="{{ 'http://' + assetContract[0] }}">{{ assetContract[0] }}</a></td>
+              </tr>
+              <tr *ngIf="asset.issuance_txin">
+                <td i18n="asset.issuance-tx|Liquid Asset issuance TX">Issuance TX</td>
+                <td><a [routerLink]="['/tx/' | relativeUrl, asset.issuance_txin.txid]">{{ asset.issuance_txin.txid | shortenString : 13 }}</a> <app-clipboard class="d-none d-sm-inline-block" [text]="asset.issuance_txin.txid"></app-clipboard></td>
+              </tr>
+              <tr *ngIf="isNativeAsset && asset.chain_stats.peg_in_amount">
+                <td i18n="asset.pegged-in|Liquid Asset pegged-in amount">Pegged in</td>
+                <td>{{ formatAmount(asset.chain_stats.peg_in_amount, assetContract[3]) | number: '1.0-' + assetContract[3] }} {{ assetContract[1] }}</td>
+              </tr>
+              <tr *ngIf="isNativeAsset && asset.chain_stats.peg_out_amount">
+                <td i18n="asset.pegged-out|Liquid Asset pegged-out amount">Pegged out</td>
+                <td>{{ formatAmount(asset.chain_stats.peg_out_amount, assetContract[3]) | number: '1.0-' + assetContract[3] }} {{ assetContract[1] }}</td>
+              </tr>
+              <tr *ngIf="asset.chain_stats.issued_amount">
+                <td i18n="asset.issued-amount|Liquid Asset issued amount">Issued amount</td>
+                <td *ngIf="!blindedIssuance; else confidentialTd">{{ formatAmount(asset.chain_stats.issued_amount, assetContract[3]) | number: '1.0-' + assetContract[3] }} {{ assetContract[1] }}</td>
+              </tr>
+              <tr>
+                <td i18n="asset.burned-amount|Liquid Asset burned amount">Burned amount</td>
+                <td *ngIf="!blindedIssuance; else confidentialTd">{{ formatAmount(asset.chain_stats.burned_amount, assetContract[3]) | number: '1.0-' + assetContract[3] }} {{ assetContract[1] }}</td>
+              </tr>
+              <tr *ngIf="asset.chain_stats.issued_amount">
+                <td i18n="asset.circulating-amount|Liquid Asset circulating amount">Circulating amount</td>
+                <td *ngIf="!blindedIssuance; else confidentialTd">{{ formatAmount(asset.chain_stats.issued_amount - asset.chain_stats.burned_amount, assetContract[3]) | number: '1.0-' + assetContract[3] }} {{ assetContract[1] }}</td>
+              </tr>
+              <tr *ngIf="isNativeAsset && asset.chain_stats.peg_in_amount">
+                <td i18n="asset.circulating-amount|Liquid Asset circulating amount">Circulating amount</td>
+                <td>{{ formatAmount(asset.chain_stats.peg_in_amount - asset.chain_stats.burned_amount - asset.chain_stats.peg_out_amount, assetContract[3]) | number: '1.0-' + assetContract[3] }} {{ assetContract[1] }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="w-100 d-block d-md-none"></div>
+        <div class="col icon-holder">
+          <img *ngIf="!imageError; else defaultIcon" class="assetIcon" [src]="'/api/v1/asset/' + asset.asset_id + '/icon'" (error)="imageError = true">
+          <ng-template #defaultIcon>
+            <fa-icon class="defaultIcon" [icon]="['fas', 'database']" [fixedWidth]="true" size="8x"></fa-icon>
+          </ng-template>
+        </div>
+      </div>
+
+    </div>
+
+    <br>
+
+    <div class="title-tx">
+      <h2>
+        <ng-template [ngIf]="transactions?.length" i18n="asset.M_of_N">{{ (transactions?.length | number) || '?' }} of {{ txCount | number }}&nbsp;</ng-template>
+        <ng-template [ngIf]="isNativeAsset && network === 'liquid'" [ngIfElse]="defaultAsset" i18n="Liquid native asset transactions title">Peg In/Out and Burn Transactions</ng-template>
+        <ng-template #defaultAsset i18n="Default asset transactions title">Issuance and Burn Transactions</ng-template>
+      </h2>
+    </div>
+
+    <app-transactions-list [transactions]="transactions" [showConfirmations]="true" (loadMore)="loadMore()"></app-transactions-list>
+
+    <div class="text-center">
+      <ng-template [ngIf]="isLoadingTransactions">
+        <div class="header-bg box" style="padding: 10px; margin-bottom: 10px;">
+          <span class="skeleton-loader"></span>
+        </div>
+
+        <div class="header-bg box">
+          <div class="row" style="height: 107px;">
+            <div class="col-sm">
+              <span class="skeleton-loader"></span>
+            </div>
+            <div class="w-100 d-block d-md-none"></div>
+            <div class="col-sm">
+              <span class="skeleton-loader"></span>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+
+  </ng-template>
+
+  <ng-template [ngIf]="isLoadingAsset && !error">
+
+    <div class="box">
+      <div class="row">
+        <div class="col">
+          <table class="table table-borderless table-striped">
+            <tbody>
+              <tr>
+                <td colspan="2"><span class="skeleton-loader"></span></td>
+              </tr>
+              <tr>
+                <td colspan="2"><span class="skeleton-loader"></span></td>
+              </tr>
+              <tr>
+                <td colspan="2"><span class="skeleton-loader"></span></td>
+              </tr>
+              <tr>
+                <td colspan="2"><span class="skeleton-loader"></span></td>
+              </tr>
+              <tr>
+                <td colspan="2"><span class="skeleton-loader"></span></td>
+              </tr>
+              <tr>
+                <td colspan="2"><span class="skeleton-loader"></span></td>
+              </tr>
+              <tr>
+                <td colspan="2"><span class="skeleton-loader"></span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="w-100 d-block d-md-none"></div>
+        <div class="col icon-holder">
+          <fa-icon class="defaultIcon skeleton" [icon]="['fas', 'database']" [fixedWidth]="true" size="8x"></fa-icon>
+        </div>
+      </div>
+    </div>
+
+  </ng-template>
+
+  <ng-template [ngIf]="error">
+    <div class="text-center">
+      <span i18n="asset.error.loading-asset-data">Error loading asset data.</span>
+      <br>
+      <i>{{ error.error }}</i>
+    </div>
+  </ng-template>
+
+</div>
+
+<br>
+
+<ng-template #confidentialTd>
+  <td i18n="shared.confidential">Confidential</td>
+</ng-template>

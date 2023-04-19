@@ -10,6 +10,7 @@ _term() {
 
 # FRONTEND SETUP
 
+LIGHTNING_DETECTED_PORT=9735
 __MEMPOOL_BACKEND_MAINNET_HTTP_HOST__=${BACKEND_MAINNET_HTTP_HOST:=127.0.0.1}
 __MEMPOOL_BACKEND_MAINNET_HTTP_PORT__=${BACKEND_MAINNET_HTTP_PORT:=8999}
 __MEMPOOL_FRONTEND_HTTP_PORT__=${FRONTEND_HTTP_PORT:=8080}
@@ -61,6 +62,7 @@ if [ "$(yq e ".lightning.type" /root/start9/config.yaml)" = "lnd" ]; then
 	echo "Running on LND..."
 elif [ "$(yq e ".lightning.type" /root/start9/config.yaml)" = "cln" ]; then
 	sed -i 's/LIGHTNING_BACKEND:=\"lnd\"/LIGHTNING_BACKEND:=\"cln\"/' start.sh
+	sed -i 's/CLIGHTNING_SOCKET:=\"\"/CLIGHTNING_SOCKET:=\"lightning-rpc\"/' start.sh
 	echo "Running on Core Lightning..."
 fi
 
@@ -72,8 +74,8 @@ else
 	sed -i '/^node \/backend\/dist\/index.js/i jq \x27.MEMPOOL.BACKEND="none"\x27 \/backend\/mempool-config.json > \/backend\/mempool-config.json.tmp && mv \/backend\/mempool-config.json.tmp \/backend\/mempool-config.json' start.sh
 	sed -i 's/MEMPOOL_BACKEND:=electrum/MEMPOOL_BACKEND:=none/' start.sh
 fi
-# DATABASE SETUP
 
+# DATABASE SETUP
 if [ -d "/run/mysqld" ]; then
 	echo "[i] mysqld already present, skipping creation"
 	chown -R mysql:mysql /run/mysqld
@@ -89,13 +91,11 @@ if [ -d /var/lib/mysql/mysql ]; then
 else
 	echo "[i] MySQL data directory not found, creating initial DBs"
 
-	echo "[i] make directory" 
     mkdir -p /var/lib/mysql
-	echo "[i] chown directory"
 	chown -R mysql:mysql /var/lib/mysql
-	echo "[i] init db"
-	mysql_install_db --user=mysql --ldata=/var/lib/mysql 
-	echo "[i] password set"
+
+	mysql_install_db --user=mysql --ldata=/var/lib/mysql > /dev/null
+
 	if [ "$MYSQL_ROOT_PASSWORD" = "" ]; then
 		MYSQL_ROOT_PASSWORD=`pwgen 16 1`
 		echo "[i] MySQL root Password: $MYSQL_ROOT_PASSWORD"
@@ -105,7 +105,7 @@ else
 	MYSQL_DATABASE=${MYSQL_DATABASE:-"mempool"}
 	MYSQL_USER=${MYSQL_USER:-"mempool"}
 	MYSQL_PASSWORD=${MYSQL_PASSWORD:-"mempool"}
-	echo "[i] Creating user: $MYSQL_USER with password $MYSQL_PASSWORD"
+
 	tfile=`mktemp`
 	if [ ! -f "$tfile" ]; then
 	    return 1
@@ -158,10 +158,10 @@ db_process=$!
 # START UP
 sed -i "s/user nobody;//g" /etc/nginx/nginx.conf
 
-./wait-for db:3306 --timeout=720 -- nginx -g 'daemon off;' &
+nginx -g 'daemon off;' &
 frontend_process=$!
 
-./wait-for-it.sh db:3306 --timeout=720 --strict -- ./start.sh &
+/backend/wait-for-it.sh localhost:3306 --timeout=720 --strict -- ./start.sh &
 backend_process=$!
 
 echo 'All processes initalized'
