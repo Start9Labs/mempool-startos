@@ -89,11 +89,13 @@ if [ -d /var/lib/mysql/mysql ]; then
 else
 	echo "[i] MySQL data directory not found, creating initial DBs"
 
+	echo "[i] make directory" 
     mkdir -p /var/lib/mysql
+	echo "[i] chown directory"
 	chown -R mysql:mysql /var/lib/mysql
-
-	mysql_install_db --user=mysql --ldata=/var/lib/mysql > /dev/null
-
+	echo "[i] init db"
+	mysql_install_db --user=mysql --ldata=/var/lib/mysql 
+	echo "[i] password set"
 	if [ "$MYSQL_ROOT_PASSWORD" = "" ]; then
 		MYSQL_ROOT_PASSWORD=`pwgen 16 1`
 		echo "[i] MySQL root Password: $MYSQL_ROOT_PASSWORD"
@@ -103,7 +105,7 @@ else
 	MYSQL_DATABASE=${MYSQL_DATABASE:-"mempool"}
 	MYSQL_USER=${MYSQL_USER:-"mempool"}
 	MYSQL_PASSWORD=${MYSQL_PASSWORD:-"mempool"}
-
+	echo "[i] Creating user: $MYSQL_USER with password $MYSQL_PASSWORD"
 	tfile=`mktemp`
 	if [ ! -f "$tfile" ]; then
 	    return 1
