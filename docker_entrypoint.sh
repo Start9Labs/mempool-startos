@@ -62,7 +62,7 @@ if [ "$(yq e ".lightning.type" /root/start9/config.yaml)" = "lnd" ]; then
 	echo "Running on LND..."
 elif [ "$(yq e ".lightning.type" /root/start9/config.yaml)" = "cln" ]; then
 	sed -i 's/LIGHTNING_BACKEND:=\"lnd\"/LIGHTNING_BACKEND:=\"cln\"/' start.sh
-	sed -i 's/CLIGHTNING_SOCKET:=\"\"/CLIGHTNING_SOCKET:=\"lightning-rpc\"/' start.sh
+	sed -i 's/CLIGHTNING_SOCKET:=\"\"/CLIGHTNING_SOCKET:=\"\/mnt\/c-lightning\/lightning-rpc\"/' start.sh
 	echo "Running on Core Lightning..."
 fi
 
