@@ -1,8 +1,9 @@
 id: mempool
 title: Mempool
-version: 2.4.0.3
+version: 2.5.0
 release-notes: | 
-  * Updated Mempool to run x86_64 architecture
+  * Update Mempool to v2.5.0 [Release Notes](https://github.com/mempool/mempool/releases/tag/v2.5.0)
+    * Note: After upgrading the blocks database table will be cleared and reindexed
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
@@ -24,6 +25,10 @@ main:
   args: []
   mounts:
     main: /root
+    cache: /backend/cache
+    db: /var/lib/mysql
+    lnd: /mnt/lnd
+    c-lightning: "/mnt/c-lightning"
 health-checks:
   web-ui:
     name: Web Interface
@@ -87,9 +92,39 @@ dependencies:
       type: "opt-out"
       how: Set Enable Electrs to Disabled in the config
     description: Used to provide an index for address lookups
+  lnd:
+    version: ">=0.14.3 <0.17.0"
+    description: Used to communicate with the Lightning Network.
+    requirement:
+      type: "opt-in"
+      how: Use the LND instance by default
+    config: ~
+  c-lightning:
+    version: ">=0.10.1 <24.0.0"
+    description: Used to communicate with the Lightning Network.
+    requirement:
+      type: "opt-in"
+      how: Can opt to use the CLN instance instead of LND
+    config: ~
 volumes: 
   main:
-    type: data 
+    type: data
+  cache:
+    type: data
+  db:
+    type: data
+  lnd:
+    type: pointer
+    package-id: lnd
+    volume-id: main
+    path: "/public"
+    readonly: true
+  c-lightning:
+    type: pointer
+    package-id: c-lightning
+    volume-id: main
+    path: /shared
+    readonly: true
 alerts:
   start: |
     READ CAREFULLY! When first running Mempool, previous block fee estimates will show as zero values until the service is able to catch up. This is expected behaviour.
@@ -123,6 +158,8 @@ backup:
     mounts:
       BACKUP: /mnt/backup
       main: /root/data
+      cache: /backend/cache
+      db: /var/lib/mysql
     io-format: yaml
   restore:
     type: docker
@@ -137,6 +174,8 @@ backup:
     mounts:
       BACKUP: /mnt/backup
       main: /root/data
+      cache: /backend/cache
+      db: /var/lib/mysql
     io-format: yaml
 migrations:
   from:

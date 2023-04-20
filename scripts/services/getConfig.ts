@@ -25,7 +25,7 @@ export const getConfig: T.ExpectedExports.getConfig = compat.getConfig({
       "description":
         "The Bitcoin Core node to connect to",
     },
-    "default": "internal-proxy",
+    "default": "internal",
     "variants": {
       "internal": {
         "user": {
@@ -83,10 +83,33 @@ export const getConfig: T.ExpectedExports.getConfig = compat.getConfig({
       },
     },
   },
+  "lightning": {
+    "type": "union",
+    "name": "Lightning Node",
+    "description":
+      "The Lightning node to connect to",
+    "tag": {
+      "id": "type",
+      "name": "Select Lightning Node",
+      "variant-names": {
+        "none": "Disabled",
+        "lnd": "LND",
+        "cln": "Core Lightning",
+      },
+      "description":
+        "The Lightning node to connect to",
+    },
+    "default": "none",
+    "variants": {
+      "none": {},
+      "lnd": {},
+      "cln": {},
+    }
+  },
   "enable-electrs": {
     "name": "Enable Electrs Address Lookups",
     "description": "Enables address lookups via an internal electrs instance",
     "type": "boolean",
     "default": true,
-  },
+  }
 });
