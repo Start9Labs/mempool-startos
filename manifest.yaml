@@ -25,7 +25,8 @@ main:
   args: []
   mounts:
     main: /root
-    data: /backend/cache
+    cache: /backend/cache
+    db: /var/lib/mysql
     lnd: /mnt/lnd
     c-lightning: "/mnt/c-lightning"
 health-checks:
@@ -108,7 +109,9 @@ dependencies:
 volumes: 
   main:
     type: data
-  data:
+  cache:
+    type: data
+  db:
     type: data
   lnd:
     type: pointer
@@ -155,6 +158,8 @@ backup:
     mounts:
       BACKUP: /mnt/backup
       main: /root/data
+      cache: /backend/cache
+      db: /var/lib/mysql
     io-format: yaml
   restore:
     type: docker
@@ -169,6 +174,8 @@ backup:
     mounts:
       BACKUP: /mnt/backup
       main: /root/data
+      cache: /backend/cache
+      db: /var/lib/mysql
     io-format: yaml
 migrations:
   from:
