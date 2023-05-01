@@ -1,6 +1,6 @@
 id: mempool
 title: Mempool
-version: 2.5.0
+version: 2.5.0.1
 release-notes: | 
   * Update Mempool to v2.5.0 [Release Notes](https://github.com/mempool/mempool/releases/tag/v2.5.0)
     * Note: After upgrading the blocks database table will be cleared and reindexed

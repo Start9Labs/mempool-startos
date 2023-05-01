@@ -87,7 +87,7 @@ export const getConfig: T.ExpectedExports.getConfig = compat.getConfig({
     "type": "union",
     "name": "Lightning Node",
     "description":
-      "The Lightning node to connect to",
+      "The Lightning node you will connect to in order to serve network data to the Lightning tab in Mempool",
     "tag": {
       "id": "type",
       "name": "Select Lightning Node",
@@ -97,7 +97,7 @@ export const getConfig: T.ExpectedExports.getConfig = compat.getConfig({
         "cln": "Core Lightning",
       },
       "description":
-        "The Lightning node to connect to",
+        "The Lightning node you will connect to in order to serve network data to the Lightning tab in Mempool",
     },
     "default": "none",
     "variants": {
