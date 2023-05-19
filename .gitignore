@@ -1,8 +1,6 @@
 *.s9pk
-tri-push.sh
-.vscode/
-scripts/embassy.js
-docker-images/
 procedures/*.js
 node_modules/
 .DS_Store
+.vscode/
+docker-images

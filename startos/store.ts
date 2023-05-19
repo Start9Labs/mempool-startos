@@ -5,6 +5,8 @@ import { ConfigSpec } from './procedures/config/spec'
  *
  * It is conventional for the "config" key to store the service's saved config, excluding sensitive data like passwords
  */
-export interface WrapperData {
-    config: ConfigSpec
+export interface Store {
+  config: {
+    name: string
+  }
 }
