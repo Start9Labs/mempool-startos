@@ -45,3 +45,8 @@ Run the following command to determine successful install:
 embassy-cli auth login
 embassy-cli package install /tmp/mempool.s9pk
 ```
+
+
+
+## SDK 040
+npm i

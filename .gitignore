@@ -1,6 +1,6 @@
-image.tar
 *.s9pk
-tri-push.sh
+procedures/*.js
+node_modules/
+.DS_Store
 .vscode/
-scripts/embassy.js
-docker-images/
+docker-images
