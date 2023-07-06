@@ -1,9 +1,9 @@
 id: mempool
 title: Mempool
-version: 2.5.0.1
+version: 2.5.0.2
 release-notes: | 
-  * Update Mempool to v2.5.0 [Release Notes](https://github.com/mempool/mempool/releases/tag/v2.5.0)
-    * Note: After upgrading the blocks database table will be cleared and reindexed
+  * Removes BTC RPC Proxy as a dependency
+  * Uses Bitcoin Core as direct dependency
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
@@ -65,22 +65,10 @@ properties:
   type: script
 dependencies:
   bitcoind:
-    version: ">=0.21.1.2 <26.0.0"
+    version: ">=0.21.1.2 <27.0.0"
     requirement:
-      type: "opt-out"
-      how: Can alternatively configure proxy or bitcoin core  node.
+      type: "required"
     description: Used to subscribe to new block events from a full archival node
-    config:
-      check:
-        type: script
-      auto-configure:
-        type: script
-  btc-rpc-proxy:
-    version: ">=0.3.2.5 <0.4.0"
-    requirement:
-      type: "opt-in"
-      how: Can alternatively configure proxy or bitcoin core  node.
-    description: Used for RPC permissioning.
     config:
       check:
         type: script

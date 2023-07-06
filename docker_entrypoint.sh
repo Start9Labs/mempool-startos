@@ -27,19 +27,13 @@ cat /backend/nginx.conf > /etc/nginx/nginx.conf
 
 #  BACKEND SETUP
 
-# read bitcoin proxy creds from start9 config
+# read bitcoin creds from start9 config
 HOST_IP=$(ip -4 route list match 0/0 | awk '{print $3}')
 bitcoind_type=$(yq e '.bitcoind.type' /root/start9/config.yaml)
 bitcoind_user=$(yq e '.bitcoind.user' /root/start9/config.yaml)
 bitcoind_pass=$(yq e '.bitcoind.password' /root/start9/config.yaml)
+bitcoind_host="bitcoind.embassy"
 
-if [ "$bitcoind_type" = "internal-proxy" ]; then
-	bitcoind_host="btc-rpc-proxy.embassy"
-	echo "Running on Bitcoin Proxy..."
-else
-	bitcoind_host="bitcoind.embassy"
-	echo "Running on Bitcoin Core..."
-fi
 sed -i "s/CORE_RPC_HOST:=127.0.0.1/CORE_RPC_HOST:=$bitcoind_host/" start.sh
 sed -i "s/CORE_RPC_USERNAME:=mempool/CORE_RPC_USERNAME:=$bitcoind_user/" start.sh
 sed -i "s/CORE_RPC_PASSWORD:=mempool/CORE_RPC_PASSWORD:=$bitcoind_pass/" start.sh

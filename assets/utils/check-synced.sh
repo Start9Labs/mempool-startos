@@ -4,16 +4,10 @@ set -e
 
 sleep 15
 
-b_type=$(yq e '.bitcoind.type' /root/start9/config.yaml)
-if [ "$b_type" = "internal" ]; then
-    b_host="bitcoind.embassy"
-    b_username=$(yq e '.bitcoind.user' /root/start9/config.yaml)
-    b_password=$(yq e '.bitcoind.password' /root/start9/config.yaml)
-else
-    b_host="btc-rpc-proxy.embassy"
-    b_username=$(yq e '.bitcoind.user' /root/start9/config.yaml)
-    b_password=$(yq e '.bitcoind.password' /root/start9/config.yaml)
-fi
+b_host="bitcoind.embassy"
+b_username=$(yq e '.bitcoin-user' /root/start9/config.yaml)
+b_password=$(yq e '.bitcoin-password' /root/start9/config.yaml)
+
 TXINDEX_CHECK=$(curl -sS --user $b_username:$b_password --data-binary '{"jsonrpc": "1.0", "id": "sync-hck", "method": "getindexinfo", "params": ["txindex"]}' -H 'content-type: text/plain;' $b_host:8332 | sed -n 's/.*\("synced":\).*/1/p') 
 TXINDEX_SYNC=$(curl -sS --user $b_username:$b_password --data-binary '{"jsonrpc": "1.0", "id": "sync-hck", "method": "getindexinfo", "params": ["txindex"]}' -H 'content-type: text/plain;' $b_host:8332 | sed -n 's/.*\("synced":true\).*/1/p')
 IBD_STATE=$(curl -sS --user $b_username:$b_password --data-binary '{"jsonrpc": "1.0", "id": "sync-hck", "method": "getblockchaininfo", "params": []}' -H 'content-type: text/plain;' $b_host:8332 | sed -n 's/.*\("initialblockdownload":false\).*/1/p')
