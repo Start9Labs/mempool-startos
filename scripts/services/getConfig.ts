@@ -30,16 +30,6 @@ export const getConfig: T.ExpectedExports.getConfig = compat.getConfig({
     "multi": false,
     "selector": "$.rpc.password",
   },
-  "bitcoin-txindex": {
-    "name": "Transaction Indexer",
-    "description": "The Transaction Indexer for Bitcoin Core",
-    "type": "pointer",
-    "subtype": "package",
-    "package-id": "bitcoind",
-    "target": "config",
-    "multi": false,
-    "selector": "$.txindex",
-  },
   "lightning": {
     "type": "union",
     "name": "Lightning Node",
