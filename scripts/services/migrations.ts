@@ -28,7 +28,6 @@ export const migration: T.ExpectedExports.migration = async (effects, version) =
     return result
   }
 
-
   return { result: { configured: true } }
 
 }

@@ -1,6 +1,7 @@
 # Mempool.space 
 
 Mempool is an open-source explorer developed for the Bitcoin community, focusing on the emerging transaction fee market to help our transition into a multi-layer ecosystem. 
+
 ## Configuration
 
 Mempool on the Start9 Server requires a fully synced archival Bitcoin Core node to function.

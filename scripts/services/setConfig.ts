@@ -16,17 +16,13 @@ export const setConfig: T.ExpectedExports.setConfig = async (
   ]
     ? { electrs: ["synced"] }
     : {};
-  const dependsOnBitcoind: { [key: string]: string[] } = newConfig?.txindex
-    ? { bitcoind: [] }
-    : {};
 
-    // add two const depsLnd and depsCln for the new lightning type string in getConfig
+  // add two const depsLnd and depsCln for the new lightning type string in getConfig
   const depsLnd: { [key: string]: string[] } = newConfig?.lightning?.type === "lnd"  ? {lnd: []} : {};
   const depsCln: { [key: string]: string[] } = newConfig?.lightning?.type === "cln"  ? {"c-lightning": []} : {};
     
   return compat.setConfig(effects, newConfig, {
     ...dependsOnElectrs,
-    ...dependsOnBitcoind,
     ...depsLnd,
     ...depsCln,
   });
