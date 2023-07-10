@@ -12,8 +12,8 @@ marketing-site: "https://mempool.space/"
 donation-url: "https://mempool.space/sponsor"
 build: ["make"]
 description:
-  short: "A Bitcoin node and network visualizer."
-  long: "Mempool is the fully featured visualizer, explorer, and API service running on https://mempool.space/, an open source project developed and operated for the benefit of the Bitcoin community, with a focus on the emerging transaction fee market to help our transition into a multi-layer ecosystem."
+  short: "Explore the full Bitcoin ecosystem"
+  long: "Be your own explorer.\n\nRun your own instance of The Mempool Open Source Project and trust no one—use your own node to beautifully visualize data about the Bitcoin network, transactions, blockchain, mempool, and more.\n\nThis product includes GeoLite2 data created by MaxMind, available from https://www.maxmind.com."
 assets:
   license: LICENSE
   icon: icon.png
