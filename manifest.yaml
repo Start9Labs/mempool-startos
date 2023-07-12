@@ -1,7 +1,7 @@
 id: mempool
 title: Mempool
-version: 2.5.0.2
-release-notes: | 
+version: 2.5.0.3
+release-notes: |
   * Removes deprecated optional dependency of BTC RPC Proxy
   * Uses Bitcoin Core as direct dependency
 license: AGPL
@@ -94,7 +94,7 @@ dependencies:
       type: "opt-in"
       how: Can opt to use the CLN instance instead of LND
     config: ~
-volumes: 
+volumes:
   main:
     type: data
   cache:
@@ -125,7 +125,7 @@ interfaces:
       port-mapping:
         80: "8080"
     lan-config:
-      443:  
+      443:
         ssl: true
         internal: 8080
     ui: true
