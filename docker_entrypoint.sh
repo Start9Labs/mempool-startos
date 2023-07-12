@@ -29,9 +29,8 @@ cat /backend/nginx.conf > /etc/nginx/nginx.conf
 
 # read bitcoin creds from start9 config
 HOST_IP=$(ip -4 route list match 0/0 | awk '{print $3}')
-bitcoind_type=$(yq e '.bitcoind.type' /root/start9/config.yaml)
-bitcoind_user=$(yq e '.bitcoind.user' /root/start9/config.yaml)
-bitcoind_pass=$(yq e '.bitcoind.password' /root/start9/config.yaml)
+bitcoind_user=$(yq e '.bitcoin-user' /root/start9/config.yaml)
+bitcoind_pass=$(yq e '.bitcoin-password' /root/start9/config.yaml)
 bitcoind_host="bitcoind.embassy"
 
 sed -i "s/CORE_RPC_HOST:=127.0.0.1/CORE_RPC_HOST:=$bitcoind_host/" start.sh
