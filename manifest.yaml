@@ -1,6 +1,6 @@
 id: mempool
 title: Mempool
-version: 2.5.0.3
+version: 2.5.0.4
 release-notes: |
   * Removes deprecated optional dependency of BTC RPC Proxy
   * Uses Bitcoin Core as direct dependency
@@ -75,7 +75,7 @@ dependencies:
       auto-configure:
         type: script
   electrs:
-    version: ">=0.9.6 <0.10.0"
+    version: ">=0.9.6 <0.12.0"
     requirement:
       type: "opt-out"
       how: Set Enable Electrs to Disabled in the config
