@@ -2,7 +2,7 @@ id: mempool
 title: Mempool
 version: 2.5.0.4
 release-notes: |
-  * Bump supported electrs version to v0.10 and v0.11
+  * Bump supported electrs version to v0.10
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
@@ -74,7 +74,7 @@ dependencies:
       auto-configure:
         type: script
   electrs:
-    version: ">=0.9.6 <0.12.0"
+    version: ">=0.9.6 <0.11.0"
     requirement:
       type: "opt-out"
       how: Set Enable Electrs to Disabled in the config
