@@ -2,8 +2,7 @@ id: mempool
 title: Mempool
 version: 2.5.0.4
 release-notes: |
-  * Removes deprecated optional dependency of BTC RPC Proxy
-  * Uses Bitcoin Core as direct dependency
+  * Bump supported electrs version to v0.11
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
