@@ -1,9 +1,8 @@
 id: mempool
 title: Mempool
-version: 2.5.0.6
+version: 2.5.1
 release-notes: |
-  * Bump version bound for LND
-  * Fixes migration error when unconfigured
+  * Updates to upstream tag of [2.5.1](https://github.com/mempool/mempool/releases/tag/v2.5.1)
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
