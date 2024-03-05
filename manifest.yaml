@@ -87,7 +87,7 @@ dependencies:
       how: Use the LND instance by default
     config: ~
   c-lightning:
-    version: ">=0.10.1 <24.0.0"
+    version: ">=0.10.1 <25.0.0"
     description: Used to communicate with the Lightning Network.
     requirement:
       type: "opt-in"
