@@ -1,6 +1,6 @@
 # Use a multi-stage build to combine the specific images
-FROM mempool/frontend:latest AS frontend
-FROM mempool/backend:latest AS backend
+FROM mempool/frontend:v2.5.1 AS frontend
+FROM mempool/backend:v2.5.1 AS backend
 FROM mariadb:10.5.8 AS db
 FROM node:16.16.0-buster-slim AS runner
 

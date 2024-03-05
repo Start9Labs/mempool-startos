@@ -1,9 +1,8 @@
 id: mempool
 title: Mempool
-version: 2.5.0.6
+version: 2.5.1
 release-notes: |
-  * Bump version bound for LND
-  * Fixes migration error when unconfigured
+  * Updates to upstream tag of [2.5.1](https://github.com/mempool/mempool/releases/tag/v2.5.1), which fixes issues regarding lightning lookups
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
@@ -88,7 +87,7 @@ dependencies:
       how: Use the LND instance by default
     config: ~
   c-lightning:
-    version: ">=0.10.1 <24.0.0"
+    version: ">=0.10.1 <25.0.0"
     description: Used to communicate with the Lightning Network.
     requirement:
       type: "opt-in"
