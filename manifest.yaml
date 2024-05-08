@@ -1,8 +1,8 @@
 id: mempool
 title: Mempool
-version: 2.5.1
+version: 2.5.1.1
 release-notes: |
-  * Updates to upstream tag of [2.5.1](https://github.com/mempool/mempool/releases/tag/v2.5.1), which fixes issues regarding lightning lookups
+  * Bumps version bounds for Bitcoin Core
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
@@ -64,7 +64,7 @@ properties:
   type: script
 dependencies:
   bitcoind:
-    version: ">=0.21.1.2 <27.0.0"
+    version: ">=0.21.1.2 <29.0.0"
     requirement:
       type: "required"
     description: Used to subscribe to new block events from a full archival node
