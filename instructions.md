@@ -1,4 +1,4 @@
-# Mempool.space 
+# Mempool 
 
 Mempool is an open-source explorer developed for the Bitcoin community, focusing on the emerging transaction fee market to help our transition into a multi-layer ecosystem. 
 
@@ -24,6 +24,10 @@ To enable address lookups, toggle on the "Enable Electrs Address Lookups" option
 
 You will need electrs to be installed and synced before this feature will work. Also, lookups may be slow or time out altogether while the service is still warming up, or if there are too many other things running on your system.
 
+## Acceleration
+
+Accelerating mempool transactions allows them to be prioritized by mining pools thus reducing the wait time for the first confirmation. Visit an unconfirmed transaction in the mempool interface and select the "Accelerate" button near ETA. Follow the on-screen instructions to increase the sat/vB and submit payment via lightning invoice.
+
 ## Support
 
-For additional support, please read the mempool documentation on the documentation tab, or visit the mempool.space matrix support room.
+For additional support, please read the mempool documentation on the documentation tab, or visit the [mempool.space matrix support room](https://matrix.to/#/%23mempool:bitcoin.kyoto).
