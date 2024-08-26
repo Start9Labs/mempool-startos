@@ -1,8 +1,8 @@
 id: mempool
 title: Mempool
-version: 2.5.1.2
+version: 3.0.0
 release-notes: |
-  * Bumps version bounds for LND
+  * Exciting new version which adds the Mempool Accelerator among other improvements and bugfixes. Check out the full [release notes](https://github.com/mempool/mempool/releases/tag/v3.0.0).
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
@@ -74,20 +74,20 @@ dependencies:
       auto-configure:
         type: script
   electrs:
-    version: ">=0.9.6 <0.11.0"
+    version: ">=0.9.6 <0.12.0"
     requirement:
       type: "opt-out"
       how: Set Enable Electrs to Disabled in the config
     description: Used to provide an index for address lookups
   lnd:
-    version: ">=0.14.3 <0.19.0"
+    version: ">=0.14.3 <0.20.0"
     description: Used to communicate with the Lightning Network.
     requirement:
       type: "opt-in"
       how: Use the LND instance by default
     config: ~
   c-lightning:
-    version: ">=0.10.1 <25.0.0"
+    version: ">=0.10.1 <26.0.0"
     description: Used to communicate with the Lightning Network.
     requirement:
       type: "opt-in"
