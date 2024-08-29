@@ -1,6 +1,6 @@
 id: mempool
 title: Mempool
-version: 3.0.0
+version: 3.0.0.1
 release-notes: |
   * Exciting new version which adds the Mempool Accelerator among other improvements and bugfixes. Check out the full [release notes](https://github.com/mempool/mempool/releases/tag/v3.0.0).
 license: AGPL
@@ -60,8 +60,6 @@ config:
     type: script
   set:
     type: script
-properties:
-  type: script
 dependencies:
   bitcoind:
     version: ">=0.21.1.2 <29.0.0"
