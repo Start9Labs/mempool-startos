@@ -1,8 +1,10 @@
 id: mempool
 title: Mempool
-version: 3.0.0.1
+version: 3.0.0.2
 release-notes: |
-  * Exciting new version which adds the Mempool Accelerator among other improvements and bugfixes. Check out the full [release notes](https://github.com/mempool/mempool/releases/tag/v3.0.0).
+  * Sets bounds on RAM used for the mempool
+  * Update the latest pool data from the Mempool repository on startup
+  * Adjust JS heap limit
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
