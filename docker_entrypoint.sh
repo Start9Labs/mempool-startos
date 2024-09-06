@@ -8,6 +8,18 @@ _term() {
   kill -TERM "$frontend_process" 2>/dev/null
 }
 
+# Record system memory info to read for bitcoin auto config
+SYSTEM_MEM_INFO=$(awk '/MemTotal/{print $(NF-1)}' /proc/meminfo)
+SYSTEM_MEM_FILE=/root/start9/system_mem_info
+
+if [ -f "$SYSTEM_MEM_FILE" ]
+then
+	echo "$SYSTEM_MEM_INFO" > "$SYSTEM_MEM_FILE"
+else
+	touch /root/start9/system_mem_info
+	echo "$SYSTEM_MEM_INFO" > "$SYSTEM_MEM_FILE"
+fi
+
 # FRONTEND SETUP
 
 LIGHTNING_DETECTED_PORT=9735
@@ -39,6 +51,9 @@ __MEMPOOL_SERVICES_API__="https://mempool.embassy/api/v1/services"
 sed -i "s/CORE_RPC_HOST:=127.0.0.1/CORE_RPC_HOST:=$bitcoind_host/" start.sh
 sed -i "s/CORE_RPC_USERNAME:=mempool/CORE_RPC_USERNAME:=$bitcoind_user/" start.sh
 sed -i "s/CORE_RPC_PASSWORD:=mempool/CORE_RPC_PASSWORD:=$bitcoind_pass/" start.sh
+
+# adjust heap size
+sed -i "s/node \/backend\/package\/index.js/node --max-old-space-size=16384 \/backend\/package\/index.js/" start.sh
 
 # Configure mempool to set lightning to true if lightning is enabled
 if [ "$(yq e ".lightning.type" /root/start9/config.yaml)" = "none" ]; then
