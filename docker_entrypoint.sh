@@ -8,18 +8,6 @@ _term() {
   kill -TERM "$frontend_process" 2>/dev/null
 }
 
-# Record system memory info to read for bitcoin auto config
-SYSTEM_MEM_INFO=$(awk '/MemTotal/{print $(NF-1)}' /proc/meminfo)
-SYSTEM_MEM_FILE=/root/start9/system_mem_info
-
-if [ -f "$SYSTEM_MEM_FILE" ]
-then
-	echo "$SYSTEM_MEM_INFO" > "$SYSTEM_MEM_FILE"
-else
-	touch /root/start9/system_mem_info
-	echo "$SYSTEM_MEM_INFO" > "$SYSTEM_MEM_FILE"
-fi
-
 # FRONTEND SETUP
 
 LIGHTNING_DETECTED_PORT=9735

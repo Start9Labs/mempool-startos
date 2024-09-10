@@ -52,6 +52,9 @@ RUN chown -R mysql:mysql /build/data /var/lib/mysql/data
 ADD ./docker_entrypoint.sh /usr/local/bin/docker_entrypoint.sh
 ADD assets/utils/*.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/*.sh
+RUN mkdir -p /usr/local/bin/migrations
+ADD ./scripts/migrations/*.sh /usr/local/bin/migrations
+RUN chmod a+x /usr/local/bin/migrations/*
 
 # remove to we can manually handle db initalization
 RUN rm -rf /var/lib/mysql/
