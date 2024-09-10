@@ -1,6 +1,6 @@
 id: mempool
 title: Mempool
-version: 3.0.0.2
+version: 3.0.0.3
 release-notes: |
   * Sets bounds on RAM used for the mempool
   * Update the latest pool data from the Mempool repository on startup
@@ -166,8 +166,32 @@ backup:
     io-format: yaml
 migrations:
   from:
-    "*":
+    "<2.3.1.4":
       type: script
+    ">=2.3.1.4 <2.5.0":
+      type: script
+    ">=2.5.0 <=3.0.0.2":
+      type: docker
+      image: main
+      system: false
+      entrypoint: /usr/local/bin/migrations/gt_2_5_0_lt_3_0_0_2.sh
+      args: ["from"]
+      io-format: json
+      mounts: 
+        main: /root
+      inject: false
   to:
-    "*":
+    "<2.3.1.4":
       type: script
+    ">=2.3.1.4 <2.5.0":
+      type: script
+    ">=2.5.0 <3.0.0.2":
+      type: docker
+      image: main
+      system: false
+      entrypoint: /usr/local/bin/migrations/gt_2_5_0_lt_3_0_0_2.sh
+      args: ["to"]
+      io-format: json
+      mounts: 
+        main: /root
+      inject: false
