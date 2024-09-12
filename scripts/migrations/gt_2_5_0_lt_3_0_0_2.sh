@@ -12,6 +12,7 @@ if [ $1 = "from" ]; then
     then
         echo "$SYSTEM_MEM_INFO" > "$SYSTEM_MEM_FILE"
     else
+        mkdir -p /root/start9
         touch /root/start9/system_mem_info
         echo "$SYSTEM_MEM_INFO" > "$SYSTEM_MEM_FILE"
     fi
