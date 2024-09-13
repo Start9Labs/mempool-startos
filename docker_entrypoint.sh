@@ -41,7 +41,7 @@ sed -i "s/CORE_RPC_USERNAME:=mempool/CORE_RPC_USERNAME:=$bitcoind_user/" start.s
 sed -i "s/CORE_RPC_PASSWORD:=mempool/CORE_RPC_PASSWORD:=$bitcoind_pass/" start.sh
 
 # adjust heap size
-sed -i "s/node \/backend\/package\/index.js/node --max-old-space-size=16384 \/backend\/package\/index.js/" start.sh
+sed -i "s/node \/backend\/package\/index.js/node --max-old-space-size=2048 \/backend\/package\/index.js/" start.sh
 
 # Configure mempool to set lightning to true if lightning is enabled
 if [ "$(yq e ".lightning.type" /root/start9/config.yaml)" = "none" ]; then
