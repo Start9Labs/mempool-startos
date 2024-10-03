@@ -1,10 +1,8 @@
 id: mempool
 title: Mempool
-version: 3.0.0.3
+version: 3.0.1
 release-notes: |
-  * Sets bounds on RAM used for the mempool
-  * Update the latest pool data from the Mempool repository on startup
-  * Adjust JS heap limit
+  * Updates upstream, which includes a fix to save CPU on lower powered hardware
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
@@ -170,7 +168,7 @@ migrations:
       type: script
     ">=2.3.1.4 <2.5.0":
       type: script
-    ">=2.5.0 <=3.0.0.2":
+    ">=2.5.0 <=3.0.0.3":
       type: docker
       image: main
       system: false
@@ -180,12 +178,14 @@ migrations:
       mounts: 
         main: /root
       inject: false
+    ">3.0.0.3":
+      type: script
   to:
     "<2.3.1.4":
       type: script
     ">=2.3.1.4 <2.5.0":
       type: script
-    ">=2.5.0 <3.0.0.2":
+    ">=2.5.0 <=3.0.0.3":
       type: docker
       image: main
       system: false
@@ -195,3 +195,5 @@ migrations:
       mounts: 
         main: /root
       inject: false
+    ">3.0.0.3":
+      type: script
