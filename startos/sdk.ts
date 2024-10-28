@@ -1,15 +1,13 @@
-import { StartSdk } from '@start9labs/start-sdk/lib/StartSdk'
+import { StartSdk } from '@start9labs/start-sdk'
 import { manifest } from './manifest'
 import { Store } from './store'
-import { Vault } from './vault'
 
 /**
- * This is a static file that provides type safety throughout the codebase
+ * Plumbing. DO NOT EDIT.
  *
- * the exported sdk const should be used instead of StartSdk directly
+ * The exported "sdk" const will be imported and used throughout the package codebase.
  */
 export const sdk = StartSdk.of()
   .withManifest(manifest)
   .withStore<Store>()
-  .withVault<Vault>()
   .build(true)

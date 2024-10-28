@@ -1,12 +1,8 @@
-import { ConfigSpec } from './procedures/config/spec'
+import { setupExposeStore } from '@start9labs/start-sdk'
 
-/**
- * Here you define the set of data that the service wrapper will persist for self consumption and for exporting to users and other services
- *
- * It is conventional for the "config" key to store the service's saved config, excluding sensitive data like passwords
- */
-export interface Store {
-  config: {
-    name: string
-  }
+export type Store = {
+  lightning: 'lnd' | 'cln' | 'none'
+  electrs: boolean
 }
+
+export const exposedStore = setupExposeStore<Store>((pathBuilder) => [])
