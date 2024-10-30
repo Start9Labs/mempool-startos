@@ -6,6 +6,7 @@ export const v301_1 = VersionInfo.of({
   migrations: {
     up: async ({ effects }) => {
       // @TODO move configurations, delete config.yaml, move db files
+      // make sure mempool-config.json is in proper place
     },
     down: IMPOSSIBLE,
   },

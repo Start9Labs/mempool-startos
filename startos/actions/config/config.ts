@@ -1,7 +1,7 @@
 import { jsonFile } from '../../file-models/mempool-config.json'
 import { backendMounts } from '../../main'
 import { sdk } from '../../sdk'
-import { inputSpec } from './spec'
+import { ConfigSpec, inputSpec } from './spec'
 
 export const config = sdk.Action.withInput(
   'config',
@@ -20,27 +20,26 @@ export const config = sdk.Action.withInput(
 
   // optionally pre-fill the input form
   async ({ effects }) => {
-    // @TODO correct for pre-filling with entire store?
-    await sdk.store.getOwn(effects, sdk.StorePath)
+    const configFile = (await jsonFile.read.const(effects))!
+
+    return {
+      lightning: configFile.LIGHTNING.ENABLED
+        ? configFile.LIGHTNING.BACKEND
+        : 'none',
+      electrs: configFile.MEMPOOL.BACKEND === 'electrum' ? true : false,
+    } as ConfigSpec
   },
 
   // the execution function
   async ({ effects, input }) => {
-    const currentLightning = await sdk.store
-      .getOwn(effects, sdk.StorePath.lightning)
-      .const()
-
-    const electrsEnabled = await sdk.store
-      .getOwn(effects, sdk.StorePath.electrs)
-      .const()
+    const configFile = (await jsonFile.read.const(effects))!
 
     if (
-      currentLightning === input.lightning &&
-      electrsEnabled === input.electrs
+      configFile.LIGHTNING.ENABLED &&
+      configFile.LIGHTNING.BACKEND === input.lightning &&
+      (configFile.MEMPOOL.BACKEND === 'electrum') === input.electrs
     )
       return
-
-    const configFile = (await jsonFile.read.const(effects))!
 
     if (input.lightning === 'lnd') {
       // @TODO mainMounts.addDependency<typeof LndManifest>
@@ -54,6 +53,7 @@ export const config = sdk.Action.withInput(
       )
       configFile.LIGHTNING.ENABLED = true
       configFile.LIGHTNING.BACKEND = 'lnd'
+      configFile.LND.REST_API_URL = 'https://lnd.embassy:8080' // @TODO confirm / get from lnd
       configFile.LND.MACAROON_PATH = `${mountpoint}/readonly.macaroon`
       configFile.LND.TLS_CERT_PATH = `${mountpoint}/tls.cert`
       configFile.LND.TLS_CERT_PATH = 'https://lnd.embassy:8080' // @TODO confirm new
@@ -75,14 +75,13 @@ export const config = sdk.Action.withInput(
     }
 
     if (input.electrs) {
+      configFile.MEMPOOL.BACKEND = 'electrum'
       configFile.ELECTRUM.HOST = 'electrs.embassy' // @TODO confirm new
       configFile.ELECTRUM.PORT = 50001 // @TODO confirm new
+    } else {
+      configFile.MEMPOOL.BACKEND = 'none'
     }
 
-    await Promise.all([
-      jsonFile.merge(configFile), // @TODO needed?
-      sdk.store.setOwn(effects, sdk.StorePath.lightning, input.lightning),
-      sdk.store.setOwn(effects, sdk.StorePath.electrs, input.electrs),
-    ])
+    await Promise.all([jsonFile.merge(configFile)])
   },
 )

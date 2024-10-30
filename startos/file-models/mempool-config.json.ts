@@ -2,7 +2,7 @@ import { matches, FileHelper } from '@start9labs/start-sdk'
 const { object, string, boolean, number, array } = matches
 
 const shape = object({
-  string: object({
+  MEMPOOL: object({
     OFFICIAL: boolean,
     NETWORK: string,
     BACKEND: string,

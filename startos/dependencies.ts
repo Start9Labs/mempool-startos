@@ -12,7 +12,7 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
         },
         txindex: true,
         mempool: {
-          maxmempool: 300, // TODO getSystemMemoryLimit
+          maxmempool: 300, // TODO getSystemMemoryLimit - how with sdk / effects?
         },
       },
     },

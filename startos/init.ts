@@ -7,7 +7,39 @@ import { actions } from './actions'
 
 // **** Install ****
 const install = sdk.setupInstall(async ({ effects }) => {
-  // @TODO copy mempool-config-sample.json to mempool-config.json
+  // initalize mempool-config.json with defaults
+  await sdk.runCommand(
+    effects,
+    { id: 'backend' },
+    [
+      'sed',
+      '-i',
+      "'s/node /backend/package/index.js/#node /backend/package/index.js/'",
+      'start.sh',
+    ],
+    {},
+    'alterStartScript',
+  )
+  await sdk.runCommand(
+    effects,
+    { id: 'backend' },
+    './start.sh',
+    {},
+    'initConfig',
+  )
+  await sdk.runCommand(
+    effects,
+    { id: 'backend' },
+    [
+      'sed',
+      '-i',
+      "'s/#node /backend/package/index.js/node /backend/package/index.js/'",
+      'start.sh',
+    ],
+    {},
+    'revertStartScript',
+  )
+  // setup nginx
   // setup db?
 })
 
