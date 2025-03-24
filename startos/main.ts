@@ -20,8 +20,7 @@ export const backendMounts = sdk.Mounts.of().addVolume(
 export const main = sdk.setupMain(async ({ effects, started }) => {
   console.info('Starting Mempool!')
 
-  const syncHealthCheck = sdk.HealthCheck.of({
-    effects,
+  const syncHealthCheck = sdk.HealthCheck.of(effects, {
     name: 'Transaction Indexer',
     fn: async () => {
       // @TODO update with path to bitcoin cookie file
@@ -86,11 +85,7 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
 
   const healthReceipts: T.HealthReceipt[] = []
 
-  return sdk.Daemons.of({
-    effects,
-    started,
-    healthReceipts,
-  })
+  return sdk.Daemons.of(effects, started, healthReceipts)
     .addDaemon('mariadb', {
       image: { id: 'mariadb' },
       command: [

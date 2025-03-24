@@ -63,7 +63,7 @@ export const config = sdk.Action.withInput(
       // @TODO mainMounts.addDependency<typeof ClnManifest>
       const mountpoint = '/mnt/cln'
       backendMounts.addDependency(
-        'cln',
+        'c-lightning',
         'main', //@TODO verify
         'shared', //@TODO verify
         mountpoint,

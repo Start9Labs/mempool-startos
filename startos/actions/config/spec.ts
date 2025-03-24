@@ -6,9 +6,7 @@ export const inputSpec = InputSpec.of({
     name: 'Lightning Node',
     description:
       'Use this setting to select the Lightning node used to serve network data to the Lightning tab in Mempool.',
-    required: {
-      default: 'none',
-    },
+    default: 'none',
     values: {
       lnd: 'LND',
       cln: 'Core Lightning',

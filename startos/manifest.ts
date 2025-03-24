@@ -60,7 +60,7 @@ export const manifest = setupManifest({
       optional: true,
       s9pk: '',
     },
-    cln: {
+    'c-lightning': {
       description: 'Used to provide Lightning Network data',
       optional: true,
       s9pk: '',
