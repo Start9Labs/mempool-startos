@@ -1,12 +1,15 @@
-import { types as T, rangeOf } from "../deps.ts";
+import { types as T, rangeOf, compat } from "../deps.ts";
 import { migration_down_2_3_1_4 } from "../migrations/2_3_1_4_down_migration.ts";
 import { migration_up_2_3_1_4 } from "../migrations/2_3_1_4_up_migration.ts";
 import { migration_down_2_5_0 } from "../migrations/2_5_0_down_migration.ts";
 import { migration_up_2_5_0 } from "../migrations/2_5_0_up_migration.ts";
 
+const current = "3.2.1";
+
 export const migration: T.ExpectedExports.migration = async (
-  effects,
-  version
+  effects: T.Effects,
+  version: string,
+  ...args: unknown[]
 ) => {
   // from migrations (upgrades)
   if (rangeOf("<2.3.1.4").check(version)) {
@@ -30,5 +33,21 @@ export const migration: T.ExpectedExports.migration = async (
     return result;
   }
 
-  return { result: { configured: true } };
+  return compat.migrations.fromMapping(
+    {
+      "3.2.1": {
+        up: compat.migrations.updateConfig(
+          (config) => {
+            return config;
+          },
+          true,
+          { version: "3.2.1", type: "up" }
+        ),
+        down: () => {
+          throw new Error("Downgrades are prohibited from this version");
+        },
+      },
+    },
+    current
+  )(effects, version, ...args);
 };
