@@ -3,7 +3,8 @@ title: Mempool
 version: 3.2.1
 release-notes: |
   * Updates to latest upstream [release](https://github.com/mempool/mempool/releases/tag/v3.2.1)
-  * Bugfix for the latest release [v3.2.0](https://github.com/mempool/mempool/releases/tag/v3.2.0), which includes some awesome new features, such as Stratum job data visualizations, DATUM miner tags, and support for v3 transactions.
+  * Hotfix for the latest release [v3.2.0](https://github.com/mempool/mempool/releases/tag/v3.2.0), which includes some awesome new features, such as Stratum job data visualizations, DATUM miner tags, and support for v3 transactions.
+  * Updates MariaDB to next minor version
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
@@ -176,7 +177,7 @@ migrations:
       entrypoint: /usr/local/bin/migrations/gt_2_5_0_lt_3_0_0_2.sh
       args: ["from"]
       io-format: json
-      mounts: 
+      mounts:
         main: /root
       inject: false
     ">3.0.0.3":
@@ -193,7 +194,7 @@ migrations:
       entrypoint: /usr/local/bin/migrations/gt_2_5_0_lt_3_0_0_2.sh
       args: ["to"]
       io-format: json
-      mounts: 
+      mounts:
         main: /root
       inject: false
     ">3.0.0.3":
