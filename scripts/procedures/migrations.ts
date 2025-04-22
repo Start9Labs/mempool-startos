@@ -1,40 +1,86 @@
-import { types as T, rangeOf, compat } from "../deps.ts";
-import { migration_down_2_3_1_4 } from "../migrations/2_3_1_4_down_migration.ts";
-import { migration_up_2_3_1_4 } from "../migrations/2_3_1_4_up_migration.ts";
-import { migration_down_2_5_0 } from "../migrations/2_5_0_down_migration.ts";
-import { migration_up_2_5_0 } from "../migrations/2_5_0_up_migration.ts";
+import { types as T, compat, matches } from "../deps.ts";
+
+const { shape, boolean, string } = matches;
 
 const current = "3.2.1";
 
-export const migration: T.ExpectedExports.migration = async (
+export const migration: T.ExpectedExports.migration = (
   effects: T.Effects,
   version: string,
   ...args: unknown[]
 ) => {
-  // from migrations (upgrades)
-  if (rangeOf("<2.3.1.4").check(version)) {
-    const result = await migration_up_2_3_1_4(effects, version);
-    return result;
-  }
-
-  if (rangeOf("<2.5.0").check(version)) {
-    const result = await migration_up_2_5_0(effects, version);
-    return result;
-  }
-
-  // to migrations (downgrades)
-  if (rangeOf(">2.3.1.4 <2.5.0").check(version)) {
-    const result = await migration_down_2_3_1_4(effects, version);
-    return result;
-  }
-
-  if (rangeOf(">2.5.0 <=3.0.0.3").check(version)) {
-    const result = await migration_down_2_5_0(effects, version);
-    return result;
-  }
-
   return compat.migrations.fromMapping(
     {
+      "2.3.1.4": {
+        up: compat.migrations.updateConfig(
+          (config) => {
+            const matchElectrs = shape({
+              "enable-electrs": boolean,
+            });
+            if (!matchElectrs.test(config)) {
+              config["enable-electrs"] = true;
+              return config;
+            }
+            return config;
+          },
+          false,
+          { version: "2.3.1.4", type: "up" }
+        ),
+        down: compat.migrations.updateConfig(
+          (config) => {
+            const matchElectrs = shape(
+              {
+                "enable-electrs ": boolean,
+              },
+              ["enable-electrs "]
+            );
+            if (matchElectrs.test(config)) {
+              delete config["enable-electrs "];
+              return config;
+            }
+            return config;
+          },
+          true,
+          { version: "2.3.1.4", type: "down" }
+        ),
+      },
+      "2.5.0": {
+        up: compat.migrations.updateConfig(
+          (config) => {
+            const matchLightningType = shape({
+              lightning: shape({
+                type: string,
+              }),
+            });
+            if (!matchLightningType.test(config)) {
+              (config as typeof matchLightningType._TYPE).lightning.type =
+                "lnd";
+              return config;
+            }
+            return config;
+          },
+          false,
+          { version: "2.5.0", type: "up" }
+        ),
+        down: compat.migrations.updateConfig(
+          (config) => {
+            const matchLightningType = shape({
+              lightning: shape({
+                type: string?.optional(),
+              }),
+            });
+            if (matchLightningType.test(config)) {
+              if (config.lightning) {
+                delete config.lightning["type"];
+                return config;
+              }
+            }
+            return config;
+          },
+          true,
+          { version: "2.5.0", type: "down" }
+        ),
+      },
       "3.2.1": {
         up: compat.migrations.updateConfig(
           (config) => {

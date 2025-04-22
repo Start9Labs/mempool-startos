@@ -168,8 +168,10 @@ migrations:
   from:
     "<2.3.1.4":
       type: script
+      args: ["from"]
     ">=2.3.1.4 <2.5.0":
       type: script
+      args: ["from"]
     ">=2.5.0 <=3.0.0.3":
       type: docker
       image: main
@@ -182,11 +184,14 @@ migrations:
       inject: false
     ">3.0.0.3":
       type: script
+      args: ["from"]
   to:
     "<2.3.1.4":
       type: script
+      args: ["to"]
     ">=2.3.1.4 <2.5.0":
       type: script
+      args: ["to"]
     ">=2.5.0 <=3.0.0.3":
       type: docker
       image: main
@@ -199,3 +204,4 @@ migrations:
       inject: false
     ">3.0.0.3":
       type: script
+      args: ["to"]
