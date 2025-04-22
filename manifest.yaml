@@ -1,6 +1,6 @@
 id: mempool
 title: Mempool
-version: 3.2.1
+version: 3.2.1.1
 release-notes: |
   * Updates to latest upstream [release](https://github.com/mempool/mempool/releases/tag/v3.2.1)
   * Hotfix for the latest release [v3.2.0](https://github.com/mempool/mempool/releases/tag/v3.2.0), which includes some awesome new features, such as Stratum job data visualizations, DATUM miner tags, and support for v3 transactions.
