@@ -1,8 +1,10 @@
 id: mempool
 title: Mempool
-version: 3.0.1
+version: 3.2.1
 release-notes: |
-  * Updates upstream, which includes a fix to save CPU on lower powered hardware
+  * Updates to latest upstream [release](https://github.com/mempool/mempool/releases/tag/v3.2.1)
+  * Hotfix for the latest release [v3.2.0](https://github.com/mempool/mempool/releases/tag/v3.2.0), which includes some awesome new features, such as Stratum job data visualizations, DATUM miner tags, and support for v3 transactions.
+  * Updates MariaDB to next minor version
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
@@ -166,8 +168,10 @@ migrations:
   from:
     "<2.3.1.4":
       type: script
+      args: ["from"]
     ">=2.3.1.4 <2.5.0":
       type: script
+      args: ["from"]
     ">=2.5.0 <=3.0.0.3":
       type: docker
       image: main
@@ -175,16 +179,19 @@ migrations:
       entrypoint: /usr/local/bin/migrations/gt_2_5_0_lt_3_0_0_2.sh
       args: ["from"]
       io-format: json
-      mounts: 
+      mounts:
         main: /root
       inject: false
     ">3.0.0.3":
       type: script
+      args: ["from"]
   to:
     "<2.3.1.4":
       type: script
+      args: ["to"]
     ">=2.3.1.4 <2.5.0":
       type: script
+      args: ["to"]
     ">=2.5.0 <=3.0.0.3":
       type: docker
       image: main
@@ -192,8 +199,9 @@ migrations:
       entrypoint: /usr/local/bin/migrations/gt_2_5_0_lt_3_0_0_2.sh
       args: ["to"]
       io-format: json
-      mounts: 
+      mounts:
         main: /root
       inject: false
     ">3.0.0.3":
       type: script
+      args: ["to"]

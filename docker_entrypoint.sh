@@ -75,25 +75,28 @@ else
 fi
 
 # DATABASE SETUP
-if [ -d "/run/mysqld" ]; then
+
+MYSQL_DATADIR="/var/lib/mysql"
+UPGRADE_MARKER="$MYSQL_DATADIR/.upgrade_done"
+MYSQL_DIR="/var/run/mysqld"
+MYSQL_SOCKET="$MYSQL_DIR/mysqld.sock"
+
+if [ -d "$MYSQL_DIR" ]; then
 	echo "[i] mysqld already present, skipping creation"
-	chown -R mysql:mysql /run/mysqld
+	chown -R mysql:mysql $MYSQL_DIR
 else
 	echo "[i] mysqld not found, creating...."
-	mkdir -p /run/mysqld
-	chown -R mysql:mysql /run/mysqld
+	mkdir -p $MYSQL_DIR
+	chown -R mysql:mysql $MYSQL_DIR
 fi
 
-if [ -d /var/lib/mysql/mysql ]; then
-	echo "[i] MySQL directory already present, skipping creation"
-	chown -R mysql:mysql /var/lib/mysql
-else
-	echo "[i] MySQL data directory not found, creating initial DBs"
-
-    mkdir -p /var/lib/mysql
-	chown -R mysql:mysql /var/lib/mysql
-
-	mysql_install_db --user=mysql --ldata=/var/lib/mysql > /dev/null
+# Initialize the database if not already initialized
+if [ ! -d "$MYSQL_DATADIR/mysql" ]; then
+	echo "Initializing MariaDB data directory..."
+	mariadb-install-db --user=mysql --datadir="$MYSQL_DATADIR" > /dev/null
+	chown -R mysql:mysql "$MYSQL_DATADIR"
+	chmod -R 755 "$MYSQL_DATADIR"
+	touch "$UPGRADE_MARKER"  # Skip upgrade on initial boot
 
 	if [ "$MYSQL_ROOT_PASSWORD" = "" ]; then
 		MYSQL_ROOT_PASSWORD=`pwgen 16 1`
@@ -151,7 +154,36 @@ EOF
 	echo
 fi
 
-/usr/bin/mysqld_safe --user=mysql --datadir='/var/lib/mysql' &
+chown -R mysql:mysql "$MYSQL_DATADIR"
+chmod -R 755 "$MYSQL_DATADIR"
+
+# Run mysql_upgrade once
+if [ -d "$MYSQL_DATADIR/mysql" ] && [ ! -f "$UPGRADE_MARKER" ]; then
+	echo "Starting MariaDB for upgrade..."
+	mariadbd --user=mysql --datadir="$MYSQL_DATADIR" --skip-grant-tables &
+	# Wait for server to start up
+	echo "Waiting for MariaDB to start..."
+	until mysqladmin -u root ping; do
+		sleep 2
+	done
+	# Switch to unix socket for auth
+	mysql --socket="$MYSQL_SOCKET" <<EOF
+FLUSH PRIVILEGES;
+ALTER USER 'root'@'localhost' IDENTIFIED VIA unix_socket;
+ALTER USER 'root'@'%' IDENTIFIED VIA unix_socket;
+FLUSH PRIVILEGES;
+EOF
+	echo "Running mysql_upgrade..."
+	mysql_upgrade -u root --protocol=SOCKET --socket=/run/mysqld/mysqld.sock
+	touch "$UPGRADE_MARKER"
+	echo "Shutting down MariaDB post upgrade..."
+	mysqladmin -u root shutdown
+else
+	echo "No upgrade needed or already completed."
+fi
+
+# Start MariaDB
+mariadbd --user=mysql --datadir="$MYSQL_DATADIR" &
 db_process=$!
 
 # START UP
