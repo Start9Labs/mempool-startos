@@ -18,24 +18,19 @@ export const manifest = setupManifest({
   images: {
     frontend: {
       source: {
-        dockerTag: 'mempool/frontend:v3.0.1',
+        dockerTag: 'mempool/frontend:v3.2.1',
       },
     },
     backend: {
       source: {
-        dockerTag: 'mempool/backend:v3.0.1',
+        dockerTag: 'mempool/backend:v3.2.1',
       },
     },
     mariadb: {
       source: {
-        dockerTag: 'mariadb:10.5.8',
+        dockerTag: 'mariadb:10.4.32',
       },
     },
-    // main: {
-    //   source: {
-    //     dockerTag: 'node:lts-buster-slim',
-    //   },
-    // },
   },
   hardwareRequirements: {},
   alerts: {

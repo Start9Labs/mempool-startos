@@ -1,52 +1,11 @@
-# Wrapper for Mempool
+<p align="center">
+  <img src="icon.png" alt="Project Logo" width="21%">
+</p>
 
-[mempool](http://mempool.space/) is a fully featured visualizer, explorer, and API service for the Bitcoin mempool, with a focus on the emerging transaction fee market to help our transition into a multi-layer ecosystem
+# Mempool for StartOS
 
-## Dependencies
+[mempool](http://mempool.space/) is a fully featured visualizer, explorer, and API service for the Bitcoin mempool, with a focus on the emerging transaction fee market to help our transition into a multi-layer ecosystem. This repository creates the `s9pk` package that is installed to run Mempool on [StartOS](https://github.com/Start9Labs/start-os/).
 
-- [docker](https://docs.docker.com/get-docker)
-- [docker-buildx](https://docs.docker.com/buildx/working-with-buildx/)
-- [yq](https://mikefarah.gitbook.io/yq)
-- [toml](https://crates.io/crates/toml-cli)
-- [make](https://www.gnu.org/software/make)
-- [embassy-sdk]
+## Setup
 
-## Cloning
-
-Clone the project locally. Note the submodule link to the original project(s). 
-
-```
-git clone https://github.com/Start9Labs/mempoolwrapper.git
-cd mempool-wrapper
-git submodule update --init --recursive
-docker run --privileged --rm tonistiigi/binfmt --install arm64,riscv64,arm
-```
-
-## Building
-
-To build the project, run the following commands:
-
-```
-make
-```
-
-## Installing (on Embassy)
-
-SSH into an Embassy device.
-`scp` the `.s9pk` to any directory from your local machine.
-
-```
-scp mempool.s9pk root@<LAN ID>:/tmp
-```
-
-Run the following command to determine successful install:
-
-```
-embassy-cli auth login
-embassy-cli package install /tmp/mempool.s9pk
-```
-
-
-
-## SDK 040
-npm i
+Follow the documentation [guides](https://staging.docs.start9.com/packaging-guide/environment-setup.html).

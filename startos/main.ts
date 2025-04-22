@@ -1,5 +1,5 @@
 import { sdk } from './sdk'
-import { T } from '@start9labs/start-sdk'
+import { SubContainer, T } from '@start9labs/start-sdk'
 import {
   apiPort,
   dbPort,
@@ -21,6 +21,7 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
   console.info('Starting Mempool!')
 
   const syncHealthCheck = sdk.HealthCheck.of(effects, {
+    id: 'tx-indexer',
     name: 'Transaction Indexer',
     fn: async () => {
       // @TODO update with path to bitcoin cookie file
@@ -83,22 +84,21 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
     },
   })
 
-  const healthReceipts: T.HealthReceipt[] = []
+  const additionalChecks: T.HealthCheck[] = []
 
-  return sdk.Daemons.of(effects, started, healthReceipts)
+  return sdk.Daemons.of(effects, started, additionalChecks)
     .addDaemon('mariadb', {
-      image: { id: 'mariadb' },
+      subcontainer: await SubContainer.of(
+        effects,
+        { imageId: 'mariadb' },
+        sdk.Mounts.of().addVolume('mariadb', null, '/var/lib/mysql', false),
+        'database',
+      ),
       command: [
         '/usr/bin/mysqld_safe',
         '--user=mysql',
         "--datadir='/var/lib/mysql",
       ],
-      mounts: sdk.Mounts.of().addVolume(
-        'mariadb',
-        null,
-        '/var/lib/mysql',
-        false,
-      ),
       env: {
         MYSQL_DATABASE: 'mempool',
         MYSQL_USER: 'mempool',
@@ -116,7 +116,12 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
       requires: [],
     })
     .addDaemon('api', {
-      image: { id: 'backend' },
+      subcontainer: await SubContainer.of(
+        effects,
+        { imageId: 'backend' },
+        backendMounts,
+        'backend-api',
+      ),
       command: [
         '/backend/wait-for-it.sh',
         `localhost:${dbPort}`,
@@ -124,7 +129,6 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
         '--strict',
         '-- ./start.sh',
       ],
-      mounts: backendMounts,
       ready: {
         display: 'API',
         fn: () =>
@@ -136,9 +140,13 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
       requires: ['mariadb'],
     })
     .addDaemon('webui', {
-      image: { id: 'frontend' },
+      subcontainer: await SubContainer.of(
+        effects,
+        { imageId: 'backend' },
+        sdk.Mounts.of().addVolume('frontend', null, '/root', false),
+        'user-interface',
+      ),
       command: ['nginx', '-g', "'daemon off;'"],
-      mounts: sdk.Mounts.of().addVolume('frontend', null, '/root', false),
       ready: {
         display: 'Web Interface',
         fn: () =>

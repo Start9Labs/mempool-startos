@@ -82,6 +82,6 @@ export const config = sdk.Action.withInput(
       configFile.MEMPOOL.BACKEND = 'none'
     }
 
-    await Promise.all([jsonFile.merge(configFile)])
+    await Promise.all([jsonFile.merge(effects, configFile)])
   },
 )
