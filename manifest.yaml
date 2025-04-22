@@ -11,8 +11,8 @@ marketing-site: "https://mempool.space/"
 donation-url: "https://mempool.space/sponsor"
 build: ["make"]
 description:
-  short: "Explore the full Bitcoin ecosystem"
-  long: "Be your own explorer.\n\nRun your own instance of The Mempool Open Source Project and trust no one—use your own node to beautifully visualize data about the Bitcoin network, transactions, blockchain, mempool, and more.\n\nThis product includes GeoLite2 data created by MaxMind, available from https://www.maxmind.com."
+  short: "Be your own explorer"
+  long: "Run your own instance of The Mempool Open Source Project and trust no one.\n\nUse your own node to beautifully visualize data about the Bitcoin network, transactions, blockchain, mempool, and more.\n\nThis product includes GeoLite2 data created by MaxMind, available from https://www.maxmind.com."
 assets:
   license: LICENSE
   icon: icon.png
