@@ -13,7 +13,6 @@ export const manifest = setupManifest({
     short: 'A mempool and blockchain explorer and network visualizer.',
     long: 'Mempool is a fully featured visualizer, explorer, and API service that runs locally on your server, an open source project developed and operated for the benefit of the Bitcoin community, with a focus on the emerging transaction fee market to help our transition into a multi-layer ecosystem.',
   },
-  assets: [],
   volumes: ['frontend', 'backend', 'mariadb'],
   images: {
     frontend: {
@@ -36,11 +35,11 @@ export const manifest = setupManifest({
   alerts: {
     install: null,
     update:
-      'WARNING: Your mempool will need to reindex following an update, which can take up to an hour depending on your hardware.',
+      'Your mempool will need to reindex following an update, which can take up to an hour depending on your hardware.',
     uninstall: null,
     restore: null,
     start:
-      "READ CAREFULLY! When first running Mempool, previous block fee estimates will show as zero values until the service is able to catch up. This is expected behaviour.  ALSO: Lookups may be slow or time out altogether while the service is still warming up, or if there are too many other things running on your system.If address lookups aren't working, try restarting electrs and try the lookup again.",
+      "When first running Mempool, previous block fee estimates will show as zero values until the service is able to catch up. This is expected behavior. Lookups may be slow or time out altogether while the service is still warming up, or if there are too many other things running on your system. If address lookups aren't working, try restarting electrs and try the lookup again.",
     stop: null,
   },
   dependencies: {
@@ -48,22 +47,22 @@ export const manifest = setupManifest({
       description:
         'A Bitcoin node is needed to subscribe to new block events and provide data for your explorer',
       optional: false,
-      s9pk: '',
+      s9pk: 'https://github.com/Start9Labs/bitcoind-startos/releases/download/v28.1.0.3-alpha.4/bitcoind.s9pk',
     },
     electrs: {
       description: 'Provides an index for address lookups',
       optional: true,
-      s9pk: '',
+      s9pk: 'https://github.com/Start9Labs/bitcoind-startos/releases/download/v28.1.0.3-alpha.4/bitcoind.s9pk',
     },
     'c-lightning': {
       description: 'Used to provide Lightning Network data',
       optional: true,
-      s9pk: '',
+      s9pk: 'https://github.com/Start9Labs/cln-startos/releases/download/v25.02.2/c-lightningV2.s9pk',
     },
     lnd: {
       description: 'Used to provide Lightning Network data',
       optional: true,
-      s9pk: '',
+      s9pk: 'https://github.com/Start9Labs/lnd-startos/releases/download/v0.19.1-beta.1-alpha.2/lnd.s9pk',
     },
   },
 })

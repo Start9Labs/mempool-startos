@@ -28,21 +28,21 @@ cat /backend/nginx.conf > /etc/nginx/nginx.conf
 #  BACKEND SETUP
 
 # read bitcoin proxy creds from start9 config
-HOST_IP=$(ip -4 route list match 0/0 | awk '{print $3}')
-bitcoind_type=$(yq e '.bitcoind.type' /root/start9/config.yaml)
-bitcoind_user=$(yq e '.bitcoind.user' /root/start9/config.yaml)
-bitcoind_pass=$(yq e '.bitcoind.password' /root/start9/config.yaml)
+# HOST_IP=$(ip -4 route list match 0/0 | awk '{print $3}')
+# bitcoind_type=$(yq e '.bitcoind.type' /root/start9/config.yaml)
+# bitcoind_user=$(yq e '.bitcoind.user' /root/start9/config.yaml)
+# bitcoind_pass=$(yq e '.bitcoind.password' /root/start9/config.yaml)
 
-if [ "$bitcoind_type" = "internal-proxy" ]; then
-	bitcoind_host="btc-rpc-proxy.embassy"
-	echo "Running on Bitcoin Proxy..."
-else
-	bitcoind_host="bitcoind.embassy"
-	echo "Running on Bitcoin Core..."
-fi
-sed -i "s/CORE_RPC_HOST:=127.0.0.1/CORE_RPC_HOST:=$bitcoind_host/" start.sh
-sed -i "s/CORE_RPC_USERNAME:=mempool/CORE_RPC_USERNAME:=$bitcoind_user/" start.sh
-sed -i "s/CORE_RPC_PASSWORD:=mempool/CORE_RPC_PASSWORD:=$bitcoind_pass/" start.sh
+# if [ "$bitcoind_type" = "internal-proxy" ]; then
+# 	bitcoind_host="btc-rpc-proxy.embassy"
+# 	echo "Running on Bitcoin Proxy..."
+# else
+# 	bitcoind_host="bitcoind.embassy"
+# 	echo "Running on Bitcoin Core..."
+# fi
+# sed -i "s/CORE_RPC_HOST:=127.0.0.1/CORE_RPC_HOST:=$bitcoind_host/" start.sh
+# sed -i "s/CORE_RPC_USERNAME:=mempool/CORE_RPC_USERNAME:=$bitcoind_user/" start.sh
+# sed -i "s/CORE_RPC_PASSWORD:=mempool/CORE_RPC_PASSWORD:=$bitcoind_pass/" start.sh
 
 # Configure mempool to set lightning to true if lightning is enabled
 # if [ "$(yq e ".lightning.type" /root/start9/config.yaml)" = "none" ]; then
@@ -156,18 +156,18 @@ fi
 db_process=$!
 
 # START UP
-sed -i "s/user nobody;//g" /etc/nginx/nginx.conf
+# sed -i "s/user nobody;//g" /etc/nginx/nginx.conf
 
-nginx -g 'daemon off;' &
-frontend_process=$!
+# nginx -g 'daemon off;' &
+# frontend_process=$!
 
-/backend/wait-for-it.sh localhost:3306 --timeout=720 --strict -- ./start.sh &
-backend_process=$!
+# /backend/wait-for-it.sh localhost:3306 --timeout=720 --strict -- ./start.sh &
+# backend_process=$!
 
-echo 'All processes initalized'
+# echo 'All processes initalized'
 
 
-# SIGTERM HANDLING
-trap _term SIGTERM
+# # SIGTERM HANDLING
+# trap _term SIGTERM
 
-wait -n $db_process $backend_process $frontend_process
+# wait -n $db_process $backend_process $frontend_process

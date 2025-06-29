@@ -3,6 +3,8 @@ INGREDIENTS := $(shell start-cli s9pk list-ingredients 2> /dev/null)
 
 .PHONY: all clean install check-deps check-init ingredients
 
+.DELETE_ON_ERROR:
+
 all: ${PACKAGE_ID}.s9pk
 	@echo " Done!"
 	@echo " Filesize:$(shell du -h $(PACKAGE_ID).s9pk) is ready"
@@ -10,6 +12,10 @@ all: ${PACKAGE_ID}.s9pk
 check-deps:
 	@if ! command -v start-cli > /dev/null; then \
 		echo "Error: start-cli not found. Please install it first."; \
+		exit 1; \
+	fi
+	@if ! command -v npm > /dev/null; then \
+		echo "Error: npm (Node Package Manager) not found. Please install Node.js and npm."; \
 		exit 1; \
 	fi
 
@@ -25,7 +31,7 @@ ${PACKAGE_ID}.s9pk: $(INGREDIENTS) | check-deps check-init
 	@$(MAKE) --no-print-directory ingredients
 	start-cli s9pk pack
 
-javascript/index.js: $(shell find startos -name "*.ts") tsconfig.json node_modules package.json
+javascript/index.js: $(shell git ls-files startos) tsconfig.json node_modules package.json
 	npm run build
 
 assets:
@@ -42,7 +48,7 @@ clean:
 	rm -rf javascript
 	rm -rf node_modules
 
-install: | check-deps check-init
+install: | check-deps check-init ${PACKAGE_ID}.s9pk
 	@if [ ! -f ~/.startos/config.yaml ]; then echo "You must define \"host: http://server-name.local\" in ~/.startos/config.yaml config file first."; exit 1; fi
 	@echo "\nInstalling to $$(grep -v '^#' ~/.startos/config.yaml | cut -d'/' -f3) ...\n"
 	@[ -f $(PACKAGE_ID).s9pk ] || ( $(MAKE) && echo "\nInstalling to $$(grep -v '^#' ~/.startos/config.yaml | cut -d'/' -f3) ...\n" )

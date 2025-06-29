@@ -1,35 +1,127 @@
 import { sdk } from './sdk'
-import { SubContainer, T } from '@start9labs/start-sdk'
 import {
   apiPort,
+  btcMountpoint,
+  clnMountpoint,
   dbPort,
-  determineResponse,
+  determineSyncResponse,
   IbdStateRes,
+  lndMountpoint,
+  nginxConf,
   TxIndexRes,
   uiPort,
 } from './utils'
-import { readFile } from 'fs/promises'
+import { readFile, writeFile } from 'fs/promises'
+import { bitcoinConfDefaults } from 'bitcoind-startos/startos/utils'
+import { configJson } from './file-models/mempool-config.json'
 
-export const backendMounts = sdk.Mounts.of().addVolume(
-  'backend',
-  null,
-  '/backend/cache',
-  false,
-)
+/**
+ * ======================== Mounts ========================
+ */
+let backendMounts = sdk.Mounts.of()
+  .mountVolume({
+    volumeId: 'backend',
+    subpath: null,
+    mountpoint: '/backend/cache',
+    readonly: false,
+  })
+  .mountDependency({
+    dependencyId: 'bitcoind',
+    volumeId: 'main',
+    subpath: null,
+    mountpoint: btcMountpoint,
+    // @TODO: this should be readonly, but we need to change its permissions
+    readonly: false,
+  })
 
 export const main = sdk.setupMain(async ({ effects, started }) => {
-  console.info('Starting Mempool!')
+  /**
+   * ======================== Setup ========================
+   */
+  console.info('Starting Mempool...')
 
-  const syncHealthCheck = sdk.HealthCheck.of(effects, {
-    id: 'tx-indexer',
-    name: 'Transaction Indexer',
+  // ========================
+  // Dependency setup & checks
+  // ========================
+
+  const depResult = await sdk.checkDependencies(effects)
+  depResult.throwIfNotSatisfied()
+
+  const config = await configJson.read().const(effects)
+  if (!config) throw new Error('Config file not found')
+
+  if (config.LIGHTNING.ENABLED) {
+    switch (config.LIGHTNING.BACKEND) {
+      case 'lnd':
+        // @TODO backendMounts.mountDependency<typeof LndManifest>
+        backendMounts = backendMounts.mountDependency({
+          dependencyId: 'lnd',
+          volumeId: 'main', //@TODO verify
+          subpath: null,
+          mountpoint: lndMountpoint,
+          readonly: true,
+        })
+        break
+      case 'c-lightning':
+        // @TODO backendMounts.mountDependency<typeof ClnManifest>
+        backendMounts = backendMounts.mountDependency({
+          dependencyId: 'c-lightning',
+          volumeId: 'main', //@TODO verify
+          subpath: null,
+          mountpoint: clnMountpoint,
+          readonly: true,
+        })
+        break
+      default:
+        break
+    }
+  }
+
+  // ========================
+  // Set containers
+  // ========================
+
+  const backendContainer = await sdk.SubContainer.of(
+    effects,
+    { imageId: 'backend' },
+    backendMounts,
+    'backend-api',
+  )
+
+  const frontendContainer = await sdk.SubContainer.of(
+    effects,
+    { imageId: 'frontend' },
+    sdk.Mounts.of().mountVolume({
+      volumeId: 'frontend',
+      subpath: null,
+      mountpoint: '/root',
+      readonly: false,
+    }),
+    'user-interface',
+  )
+
+  // ========================
+  // Setup Nginx
+  // ========================
+  await writeFile(
+    `${frontendContainer.rootfs}/etc/nginx/conf.d/default.conf`,
+    nginxConf,
+  )
+
+  // ========================
+  // Additional health check(s)
+  // ========================
+
+  const syncHealthCheck = {
+    display: 'Transaction Indexer',
     fn: async () => {
-      // @TODO update with path to bitcoin cookie file
-      const auth = await readFile('', {
-        encoding: 'base64',
-      })
-      // @TODO update url and port from bitcoin config
-      const txIndexReq = fetch('http://bitcoind.embassy:8332', {
+      const auth = await readFile(
+        `${backendContainer.rootfs}${btcMountpoint}/${bitcoinConfDefaults.rpccookiefile}`,
+        {
+          encoding: 'base64',
+        },
+      )
+      const txIndexReq = fetch('http://bitcoind.startos:8332', {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Basic ${auth}`,
@@ -52,8 +144,7 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
           throw new Error(e)
         })
 
-      // @TODO update url and port from bitcoin config
-      const ibdStateReq = fetch('http://bitcoind.embassy:8332', {
+      const ibdStateReq = fetch('http://bitcoind.startos:8332', {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Basic ${auth}`,
@@ -80,30 +171,38 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
         txIndexReq,
         ibdStateReq,
       ])
-      return determineResponse(txIndexRes, ibdStateRes)
+      return determineSyncResponse(txIndexRes, ibdStateRes)
     },
-  })
+  }
 
-  const additionalChecks: T.HealthCheck[] = []
-
-  return sdk.Daemons.of(effects, started, additionalChecks)
+  /**
+   *  ======================== Daemons ========================
+   */
+  return sdk.Daemons.of(effects, started)
     .addDaemon('mariadb', {
-      subcontainer: await SubContainer.of(
+      subcontainer: await sdk.SubContainer.of(
         effects,
         { imageId: 'mariadb' },
-        sdk.Mounts.of().addVolume('mariadb', null, '/var/lib/mysql', false),
+        sdk.Mounts.of().mountVolume({
+          volumeId: 'mariadb',
+          subpath: null,
+          mountpoint: '/var/lib/mysql',
+          readonly: false,
+        }),
         'database',
       ),
-      command: [
-        '/usr/bin/mysqld_safe',
-        '--user=mysql',
-        "--datadir='/var/lib/mysql",
-      ],
-      env: {
-        MYSQL_DATABASE: 'mempool',
-        MYSQL_USER: 'mempool',
-        MYSQL_PASSWORD: 'mempool',
-        MYSQL_ROOT_PASSWORD: 'admin',
+      exec: {
+        command: [
+          '/usr/bin/mysqld_safe',
+          '--user=mysql',
+          "--datadir='/var/lib/mysql",
+        ],
+        env: {
+          MYSQL_DATABASE: 'mempool',
+          MYSQL_USER: 'mempool',
+          MYSQL_PASSWORD: 'mempool',
+          MYSQL_ROOT_PASSWORD: 'admin',
+        },
       },
       ready: {
         display: 'Database',
@@ -116,19 +215,16 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
       requires: [],
     })
     .addDaemon('api', {
-      subcontainer: await SubContainer.of(
-        effects,
-        { imageId: 'backend' },
-        backendMounts,
-        'backend-api',
-      ),
-      command: [
-        '/backend/wait-for-it.sh',
-        `localhost:${dbPort}`,
-        '--timeout=720',
-        '--strict',
-        '-- ./start.sh',
-      ],
+      subcontainer: backendContainer,
+      exec: {
+        command: [
+          '/backend/wait-for-it.sh',
+          `localhost:${dbPort}`,
+          '--timeout=720',
+          '--strict',
+          '-- ./start.sh',
+        ],
+      },
       ready: {
         display: 'API',
         fn: () =>
@@ -139,14 +235,12 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
       },
       requires: ['mariadb'],
     })
+    .addHealthCheck('sync', { ready: syncHealthCheck, requires: ['api'] })
     .addDaemon('webui', {
-      subcontainer: await SubContainer.of(
-        effects,
-        { imageId: 'backend' },
-        sdk.Mounts.of().addVolume('frontend', null, '/root', false),
-        'user-interface',
-      ),
-      command: ['nginx', '-g', "'daemon off;'"],
+      subcontainer: frontendContainer,
+      exec: {
+        command: ['nginx', '-g', "'daemon off;'"],
+      },
       ready: {
         display: 'Web Interface',
         fn: () =>

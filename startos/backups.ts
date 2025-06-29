@@ -1,5 +1,6 @@
 import { sdk } from './sdk'
 
-export const { createBackup, restoreBackup } = sdk.setupBackups(
-  async ({ effects }) => sdk.Backups.volumes('frontend', 'backend', 'mariadb'),
+export const { createBackup, restoreInit } = sdk.setupBackups(
+  async ({ effects }) =>
+    sdk.Backups.ofVolumes('frontend', 'backend', 'mariadb'),
 )

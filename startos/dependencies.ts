@@ -1,24 +1,23 @@
 import { sdk } from './sdk'
 import { T } from '@start9labs/start-sdk'
-import { config } from 'bitcoind-startos/startos/actions/config/config'
+import { config } from 'bitcoind-startos/startos/actions/config/other'
+import { configJson } from './file-models/mempool-config.json'
 
 export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
-  await sdk.action.request(effects, 'bitcoind', config, 'important', {
+  await sdk.action.createTask(effects, 'bitcoind', config, 'critical', {
     input: {
       kind: 'partial',
       value: {
-        advanced: {
-          prune: 0,
-        },
+        prune: 0,
         txindex: true,
-        mempool: {
-          maxmempool: 300, // TODO getSystemMemoryLimit - how with sdk / effects?
-        },
+        // mempool: {
+        //   maxmempool: 300, // TODO getSystemMemoryLimit
+        // },
       },
     },
     when: { condition: 'input-not-matches', once: false },
     reason:
-      'Mempool requires an transaction indexing enabled and an unpruned bitcoin node.',
+      'Mempool requires transaction indexing enabled and an unpruned bitcoin node.',
   })
 
   let currentDeps = {} as Record<
@@ -26,10 +25,10 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
     T.DependencyRequirement
   >
 
-  const ln = await sdk.store.getOwn(effects, sdk.StorePath.lightning).const()
-  const electrsEnabled = await sdk.store
-    .getOwn(effects, sdk.StorePath.electrs)
-    .const()
+  const ln = await configJson.read((c) => c.LIGHTNING.BACKEND).const(effects)
+  const electrsEnabled = await configJson
+    .read((c) => c.MEMPOOL.BACKEND)
+    .const(effects)
 
   if (ln === 'lnd') {
     currentDeps.lnd = {
@@ -40,7 +39,7 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
     }
   }
 
-  if (ln === 'cln') {
+  if (ln === 'c-lightning') {
     currentDeps['c-lightning'] = {
       id: 'c-lightning',
       kind: 'running',
@@ -49,11 +48,11 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
     }
   }
 
-  if (electrsEnabled) {
+  if (electrsEnabled === 'electrum') {
     currentDeps.electrs = {
       id: 'electrs',
       kind: 'running',
-      versionRange: '>=0.10.6:1', // @TODO confirm
+      versionRange: '>=0.10.9:1',
       healthChecks: [],
     }
   }
