@@ -4,55 +4,57 @@ import { config } from 'bitcoind-startos/startos/actions/config/other'
 import { configJson } from './file-models/mempool-config.json'
 
 export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
-  await sdk.action.createTask(effects, 'bitcoind', config, 'critical', {
-    input: {
-      kind: 'partial',
-      value: {
-        prune: 0,
-        txindex: true,
-        // mempool: {
-        //   maxmempool: 300, // TODO getSystemMemoryLimit
-        // },
-      },
-    },
-    when: { condition: 'input-not-matches', once: false },
-    reason:
-      'Mempool requires transaction indexing enabled and an unpruned bitcoin node.',
-  })
+  // await sdk.action.createTask(effects, 'bitcoind', config, 'critical', {
+  //   input: {
+  //     kind: 'partial',
+  //     value: {
+  //       prune: 0,
+  //       txindex: true,
+  //       // mempool: {
+  //       //   maxmempool: 300, // TODO getSystemMemoryLimit
+  //       // },
+  //     },
+  //   },
+  //   when: { condition: 'input-not-matches', once: false },
+  //   reason:
+  //     'Mempool requires transaction indexing enabled and an unpruned bitcoin node.',
+  // })
 
   let currentDeps = {} as Record<
     'bitcoind' | 'lnd' | 'c-lightning' | 'electrs',
     T.DependencyRequirement
   >
 
-  const ln = await configJson.read((c) => c.LIGHTNING.BACKEND).const(effects)
-  const electrsEnabled = await configJson
+  const lnData = await configJson.read((c) => c.LIGHTNING).const(effects)
+  const electrsData = await configJson
     .read((c) => c.MEMPOOL.BACKEND)
     .const(effects)
 
-  if (ln === 'lnd') {
-    currentDeps.lnd = {
-      id: 'lnd',
-      kind: 'running',
-      versionRange: '>=0.19.1-beta:1-alpha.2',
-      healthChecks: [],
+  if (lnData && lnData.ENABLED) {
+    if (lnData.BACKEND === 'lnd') {
+      currentDeps.lnd = {
+        id: 'lnd',
+        kind: 'running',
+        versionRange: '>=0.19.1-beta:1-alpha.4',
+        healthChecks: [],
+      }
+    }
+
+    if (lnData.BACKEND === 'cln') {
+      currentDeps['c-lightning'] = {
+        id: 'c-lightning',
+        kind: 'running',
+        versionRange: '>=25.02.2',
+        healthChecks: [],
+      }
     }
   }
 
-  if (ln === 'c-lightning') {
-    currentDeps['c-lightning'] = {
-      id: 'c-lightning',
-      kind: 'running',
-      versionRange: '>=25.02.2',
-      healthChecks: [],
-    }
-  }
-
-  if (electrsEnabled === 'electrum') {
+  if (electrsData === 'electrum') {
     currentDeps.electrs = {
       id: 'electrs',
       kind: 'running',
-      versionRange: '>=0.10.9:1',
+      versionRange: '>=0.10.9:1-alpha.2',
       healthChecks: [],
     }
   }
@@ -61,7 +63,7 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
     ...currentDeps,
     bitcoind: {
       kind: 'running',
-      versionRange: '>=28.1:3-alpha.4 ',
+      versionRange: '>=28.1:3-alpha.6',
       healthChecks: [],
     },
   }

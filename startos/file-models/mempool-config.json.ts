@@ -6,7 +6,7 @@ const shape = object({
   MEMPOOL: object({
     OFFICIAL: boolean.onMismatch(c.MEMPOOL.OFFICIAL),
     NETWORK: literals('mainnet', 'testnet').onMismatch(c.MEMPOOL.NETWORK),
-    BACKEND: literals('electrum', 'none').onMismatch(c.MEMPOOL.BACKEND), // @TODO confirm literals
+    BACKEND: literals('electrum', 'none').onMismatch(c.MEMPOOL.BACKEND),
     ENABLED: boolean.onMismatch(c.MEMPOOL.ENABLED),
     HTTP_PORT: number.onMismatch(c.MEMPOOL.HTTP_PORT),
     SPAWN_CLUSTER_PROCS: number.onMismatch(c.MEMPOOL.SPAWN_CLUSTER_PROCS),
@@ -31,15 +31,19 @@ const shape = object({
     USE_SECOND_NODE_FOR_MINFEE: boolean.onMismatch(
       c.MEMPOOL.USE_SECOND_NODE_FOR_MINFEE,
     ),
-    EXTERNAL_ASSETS: array(string).onMismatch(c.MEMPOOL.EXTERNAL_ASSETS), //@TODO confirm
+    EXTERNAL_ASSETS: array(string).onMismatch(c.MEMPOOL.EXTERNAL_ASSETS),
     EXTERNAL_MAX_RETRY: number.onMismatch(c.MEMPOOL.EXTERNAL_MAX_RETRY),
     EXTERNAL_RETRY_INTERVAL: number.onMismatch(
       c.MEMPOOL.EXTERNAL_RETRY_INTERVAL,
     ),
     USER_AGENT: string.onMismatch(c.MEMPOOL.USER_AGENT),
-    STDOUT_LOG_MIN_PRIORITY: literals('debug', 'info', 'error').onMismatch(
-      c.MEMPOOL.STDOUT_LOG_MIN_PRIORITY,
-    ), // @TODO confirm
+    STDOUT_LOG_MIN_PRIORITY: literals(
+      'trade',
+      'debug',
+      'info',
+      'warn',
+      'error',
+    ).onMismatch(c.MEMPOOL.STDOUT_LOG_MIN_PRIORITY),
     AUTOMATIC_POOLS_UPDATE: boolean.onMismatch(
       c.MEMPOOL.AUTOMATIC_POOLS_UPDATE,
     ),
@@ -91,7 +95,7 @@ const shape = object({
     ),
     REQUEST_TIMEOUT: number.onMismatch(c.ESPLORA.REQUEST_TIMEOUT),
     FALLBACK_TIMEOUT: number.onMismatch(c.ESPLORA.FALLBACK_TIMEOUT),
-    FALLBACK: array(string).onMismatch(c.ESPLORA.FALLBACK), // @TODO confirm
+    FALLBACK: array(string).onMismatch(c.ESPLORA.FALLBACK),
     MAX_BEHIND_TIP: number.onMismatch(c.ESPLORA.MAX_BEHIND_TIP),
   }),
   SECOND_CORE_RPC: object({
@@ -143,7 +147,7 @@ const shape = object({
   }),
   LIGHTNING: object({
     ENABLED: boolean.onMismatch(c.LIGHTNING.ENABLED),
-    BACKEND: literals('lnd', 'c-lightning').onMismatch(c.LIGHTNING.BACKEND), // @TODO confirm c-lightning or cln
+    BACKEND: literals('lnd', 'cln').onMismatch(c.LIGHTNING.BACKEND),
     STATS_REFRESH_INTERVAL: number.onMismatch(
       c.LIGHTNING.STATS_REFRESH_INTERVAL,
     ),
@@ -212,7 +216,7 @@ const shape = object({
 export const configJson = FileHelper.json(
   {
     volumeId: 'backend',
-    subpath: 'mempool-config.json',
+    subpath: '/backend/mempool-config.json',
   },
   shape,
 )

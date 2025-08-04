@@ -31,7 +31,7 @@ ${PACKAGE_ID}.s9pk: $(INGREDIENTS) | check-deps check-init
 	@$(MAKE) --no-print-directory ingredients
 	start-cli s9pk pack
 
-javascript/index.js: $(shell git ls-files startos) tsconfig.json node_modules package.json
+javascript/index.js: $(shell find startos -name "*.ts") tsconfig.json node_modules package.json
 	npm run build
 
 assets:

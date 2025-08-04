@@ -1,5 +1,6 @@
 import { configJson } from '../file-models/mempool-config.json'
 import { sdk } from '../sdk'
+import { clnMountpoint, lndMountpoint } from '../utils'
 const { InputSpec, Value } = sdk
 
 export const lightningInputSpec = InputSpec.of({
@@ -60,10 +61,13 @@ export const enableLightning = sdk.Action.withInput(
       case 'lnd':
         config.LIGHTNING.ENABLED = true
         config.LIGHTNING.BACKEND = 'lnd'
+        config.LND.TLS_CERT_PATH = `${lndMountpoint}/tls.cert`
+        config.LND.MACAROON_PATH = `${lndMountpoint}/readonly.macaroon`
         break
       case 'cln':
         config.LIGHTNING.ENABLED = true
-        config.LIGHTNING.BACKEND = 'c-lightning' // @TODO confirm
+        config.LIGHTNING.BACKEND = 'cln'
+        config.CLIGHTNING.SOCKET = `${clnMountpoint}/lightning-rpc`
         break
       default:
         config.LIGHTNING.ENABLED = false

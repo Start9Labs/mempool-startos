@@ -33,13 +33,13 @@ export const manifest = setupManifest({
   },
   hardwareRequirements: {},
   alerts: {
-    install: null,
+    install:
+      'When first running Mempool, previous block fee estimates will show as zero values until the service is able to catch up. Lookups may be slow or time out altogether while the service is still warming up, or if there are too many other things running on your system.',
     update:
       'Your mempool will need to reindex following an update, which can take up to an hour depending on your hardware.',
     uninstall: null,
     restore: null,
-    start:
-      "When first running Mempool, previous block fee estimates will show as zero values until the service is able to catch up. This is expected behavior. Lookups may be slow or time out altogether while the service is still warming up, or if there are too many other things running on your system. If address lookups aren't working, try restarting electrs and try the lookup again.",
+    start: null,
     stop: null,
   },
   dependencies: {
@@ -47,12 +47,12 @@ export const manifest = setupManifest({
       description:
         'A Bitcoin node is needed to subscribe to new block events and provide data for your explorer',
       optional: false,
-      s9pk: 'https://github.com/Start9Labs/bitcoind-startos/releases/download/v28.1.0.3-alpha.4/bitcoind.s9pk',
+      s9pk: 'https://github.com/Start9Labs/bitcoind-startos/releases/download/v28.1.0.3-alpha.6/bitcoind.s9pk',
     },
     electrs: {
       description: 'Provides an index for address lookups',
       optional: true,
-      s9pk: 'https://github.com/Start9Labs/bitcoind-startos/releases/download/v28.1.0.3-alpha.4/bitcoind.s9pk',
+      s9pk: 'https://github.com/Start9Labs/electrs-startos/releases/download/v0.10.9-1-alpha.2/electrs.s9pk',
     },
     'c-lightning': {
       description: 'Used to provide Lightning Network data',
@@ -62,7 +62,7 @@ export const manifest = setupManifest({
     lnd: {
       description: 'Used to provide Lightning Network data',
       optional: true,
-      s9pk: 'https://github.com/Start9Labs/lnd-startos/releases/download/v0.19.1-beta.1-alpha.2/lnd.s9pk',
+      s9pk: 'https://github.com/Start9Labs/lnd-startos/releases/download/v0.19.1-beta.1-alpha.4/lnd.s9pk',
     },
   },
 })

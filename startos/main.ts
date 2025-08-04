@@ -3,6 +3,7 @@ import {
   apiPort,
   btcMountpoint,
   clnMountpoint,
+  configJsonDefaults,
   dbPort,
   determineSyncResponse,
   IbdStateRes,
@@ -22,13 +23,19 @@ let backendMounts = sdk.Mounts.of()
   .mountVolume({
     volumeId: 'backend',
     subpath: null,
-    mountpoint: '/backend/cache',
+    mountpoint: '/root',
     readonly: false,
   })
+  // .mountVolume({
+  //   volumeId: 'backend',
+  //   subpath: null,
+  //   mountpoint: '/backend/cache',
+  //   readonly: false,
+  // })
   .mountDependency({
     dependencyId: 'bitcoind',
     volumeId: 'main',
-    subpath: null,
+    subpath: '/data',
     mountpoint: btcMountpoint,
     // @TODO: this should be readonly, but we need to change its permissions
     readonly: false,
@@ -62,7 +69,7 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
           readonly: true,
         })
         break
-      case 'c-lightning':
+      case 'cln':
         // @TODO backendMounts.mountDependency<typeof ClnManifest>
         backendMounts = backendMounts.mountDependency({
           dependencyId: 'c-lightning',
@@ -103,10 +110,10 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
   // ========================
   // Setup Nginx
   // ========================
-  await writeFile(
-    `${frontendContainer.rootfs}/etc/nginx/conf.d/default.conf`,
-    nginxConf,
-  )
+  // await writeFile(
+  //   `${frontendContainer.rootfs}/etc/nginx/conf.d/default.conf`,
+  //   nginxConf,
+  // )
 
   // ========================
   // Additional health check(s)
@@ -116,7 +123,7 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
     display: 'Transaction Indexer',
     fn: async () => {
       const auth = await readFile(
-        `${backendContainer.rootfs}${btcMountpoint}/${bitcoinConfDefaults.rpccookiefile}`,
+        `${btcMountpoint}/${bitcoinConfDefaults.rpccookiefile}`,
         {
           encoding: 'base64',
         },
@@ -175,6 +182,29 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
     },
   }
 
+  await backendContainer.execFail(['groupadd', '-g', '1000', 'memgroup'], {
+    user: 'root',
+  })
+  await backendContainer.execFail(
+    [
+      'useradd',
+      '-u',
+      '1000',
+      '-g',
+      '1000',
+      '-m',
+      '-d',
+      '/home/memuser',
+      'memuser',
+    ],
+    { user: 'root' },
+  )
+
+  await frontendContainer.execFail(
+    ['chown', '-R', 'nginx:nginx', '/var/log/nginx'],
+    { user: 'root' },
+  )
+
   /**
    *  ======================== Daemons ========================
    */
@@ -192,15 +222,11 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
         'database',
       ),
       exec: {
-        command: [
-          '/usr/bin/mysqld_safe',
-          '--user=mysql',
-          "--datadir='/var/lib/mysql",
-        ],
+        command: sdk.useEntrypoint(),
         env: {
-          MYSQL_DATABASE: 'mempool',
-          MYSQL_USER: 'mempool',
-          MYSQL_PASSWORD: 'mempool',
+          MYSQL_DATABASE: config.DATABASE.DATABASE,
+          MYSQL_USER: config.DATABASE.USERNAME,
+          MYSQL_PASSWORD: config.DATABASE.PASSWORD,
           MYSQL_ROOT_PASSWORD: 'admin',
         },
       },
@@ -217,13 +243,16 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
     .addDaemon('api', {
       subcontainer: backendContainer,
       exec: {
-        command: [
-          '/backend/wait-for-it.sh',
-          `localhost:${dbPort}`,
-          '--timeout=720',
-          '--strict',
-          '-- ./start.sh',
-        ],
+        // command: [
+        //   // 'su',
+        //   // '-',
+        //   // '1000:1000',
+        //   'sh',
+        //   '-c',
+        //   `/backend/wait-for-it.sh localhost:${dbPort} --timeout=720 --strict -- ./start.sh`,
+        // ],
+        command: ['node', '/backend/package/index.js'],
+        user: '1000:1000',
       },
       ready: {
         display: 'API',

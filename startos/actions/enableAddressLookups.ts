@@ -41,18 +41,10 @@ export const enableAddressLookups = sdk.Action.withInput(
 
   // the execution function
   async ({ effects, input }) => {
-    const configFile = await configJson.read().const(effects)
-    if (!configFile) throw new Error('Config file not found')
-
-    // return early if nothing changed
-    if ((configFile.MEMPOOL.BACKEND === 'electrum') === input.electrs) return
-
     if (input.electrs) {
-      configFile.MEMPOOL.BACKEND = 'electrum'
+      await configJson.merge(effects, { MEMPOOL: { BACKEND: 'electrum' } })
     } else {
-      configFile.MEMPOOL.BACKEND = 'none'
+      await configJson.merge(effects, { MEMPOOL: { BACKEND: 'none' } })
     }
-
-    await configJson.merge(effects, configFile)
   },
 )

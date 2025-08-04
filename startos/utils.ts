@@ -1,5 +1,6 @@
 import { T } from '@start9labs/start-sdk'
 import { bitcoinConfDefaults } from 'bitcoind-startos/startos/utils'
+import { port as electrsPort } from 'electrs-startos/startos/utils'
 
 export const uiPort = 8080
 export const apiPort = 8999
@@ -65,7 +66,7 @@ export const configJsonDefaults = {
     BLOCK_WEIGHT_UNITS: 4000000,
     INITIAL_BLOCKS_AMOUNT: 8,
     MEMPOOL_BLOCKS_AMOUNT: 8,
-    INDEXING_BLOCKS_AMOUNT: 11000,
+    INDEXING_BLOCKS_AMOUNT: 52560,
     BLOCKS_SUMMARIES_INDEXING: false,
     GOGGLES_INDEXING: false,
     USE_SECOND_NODE_FOR_MINFEE: false,
@@ -73,7 +74,7 @@ export const configJsonDefaults = {
     EXTERNAL_MAX_RETRY: 1,
     EXTERNAL_RETRY_INTERVAL: 0,
     USER_AGENT: 'mempool',
-    STDOUT_LOG_MIN_PRIORITY: 'debug' as const,
+    STDOUT_LOG_MIN_PRIORITY: 'info' as const,
     AUTOMATIC_POOLS_UPDATE: false,
     POOLS_JSON_URL:
       'https://raw.githubusercontent.com/mempool/mining-pools/master/pools-v2.json',
@@ -104,7 +105,7 @@ export const configJsonDefaults = {
   },
   ELECTRUM: {
     HOST: 'electrs.startos',
-    PORT: 50001, // @TODO get from electrs?
+    PORT: electrsPort,
     TLS_ENABLED: true,
   },
   ESPLORA: {
@@ -157,20 +158,20 @@ export const configJsonDefaults = {
   LIGHTNING: {
     ENABLED: false,
     BACKEND: 'lnd' as const,
-    STATS_REFRESH_INTERVAL: 600,
-    GRAPH_REFRESH_INTERVAL: 600,
+    STATS_REFRESH_INTERVAL: 3600,
+    GRAPH_REFRESH_INTERVAL: 3600,
     LOGGER_UPDATE_INTERVAL: 30,
     FORENSICS_INTERVAL: 43200,
     FORENSICS_RATE_LIMIT: 20,
   },
   LND: {
-    TLS_CERT_PATH: `${lndMountpoint}/tls.cert` as const,
-    MACAROON_PATH: `${lndMountpoint}/readonly.macaroon` as const,
+    TLS_CERT_PATH: '',
+    MACAROON_PATH: '',
     REST_API_URL: 'https://lnd.startos:8080' as const,
     TIMEOUT: 10000,
   },
   CLIGHTNING: {
-    SOCKET: `${clnMountpoint}/lightning-rpc` as const,
+    SOCKET: '',
   },
   SOCKS5PROXY: {
     ENABLED: false,
