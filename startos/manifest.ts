@@ -1,4 +1,10 @@
 import { setupManifest } from '@start9labs/start-sdk'
+import { SDKImageInputSpec } from '@start9labs/start-sdk/base/lib/types/ManifestTypes'
+
+const BUILD = process.env.BUILD || ''
+
+const architectures =
+  BUILD === 'x86_64' || BUILD === 'aarch64' ? [BUILD] : ['x86_64', 'aarch64']
 
 export const manifest = setupManifest({
   id: 'mempool',
@@ -9,6 +15,8 @@ export const manifest = setupManifest({
   supportSite: 'https://mempool.space/docs/faq',
   marketingSite: 'https://mempool.space',
   donationUrl: 'https://mempool.space/sponsor',
+  docsUrl:
+    'https://github.com/Start9Labs/mempool-startos/blob/master/instructions.md',
   description: {
     short: 'A mempool and blockchain explorer and network visualizer.',
     long: 'Mempool is a fully featured visualizer, explorer, and API service that runs locally on your server, an open source project developed and operated for the benefit of the Bitcoin community, with a focus on the emerging transaction fee market to help our transition into a multi-layer ecosystem.',
@@ -19,17 +27,20 @@ export const manifest = setupManifest({
       source: {
         dockerTag: 'mempool/frontend:v3.2.1',
       },
-    },
+      arch: architectures,
+    } as SDKImageInputSpec,
     backend: {
       source: {
         dockerTag: 'mempool/backend:v3.2.1',
       },
-    },
+      arch: architectures,
+    } as SDKImageInputSpec,
     mariadb: {
       source: {
         dockerTag: 'mariadb:10.4.32',
       },
-    },
+      arch: architectures,
+    } as SDKImageInputSpec,
   },
   hardwareRequirements: {},
   alerts: {
@@ -47,22 +58,22 @@ export const manifest = setupManifest({
       description:
         'A Bitcoin node is needed to subscribe to new block events and provide data for your explorer',
       optional: false,
-      s9pk: 'https://github.com/Start9Labs/bitcoind-startos/releases/download/v28.1.0.3-alpha.6/bitcoind.s9pk',
+      s9pk: 'https://github.com/Start9Labs/bitcoind-startos/releases/download/v28.1.0.3-alpha.8/bitcoind.s9pk',
     },
     electrs: {
       description: 'Provides an index for address lookups',
       optional: true,
-      s9pk: 'https://github.com/Start9Labs/electrs-startos/releases/download/v0.10.9-1-alpha.2/electrs.s9pk',
+      s9pk: 'https://github.com/Start9Labs/electrs-startos/releases/download/v0.10.10.0-alpha.1/electrs.s9pk',
     },
     'c-lightning': {
       description: 'Used to provide Lightning Network data',
       optional: true,
-      s9pk: 'https://github.com/Start9Labs/cln-startos/releases/download/v25.02.2/c-lightningV2.s9pk',
+      s9pk: 'https://github.com/Start9Labs/cln-startos/releases/download/v25.05.0.1-alpha.1/c-lightning.s9pk',
     },
     lnd: {
       description: 'Used to provide Lightning Network data',
       optional: true,
-      s9pk: 'https://github.com/Start9Labs/lnd-startos/releases/download/v0.19.1-beta.1-alpha.4/lnd.s9pk',
+      s9pk: 'https://github.com/Start9Labs/lnd-startos/releases/download/v0.19.2-beta.1-beta.2/lnd.s9pk',
     },
   },
 })

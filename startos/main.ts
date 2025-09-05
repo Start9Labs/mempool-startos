@@ -3,16 +3,14 @@ import {
   apiPort,
   btcMountpoint,
   clnMountpoint,
-  configJsonDefaults,
   dbPort,
   determineSyncResponse,
   IbdStateRes,
   lndMountpoint,
-  nginxConf,
   TxIndexRes,
   uiPort,
 } from './utils'
-import { readFile, writeFile } from 'fs/promises'
+import { readFile } from 'fs/promises'
 import { bitcoinConfDefaults } from 'bitcoind-startos/startos/utils'
 import { configJson } from './file-models/mempool-config.json'
 
@@ -23,21 +21,14 @@ let backendMounts = sdk.Mounts.of()
   .mountVolume({
     volumeId: 'backend',
     subpath: null,
-    mountpoint: '/root',
+    mountpoint: '/backend/cache',
     readonly: false,
   })
-  // .mountVolume({
-  //   volumeId: 'backend',
-  //   subpath: null,
-  //   mountpoint: '/backend/cache',
-  //   readonly: false,
-  // })
   .mountDependency({
     dependencyId: 'bitcoind',
     volumeId: 'main',
-    subpath: '/data',
+    subpath: null,
     mountpoint: btcMountpoint,
-    // @TODO: this should be readonly, but we need to change its permissions
     readonly: false,
   })
 
@@ -60,20 +51,18 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
   if (config.LIGHTNING.ENABLED) {
     switch (config.LIGHTNING.BACKEND) {
       case 'lnd':
-        // @TODO backendMounts.mountDependency<typeof LndManifest>
         backendMounts = backendMounts.mountDependency({
           dependencyId: 'lnd',
-          volumeId: 'main', //@TODO verify
+          volumeId: 'main',
           subpath: null,
           mountpoint: lndMountpoint,
           readonly: true,
         })
         break
       case 'cln':
-        // @TODO backendMounts.mountDependency<typeof ClnManifest>
         backendMounts = backendMounts.mountDependency({
           dependencyId: 'c-lightning',
-          volumeId: 'main', //@TODO verify
+          volumeId: 'main',
           subpath: null,
           mountpoint: clnMountpoint,
           readonly: true,
@@ -108,14 +97,6 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
   )
 
   // ========================
-  // Setup Nginx
-  // ========================
-  // await writeFile(
-  //   `${frontendContainer.rootfs}/etc/nginx/conf.d/default.conf`,
-  //   nginxConf,
-  // )
-
-  // ========================
   // Additional health check(s)
   // ========================
 
@@ -123,12 +104,13 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
     display: 'Transaction Indexer',
     fn: async () => {
       const auth = await readFile(
-        `${btcMountpoint}/${bitcoinConfDefaults.rpccookiefile}`,
+        `${backendContainer.rootfs}/${btcMountpoint}/${bitcoinConfDefaults.rpccookiefile}`,
         {
           encoding: 'base64',
         },
       )
       const txIndexReq = fetch('http://bitcoind.startos:8332', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Basic ${auth}`,
@@ -142,9 +124,6 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
       })
         .then(async (res: any) => {
           const jsonRes = (await res.json()) as TxIndexRes
-          // @TODO remove me after testing
-          console.log(`Tx index response is: ${res}`)
-          console.log(`Tx index response parsed as json: ${jsonRes}`)
           return jsonRes
         })
         .catch((e: any) => {
@@ -152,6 +131,7 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
         })
 
       const ibdStateReq = fetch('http://bitcoind.startos:8332', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Basic ${auth}`,
@@ -165,9 +145,6 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
       })
         .then(async (res: any) => {
           const jsonRes = (await res.json()) as IbdStateRes
-          // @TODO remove me after testing
-          console.log(`IBD response is: ${res}`)
-          console.log(`IBD response parsed as json: ${jsonRes}`)
           return jsonRes
         })
         .catch((e: any) => {
@@ -182,6 +159,7 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
     },
   }
 
+  // set permissions, needs to be in main container, not a temp
   await backendContainer.execFail(['groupadd', '-g', '1000', 'memgroup'], {
     user: 'root',
   })
@@ -197,11 +175,22 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
       '/home/memuser',
       'memuser',
     ],
+    {
+      user: 'root',
+    },
+  )
+  await backendContainer.execFail(['chmod', '1000', '/backend/cache'], {
+    user: 'root',
+  })
+  await backendContainer.execFail(['chown', '1000:1000', '/backend/cache'], {
+    user: 'root',
+  })
+  await backendContainer.execFail(
+    ['cp', '/backend/cache/mempool-config.json', '/backend'],
     { user: 'root' },
   )
-
-  await frontendContainer.execFail(
-    ['chown', '-R', 'nginx:nginx', '/var/log/nginx'],
+  await backendContainer.execFail(
+    ['chown', '1000:1000', '/mnt/bitcoind/.cookie'],
     { user: 'root' },
   )
 
@@ -243,16 +232,11 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
     .addDaemon('api', {
       subcontainer: backendContainer,
       exec: {
-        // command: [
-        //   // 'su',
-        //   // '-',
-        //   // '1000:1000',
-        //   'sh',
-        //   '-c',
-        //   `/backend/wait-for-it.sh localhost:${dbPort} --timeout=720 --strict -- ./start.sh`,
-        // ],
         command: ['node', '/backend/package/index.js'],
-        user: '1000:1000',
+        user: '1000',
+        env: {
+          NODE_OPTIONS: '--max-old-space-size=2048',
+        },
       },
       ready: {
         display: 'API',
@@ -268,7 +252,8 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
     .addDaemon('webui', {
       subcontainer: frontendContainer,
       exec: {
-        command: ['nginx', '-g', "'daemon off;'"],
+        command: sdk.useEntrypoint(),
+        user: '1000',
       },
       ready: {
         display: 'Web Interface',

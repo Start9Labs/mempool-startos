@@ -1,6 +1,8 @@
 import { T } from '@start9labs/start-sdk'
 import { bitcoinConfDefaults } from 'bitcoind-startos/startos/utils'
 import { port as electrsPort } from 'electrs-startos/startos/utils'
+import { sdk } from './sdk'
+import { Effects } from '@start9labs/start-sdk/base/lib/Effects'
 
 export const uiPort = 8080
 export const apiPort = 8999
@@ -10,31 +12,43 @@ export const lndMountpoint = '/mnt/lnd'
 export const clnMountpoint = '/mnt/cln'
 
 export interface TxIndexRes {
-  synced: boolean
+  result: {
+    txindex: {
+      synced: boolean
+    }
+  }
 }
 export interface IbdStateRes {
-  initialblockdownload: boolean
+  result: {
+    initialblockdownload: boolean
+  }
 }
 
 export const determineSyncResponse = (
   txIndexRes: TxIndexRes,
   ibdStateRes: IbdStateRes,
 ): T.NamedHealthCheckResult => {
-  if (!ibdStateRes.initialblockdownload) {
+  if (!ibdStateRes.result.initialblockdownload) {
     return {
       name: 'Transaction Indexer',
       result: 'loading',
       message:
         'Initial blockchain download still in progress. Mempool will not display correctly until this is complete.',
     }
-  } else if (ibdStateRes.initialblockdownload && !txIndexRes.synced) {
+  } else if (
+    ibdStateRes.result.initialblockdownload &&
+    !txIndexRes.result.txindex.synced
+  ) {
     return {
       name: 'Transaction Indexer',
       result: 'loading',
       message:
         'Transaction Indexer is still syncing. Mempool will not display correctly until sync is complete.',
     }
-  } else if (ibdStateRes.initialblockdownload && txIndexRes.synced) {
+  } else if (
+    ibdStateRes.result.initialblockdownload &&
+    txIndexRes.result.txindex.synced
+  ) {
     return {
       name: 'Transaction Indexer',
       result: 'success',
@@ -100,7 +114,7 @@ export const configJsonDefaults = {
     TIMEOUT: 60000,
     COOKIE: true,
     COOKIE_PATH:
-      `${btcMountpoint}${bitcoinConfDefaults.rpccookiefile}` as const,
+      `${btcMountpoint}/${bitcoinConfDefaults.rpccookiefile}` as const,
     DEBUG_LOG_PATH: '',
   },
   ELECTRUM: {
@@ -131,7 +145,7 @@ export const configJsonDefaults = {
     ENABLED: true,
     HOST: '127.0.0.1',
     PORT: 3306,
-    SOCKET: '/var/run/mysql/mysql.sock' as const,
+    SOCKET: '',
     DATABASE: 'mempool' as const,
     USERNAME: 'mempool' as const,
     PASSWORD: 'mempool' as const,
@@ -216,5 +230,3 @@ export const configJsonDefaults = {
     API_KEY: '',
   },
 }
-
-export const nginxConf = ``
