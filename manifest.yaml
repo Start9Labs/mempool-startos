@@ -2,9 +2,7 @@ id: mempool
 title: Mempool
 version: 3.2.1.1
 release-notes: |
-  * Updates to latest upstream [release](https://github.com/mempool/mempool/releases/tag/v3.2.1)
-  * Hotfix for the latest release [v3.2.0](https://github.com/mempool/mempool/releases/tag/v3.2.0), which includes some awesome new features, such as Stratum job data visualizations, DATUM miner tags, and support for v3 transactions.
-  * Updates MariaDB to next minor version
+  * Update dependency allowed versions for bitcoind and lnd
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
@@ -64,7 +62,7 @@ config:
     type: script
 dependencies:
   bitcoind:
-    version: ">=0.21.1.2 <29.0.0"
+    version: ">=0.21.1.2 <31.0.0"
     requirement:
       type: "required"
     description: Used to subscribe to new block events from a full archival node
@@ -80,7 +78,7 @@ dependencies:
       how: Set Enable Electrs to Disabled in the config
     description: Used to provide an index for address lookups
   lnd:
-    version: ">=0.14.3 <0.20.0"
+    version: ">=0.14.3 <0.21.0"
     description: Used to communicate with the Lightning Network.
     requirement:
       type: "opt-in"
