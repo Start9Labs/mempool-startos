@@ -3,7 +3,7 @@ import { SDKImageInputSpec } from '@start9labs/start-sdk/base/lib/types/Manifest
 
 const BUILD = process.env.BUILD || ''
 
-const architectures =
+const arch =
   BUILD === 'x86_64' || BUILD === 'aarch64' ? [BUILD] : ['x86_64', 'aarch64']
 
 export const manifest = setupManifest({
@@ -27,22 +27,24 @@ export const manifest = setupManifest({
       source: {
         dockerTag: 'mempool/frontend:v3.2.1',
       },
-      arch: architectures,
+      arch,
     } as SDKImageInputSpec,
     backend: {
       source: {
         dockerTag: 'mempool/backend:v3.2.1',
       },
-      arch: architectures,
+      arch,
     } as SDKImageInputSpec,
     mariadb: {
       source: {
         dockerTag: 'mariadb:10.4.32',
       },
-      arch: architectures,
+      arch,
     } as SDKImageInputSpec,
   },
-  hardwareRequirements: {},
+  hardwareRequirements: {
+    arch,
+  },
   alerts: {
     install:
       'When first running Mempool, previous block fee estimates will show as zero values until the service is able to catch up. Lookups may be slow or time out altogether while the service is still warming up, or if there are too many other things running on your system.',
