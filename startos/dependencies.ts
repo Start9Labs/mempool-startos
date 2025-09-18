@@ -4,21 +4,21 @@ import { config } from 'bitcoind-startos/startos/actions/config/other'
 import { configJson } from './file-models/mempool-config.json'
 
 export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
-  // await sdk.action.createTask(effects, 'bitcoind', config, 'critical', {
-  //   input: {
-  //     kind: 'partial',
-  //     value: {
-  //       prune: 0,
-  //       txindex: true,
-  //       // mempool: {
-  //       //   maxmempool: 300, // TODO getSystemMemoryLimit
-  //       // },
-  //     },
-  //   },
-  //   when: { condition: 'input-not-matches', once: false },
-  //   reason:
-  //     'Mempool requires transaction indexing enabled and an unpruned bitcoin node.',
-  // })
+  await sdk.action.createTask(effects, 'bitcoind', config, 'critical', {
+    input: {
+      kind: 'partial',
+      value: {
+        prune: 0,
+        txindex: true,
+        // mempool: {
+        //   maxmempool: 300, // TODO getSystemMemoryLimit
+        // },
+      },
+    },
+    when: { condition: 'input-not-matches', once: false },
+    reason:
+      'Mempool requires transaction indexing enabled and an unpruned bitcoin node.',
+  })
 
   let currentDeps = {} as Record<
     'bitcoind' | 'lnd' | 'c-lightning' | 'electrs',
