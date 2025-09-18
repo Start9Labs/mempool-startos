@@ -65,7 +65,7 @@ export const manifest = setupManifest({
     electrs: {
       description: 'Provides an index for address lookups',
       optional: true,
-      s9pk: 'https://github.com/Start9Labs/electrs-startos/releases/download/v0.10.10.0-alpha.1/electrs.s9pk',
+      s9pk: 'https://github.com/Start9Labs/electrs-startos/releases/download/v0.10.10.0-alpha.2/electrs.s9pk',
     },
     'c-lightning': {
       description: 'Used to provide Lightning Network data',
@@ -75,7 +75,7 @@ export const manifest = setupManifest({
     lnd: {
       description: 'Used to provide Lightning Network data',
       optional: true,
-      s9pk: 'https://github.com/Start9Labs/lnd-startos/releases/download/v0.19.2-beta.1-beta.2/lnd.s9pk',
+      s9pk: 'https://github.com/Start9Labs/lnd-startos/releases/download/v0.19.3-beta.1-beta.0/lnd.s9pk',
     },
   },
 })
