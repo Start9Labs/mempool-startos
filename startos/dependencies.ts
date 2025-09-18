@@ -35,7 +35,7 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
       currentDeps.lnd = {
         id: 'lnd',
         kind: 'running',
-        versionRange: '>=0.19.2-beta:1-beta.2',
+        versionRange: '>=0.19.3-beta:1-beta.0',
         healthChecks: [],
       }
     }
@@ -54,7 +54,7 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
     currentDeps.electrs = {
       id: 'electrs',
       kind: 'running',
-      versionRange: '>=0.10.10:0-alpha.0',
+      versionRange: '>=0.10.10:0-alpha.2',
       healthChecks: [],
     }
   }
@@ -63,7 +63,7 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
     ...currentDeps,
     bitcoind: {
       kind: 'running',
-      versionRange: '>=28.1.0:3-alpha.8',
+      versionRange: '>=29.1:2-beta.0',
       healthChecks: [],
     },
   }
