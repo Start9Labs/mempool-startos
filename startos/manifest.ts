@@ -72,7 +72,7 @@ export const manifest = setupManifest({
     'c-lightning': {
       description: 'Used to provide Lightning Network data',
       optional: true,
-      s9pk: 'https://github.com/Start9Labs/cln-startos/releases/download/v25.05.0.1-alpha.1/c-lightning.s9pk',
+      s9pk: 'https://github.com/Start9Labs/cln-startos/releases/download/v25.09.0.1-beta.0/c-lightning.s9pk',
     },
     lnd: {
       description: 'Used to provide Lightning Network data',
