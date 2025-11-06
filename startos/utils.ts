@@ -28,7 +28,7 @@ export const determineSyncResponse = (
   txIndexRes: TxIndexRes,
   ibdStateRes: IbdStateRes,
 ): T.NamedHealthCheckResult => {
-  if (!ibdStateRes.result.initialblockdownload) {
+  if (ibdStateRes.result.initialblockdownload) {
     return {
       name: 'Transaction Indexer',
       result: 'loading',
@@ -36,7 +36,6 @@ export const determineSyncResponse = (
         'Initial blockchain download still in progress. Mempool will not display correctly until this is complete.',
     }
   } else if (
-    ibdStateRes.result.initialblockdownload &&
     !txIndexRes.result.txindex.synced
   ) {
     return {
@@ -46,7 +45,6 @@ export const determineSyncResponse = (
         'Transaction Indexer is still syncing. Mempool will not display correctly until sync is complete.',
     }
   } else if (
-    ibdStateRes.result.initialblockdownload &&
     txIndexRes.result.txindex.synced
   ) {
     return {
