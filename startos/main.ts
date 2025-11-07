@@ -254,7 +254,12 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
       subcontainer: frontendContainer,
       exec: {
         command: sdk.useEntrypoint(),
-        user: '1000',
+        // fn: async (subcontainer, abort) => {
+        //   await frontendContainer.execFail(['sh', '/patch/entrypoint.sh'])
+        //   await frontendContainer.execFail(['nginx', '-g', 'daemon off;'])
+        //   return null
+        // },
+        // user: '1000',
       },
       ready: {
         display: 'Web Interface',
