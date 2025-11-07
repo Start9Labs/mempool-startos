@@ -239,6 +239,7 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
         },
       },
       ready: {
+        gracePeriod: 45_000,
         display: 'API',
         fn: () =>
           sdk.healthCheck.checkPortListening(effects, apiPort, {
