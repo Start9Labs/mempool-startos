@@ -118,7 +118,7 @@ export const configJsonDefaults = {
   ELECTRUM: {
     HOST: 'electrs.startos',
     PORT: electrsPort,
-    TLS_ENABLED: true,
+    TLS_ENABLED: false,
   },
   ESPLORA: {
     REST_API_URL: 'http://127.0.0.1:3000' as const,
