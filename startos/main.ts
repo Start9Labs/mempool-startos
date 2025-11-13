@@ -27,9 +27,10 @@ let backendMounts = sdk.Mounts.of()
   .mountDependency({
     dependencyId: 'bitcoind',
     volumeId: 'main',
-    subpath: null,
-    mountpoint: btcMountpoint,
+    subpath: '.cookie',
+    mountpoint: '/mnt/bitcoind/.readonly-cookie',
     readonly: false,
+    type: 'file'
   })
 
 export const main = sdk.setupMain(async ({ effects, started }) => {
@@ -187,6 +188,10 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
   })
   await backendContainer.execFail(
     ['cp', '/backend/cache/mempool-config.json', '/backend'],
+    { user: 'root' },
+  )
+  await backendContainer.execFail(
+    ['cp', '/mnt/bitcoind/.readonly-cookie', '/mnt/bitcoind/.cookie'],
     { user: 'root' },
   )
   await backendContainer.execFail(
