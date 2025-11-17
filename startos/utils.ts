@@ -177,13 +177,13 @@ export const configJsonDefaults = {
     FORENSICS_RATE_LIMIT: 20,
   },
   LND: {
-    TLS_CERT_PATH: '',
-    MACAROON_PATH: '',
+    TLS_CERT_PATH: `${lndMountpoint}/tls.cert`,
+    MACAROON_PATH: `${lndMountpoint}/readonly.macaroon`,
     REST_API_URL: 'https://lnd.startos:8080' as const,
     TIMEOUT: 10000,
   },
   CLIGHTNING: {
-    SOCKET: '',
+    SOCKET: `${clnMountpoint}/lightning-rpc`,
   },
   SOCKS5PROXY: {
     ENABLED: false,

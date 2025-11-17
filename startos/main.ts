@@ -3,6 +3,7 @@ import {
   apiPort,
   btcMountpoint,
   clnMountpoint,
+  configJsonDefaults,
   dbPort,
   determineSyncResponse,
   IbdStateRes,
@@ -13,6 +14,8 @@ import {
 import { readFile } from 'fs/promises'
 import { bitcoinConfDefaults } from 'bitcoind-startos/startos/utils'
 import { configJson } from './file-models/mempool-config.json'
+import { FileHelper } from '@start9labs/start-sdk'
+const cookieMount = '/mnt/bitcoind-readonly'
 
 /**
  * ======================== Mounts ========================
@@ -27,10 +30,9 @@ let backendMounts = sdk.Mounts.of()
   .mountDependency({
     dependencyId: 'bitcoind',
     volumeId: 'main',
-    subpath: '.cookie',
-    mountpoint: '/mnt/bitcoind/.readonly-cookie',
+    subpath: null,
+    mountpoint: cookieMount,
     readonly: false,
-    type: 'file'
   })
 
 export const main = sdk.setupMain(async ({ effects, started }) => {
@@ -56,17 +58,19 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
           dependencyId: 'lnd',
           volumeId: 'main',
           subpath: null,
-          mountpoint: lndMountpoint,
-          readonly: true,
+          mountpoint: '/mnt/lnd-readonly',
+          readonly: false,
+          type: 'directory',
         })
         break
       case 'cln':
         backendMounts = backendMounts.mountDependency({
           dependencyId: 'c-lightning',
           volumeId: 'main',
-          subpath: null,
-          mountpoint: clnMountpoint,
+          subpath: '/bitcoin/lightning-rpc',
+          mountpoint: `${clnMountpoint}/lightning-rpc`,
           readonly: true,
+          type: 'file',
         })
         break
       default:
@@ -84,6 +88,11 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
     backendMounts,
     'backend-api',
   )
+
+  // Restart on cookie change
+  await FileHelper.string(`${backendContainer.rootfs}/${cookieMount}/.cookie`)
+    .read()
+    .const(effects)
 
   const frontendContainer = await sdk.SubContainer.of(
     effects,
@@ -186,18 +195,53 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
   await backendContainer.execFail(['chown', '1000:1000', '/backend/cache'], {
     user: 'root',
   })
+  await backendContainer.execFail(['chmod', 'a+rwx', './cache'], {
+    user: 'root',
+  })
+  await backendContainer.execFail(['chown', '1000:1000', './cache'], {
+    user: 'root',
+  })
   await backendContainer.execFail(
     ['cp', '/backend/cache/mempool-config.json', '/backend'],
     { user: 'root' },
   )
+  await backendContainer.execFail(['mkdir', '-p', '/mnt/bitcoind'], {
+    user: 'root',
+  })
   await backendContainer.execFail(
-    ['cp', '/mnt/bitcoind/.readonly-cookie', '/mnt/bitcoind/.cookie'],
+    ['cp', `${cookieMount}/.cookie`, '/mnt/bitcoind/.cookie'],
     { user: 'root' },
   )
   await backendContainer.execFail(
     ['chown', '1000:1000', '/mnt/bitcoind/.cookie'],
     { user: 'root' },
   )
+
+  if (config.LIGHTNING.ENABLED && config.LIGHTNING.BACKEND === 'lnd') {
+    await backendContainer.execFail(['mkdir', '-p', '/mnt/lnd'], {
+      user: 'root',
+    })
+    await backendContainer.execFail(
+      [
+        'cp',
+        '/mnt/lnd-readonly/data/chain/bitcoin/mainnet/readonly.macaroon',
+        '/mnt/lnd/readonly.macaroon',
+      ],
+      { user: 'root' },
+    )
+    await backendContainer.execFail(
+      [
+        'cp',
+        '/mnt/lnd-readonly/tls.cert',
+        '/mnt/lnd/tls.cert',
+      ],
+      { user: 'root' },
+    )
+    await backendContainer.execFail(
+      ['chown', '1000:1000', configJsonDefaults.LND.MACAROON_PATH],
+      { user: 'root' },
+    )
+  }
 
   /**
    *  ======================== Daemons ========================
@@ -238,7 +282,6 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
       subcontainer: backendContainer,
       exec: {
         command: ['node', '/backend/package/index.js'],
-        user: '1000',
         env: {
           NODE_OPTIONS: '--max-old-space-size=2048',
         },
@@ -259,12 +302,11 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
       subcontainer: frontendContainer,
       exec: {
         command: sdk.useEntrypoint(),
-        // fn: async (subcontainer, abort) => {
-        //   await frontendContainer.execFail(['sh', '/patch/entrypoint.sh'])
-        //   await frontendContainer.execFail(['nginx', '-g', 'daemon off;'])
-        //   return null
-        // },
-        // user: '1000',
+        env: config.LIGHTNING.ENABLED
+          ? {
+              LIGHTNING: 'true',
+            }
+          : {},
       },
       ready: {
         display: 'Web Interface',
