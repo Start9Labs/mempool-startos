@@ -1,8 +1,8 @@
 #!/bin/bash
 set -ea
 
-_term() { 
-  echo "Caught SIGTERM signal!" 
+_term() {
+  echo "Caught SIGTERM signal!"
   kill -TERM "$backend_process" 2>/dev/null
   kill -TERM "$db_process" 2>/dev/null
   kill -TERM "$frontend_process" 2>/dev/null
@@ -65,9 +65,15 @@ elif [ "$(yq e ".lightning.type" /root/start9/config.yaml)" = "cln" ]; then
 	echo "Running on Core Lightning..."
 fi
 
-if [ "$(yq e ".enable-electrs" /root/start9/config.yaml)" = "true" ]; then
+# Allow user to choose between Electrs, Fulcrum as Indexer
+if [ "$(yq e ".indexer.type" /root/start9/config.yaml)" = "electrs" ]; then
 	sed -i 's/ELECTRUM_HOST:=127.0.0.1/ELECTRUM_HOST:=electrs.embassy/' start.sh
 	sed -i 's/ELECTRUM_PORT:=50002/ELECTRUM_PORT:=50001/' start.sh
+	echo "Running with Electrs..."
+elif [ "$(yq e ".indexer.type" /root/start9/config.yaml)" = "fulcrum" ]; then
+	sed -i 's/ELECTRUM_HOST:=127.0.0.1/ELECTRUM_HOST:=fulcrum.embassy/' start.sh
+	sed -i 's/ELECTRUM_PORT:=50002/ELECTRUM_PORT:=50001/' start.sh
+	echo "Running with Fulcrum..."
 else
 	# configure mempool to use just a bitcoind backend
 	sed -i '/^node \/backend\/dist\/index.js/i jq \x27.MEMPOOL.BACKEND="none"\x27 \/backend\/mempool-config.json > \/backend\/mempool-config.json.tmp && mv \/backend\/mempool-config.json.tmp \/backend\/mempool-config.json' start.sh
@@ -75,7 +81,6 @@ else
 fi
 
 # DATABASE SETUP
-
 MYSQL_DATADIR="/var/lib/mysql"
 UPGRADE_MARKER="$MYSQL_DATADIR/.upgrade_done"
 MYSQL_DIR="/var/run/mysqld"
@@ -136,7 +141,7 @@ EOF
 	    fi
 	fi
 
-	/usr/sbin/mysqld --user=mysql --bootstrap --verbose=0 --skip-name-resolve --skip-networking=0 < $tfile
+	/usr/sbin/mysqld --user=mysql --datadir="$MYSQL_DATADIR" --bootstrap --verbose=0 --skip-name-resolve --skip-networking=0 < $tfile
 
 	rm -f $tfile
 
@@ -196,7 +201,6 @@ frontend_process=$!
 backend_process=$!
 
 echo 'All processes initalized'
-
 
 # SIGTERM HANDLING
 trap _term SIGTERM
