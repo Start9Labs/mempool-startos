@@ -11,15 +11,15 @@ export const getConfig: T.ExpectedExports.getConfig = compat.getConfig({
     "interface": "main",
   },
   "bitcoin-user": {
-      "type": "pointer",
-      "name": "RPC Username",
-      "description": "The username for Bitcoin Core's RPC interface",
-      "subtype": "package",
-      "package-id": "bitcoind",
-      "target": "config",
-      "multi": false,
-      "selector": "$.rpc.username",
-    },
+    "type": "pointer",
+    "name": "RPC Username",
+    "description": "The username for Bitcoin Core's RPC interface",
+    "subtype": "package",
+    "package-id": "bitcoind",
+    "target": "config",
+    "multi": false,
+    "selector": "$.rpc.username",
+  },
   "bitcoin-password": {
     "type": "pointer",
     "name": "RPC Password",
@@ -34,7 +34,7 @@ export const getConfig: T.ExpectedExports.getConfig = compat.getConfig({
     "type": "union",
     "name": "Lightning Node",
     "description":
-      "The Lightning node you will connect to in order to serve network data to the Lightning tab in Mempool",
+    "The Lightning node you will connect to in order to serve network data to the Lightning tab in Mempool",
     "tag": {
       "id": "type",
       "name": "Select Lightning Node",
@@ -44,7 +44,7 @@ export const getConfig: T.ExpectedExports.getConfig = compat.getConfig({
         "cln": "Core Lightning",
       },
       "description":
-        "The Lightning node you will connect to in order to serve network data to the Lightning tab in Mempool",
+      "The Lightning node you will connect to in order to serve network data to the Lightning tab in Mempool",
     },
     "default": "none",
     "variants": {
@@ -53,10 +53,25 @@ export const getConfig: T.ExpectedExports.getConfig = compat.getConfig({
       "cln": {},
     }
   },
-  "enable-electrs": {
-    "name": "Enable Electrs Address Lookups",
-    "description": "Enables address lookups via an internal electrs instance",
-    "type": "boolean",
-    "default": true,
+  "indexer": {
+    "name": "Indexer Type",
+    "description": "Select the type of indexer to use for address lookups",
+    "type": "union",
+    "tag": {
+      "id": "type",
+      "name": "Select Indexer",
+      "variant-names": {
+        "none": "Disabled",
+        "electrs": "Electrs",
+        "fulcrum": "Fulcrum",
+      },
+      "description": "Select the Bitcoin indexer you want to use for address lookups",
+    },
+    "default": "none",
+    "variants": {
+      "none": {},
+      "electrs": {},
+      "fulcrum": {},
+    }
   }
 });
