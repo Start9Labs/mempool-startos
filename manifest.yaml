@@ -81,7 +81,7 @@ dependencies:
     version: ">=0.9.6 <0.12.0"
     requirement:
       type: "opt-in"
-      how: Set Enable Electrs to Disabled in the config
+      how: Set Indexer to Electrs in the config
     description: A more stable, but less performant indexer.
   lnd:
     version: ">=0.14.3 <0.21.0"
