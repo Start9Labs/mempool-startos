@@ -67,10 +67,16 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
         backendMounts = backendMounts.mountDependency({
           dependencyId: 'c-lightning',
           volumeId: 'main',
-          subpath: '/bitcoin/lightning-rpc',
-          mountpoint: `${clnMountpoint}/lightning-rpc`,
+          subpath: '/bitcoin',
+          mountpoint: clnMountpoint,
           readonly: true,
-          type: 'file',
+          type: 'directory',
+          idmap: [
+            {
+              fromId: 0,
+              toId: 1000,
+            }
+          ] 
         })
         break
       default:
