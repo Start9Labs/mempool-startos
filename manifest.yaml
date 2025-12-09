@@ -1,8 +1,9 @@
 id: mempool
 title: Mempool
-version: 3.2.1.2
+version: 3.2.1.3
 release-notes: |
   * Fix bug where lightning tab appeared even when disabled
+  * Add Fulcrum as optinal indexer
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
@@ -71,12 +72,18 @@ dependencies:
         type: script
       auto-configure:
         type: script
+  fulcrum:
+    version: '>=1.11.0 <3.0.0'
+    requirement:
+      type: 'opt-in'
+      how: Set Indexer to Fulcrum in the config
+    description: Used for fast scan of addresses and indexing for deep wallets.
   electrs:
     version: ">=0.9.6 <0.12.0"
     requirement:
-      type: "opt-out"
-      how: Set Enable Electrs to Disabled in the config
-    description: Used to provide an index for address lookups
+      type: "opt-in"
+      how: Set Indexer to Electrs in the config
+    description: A more stable, but less performant indexer.
   lnd:
     version: ">=0.14.3 <0.21.0"
     description: Used to communicate with the Lightning Network.

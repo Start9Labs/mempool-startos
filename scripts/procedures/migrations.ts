@@ -2,7 +2,7 @@ import { types as T, compat, matches } from "../deps.ts";
 
 const { shape, boolean, string } = matches;
 
-const current = "3.2.1.2";
+const current = "3.2.1.3";
 
 export const migration: T.ExpectedExports.migration = (
   effects: T.Effects,
@@ -92,6 +92,42 @@ export const migration: T.ExpectedExports.migration = (
         down: () => {
           throw new Error("Downgrades are prohibited from this version");
         },
+      },
+      "3.2.1.3": {
+        up: compat.migrations.updateConfig(
+          (config: any) => {
+            if (config["enable-electrs"]) {
+              config.indexer = { type: "electrs" };
+            } else {
+              config.indexer = { type: "none" };
+            }
+            delete config["enable-electrs"];
+            return config;
+          },
+          true,
+          { version: "3.2.1.3", type: "up" }
+        ),
+        down: compat.migrations.updateConfig(
+          (config) => {
+            if (
+              matches
+                .shape({
+                  indexer: matches.shape({ type: matches.any }),
+                })
+                .test(config)
+            ) {
+              if (config.indexer.type === "electrs") {
+                config["enable-electrs"] = true;
+              } else {
+                config["enable-electrs"] = false;
+              }
+            }
+            delete config.indexer;
+            return config;
+          },
+          true,
+          { version: "3.2.1.3", type: "down" }
+        ),
       },
     },
     current
