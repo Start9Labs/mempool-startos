@@ -2,7 +2,7 @@ id: mempool
 title: Mempool
 version: 3.2.1.2
 release-notes: |
-  * Update dependency allowed versions for bitcoind and lnd
+  * Fix bug where lightning tab appeared even when disabled
 license: AGPL
 wrapper-repo: "https://github.com/Start9Labs/mempool-wrapper"
 upstream-repo: "https://github.com/mempool/mempool"
