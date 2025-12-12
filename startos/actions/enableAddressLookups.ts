@@ -1,6 +1,5 @@
 import { configJson } from '../file-models/mempool-config.json'
 import { sdk } from '../sdk'
-import { configJsonDefaults } from '../utils'
 const { InputSpec, Value } = sdk
 
 const electrsInputSpec = InputSpec.of({

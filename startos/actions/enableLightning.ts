@@ -1,6 +1,6 @@
 import { configJson } from '../file-models/mempool-config.json'
 import { sdk } from '../sdk'
-import { clnMountpoint, lndMountpoint, configJsonDefaults } from '../utils'
+import { configJsonDefaults } from '../utils'
 const { InputSpec, Value } = sdk
 
 export const lightningInputSpec = InputSpec.of({

@@ -1,8 +1,6 @@
 import { T } from '@start9labs/start-sdk'
 import { bitcoinConfDefaults } from 'bitcoind-startos/startos/utils'
 import { port as electrsPort } from 'electrs-startos/startos/utils'
-import { sdk } from './sdk'
-import { Effects } from '@start9labs/start-sdk/base/lib/Effects'
 
 export const uiPort = 8080
 export const apiPort = 8999
@@ -35,18 +33,14 @@ export const determineSyncResponse = (
       message:
         'Initial blockchain download still in progress. Mempool will not display correctly until this is complete.',
     }
-  } else if (
-    !txIndexRes.result.txindex.synced
-  ) {
+  } else if (!txIndexRes.result.txindex.synced) {
     return {
       name: 'Transaction Indexer',
       result: 'loading',
       message:
         'Transaction Indexer is still syncing. Mempool will not display correctly until sync is complete.',
     }
-  } else if (
-    txIndexRes.result.txindex.synced
-  ) {
+  } else if (txIndexRes.result.txindex.synced) {
     return {
       name: 'Transaction Indexer',
       result: 'success',
@@ -146,7 +140,7 @@ export const configJsonDefaults = {
     SOCKET: '',
     DATABASE: 'mempool' as const,
     USERNAME: 'mempool' as const,
-    PASSWORD: 'mempool' as const,
+    PASSWORD: 'password', // @TODO don't do this
     TIMEOUT: 180000,
     PID_DIR: '',
   },

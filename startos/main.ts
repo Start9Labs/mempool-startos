@@ -4,10 +4,8 @@ import {
   btcMountpoint,
   clnMountpoint,
   configJsonDefaults,
-  dbPort,
   determineSyncResponse,
   IbdStateRes,
-  lndMountpoint,
   TxIndexRes,
   uiPort,
 } from './utils'
@@ -15,7 +13,6 @@ import { readFile } from 'fs/promises'
 import { bitcoinConfDefaults } from 'bitcoind-startos/startos/utils'
 import { configJson } from './file-models/mempool-config.json'
 import { FileHelper } from '@start9labs/start-sdk'
-const cookieMount = '/mnt/bitcoind/.cookie'
 
 /**
  * ======================== Mounts ========================
@@ -51,9 +48,6 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
   // ========================
   // Dependency setup & checks
   // ========================
-
-  const depResult = await sdk.checkDependencies(effects)
-  depResult.throwIfNotSatisfied()
 
   const config = await configJson.read().const(effects)
   if (!config) throw new Error('Config file not found')
@@ -95,29 +89,19 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
   // Set containers
   // ========================
 
-  const backendContainer = await sdk.SubContainer.of(
+  const backendSub = await sdk.SubContainer.of(
     effects,
     { imageId: 'backend' },
     backendMounts,
     'backend-api',
   )
 
-  // Restart on cookie change
-  await FileHelper.string(`${backendContainer.rootfs}/${cookieMount}`)
+  // Restart on Bitcoin cookie change
+  await FileHelper.string(
+    `${backendSub.rootfs}/${configJsonDefaults.CORE_RPC.COOKIE_PATH}`,
+  )
     .read()
     .const(effects)
-
-  const frontendContainer = await sdk.SubContainer.of(
-    effects,
-    { imageId: 'frontend' },
-    sdk.Mounts.of().mountVolume({
-      volumeId: 'main',
-      subpath: null,
-      mountpoint: '/root/data',
-      readonly: false,
-    }),
-    'user-interface',
-  )
 
   // ========================
   // Additional health check(s)
@@ -127,7 +111,7 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
     display: 'Transaction Indexer',
     fn: async () => {
       const auth = await readFile(
-        `${backendContainer.rootfs}/${btcMountpoint}/${bitcoinConfDefaults.rpccookiefile}`,
+        `${backendSub.rootfs}/${btcMountpoint}/${bitcoinConfDefaults.rpccookiefile}`,
         {
           encoding: 'base64',
         },
@@ -182,132 +166,64 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
     },
   }
 
-  // set permissions, needs to be in main container, not a temp
-  // await backendContainer.execFail(['groupadd', '-g', '1000', 'memgroup'], {
-  //   user: 'root',
-  // })
-  // await backendContainer.execFail(
-  //   [
-  //     'useradd',
-  //     '-u',
-  //     '1000',
-  //     '-g',
-  //     '1000',
-  //     '-m',
-  //     '-d',
-  //     '/home/memuser',
-  //     'memuser',
-  //   ],
-  //   {
-  //     user: 'root',
-  //   },
-  // )
-  // await backendContainer.execFail(['chmod', '1000', '/backend/cache'], {
-  //   user: 'root',
-  // })
-  // await backendContainer.execFail(['chown', '1000:1000', '/backend/cache'], {
-  //   user: 'root',
-  // })
-  // await backendContainer.execFail(['chmod', 'a+rwx', './cache'], {
-  //   user: 'root',
-  // })
-  // await backendContainer.execFail(['chown', '1000:1000', './cache'], {
-  //   user: 'root',
-  // })
-  // await backendContainer.execFail(
-  //   ['cp', '/backend/cache/mempool-config.json', '/backend'],
-  //   { user: 'root' },
-  // )
-  // await backendContainer.execFail(['mkdir', '-p', '/mnt/bitcoind'], {
-  //   user: 'root',
-  // })
-  // await backendContainer.execFail(
-  //   ['cp', `${cookieMount}/.cookie`, '/mnt/bitcoind/.cookie'],
-  //   { user: 'root' },
-  // )
-  // await backendContainer.execFail(
-  //   ['chown', '1000:1000', '/mnt/bitcoind/.cookie'],
-  //   { user: 'root' },
-  // )
-
-  // if (config.LIGHTNING.ENABLED && config.LIGHTNING.BACKEND === 'lnd') {
-  //   await backendContainer.execFail(['mkdir', '-p', '/mnt/lnd'], {
-  //     user: 'root',
-  //   })
-  //   await backendContainer.execFail(
-  //     [
-  //       'cp',
-  //       '/mnt/lnd-readonly/data/chain/bitcoin/mainnet/readonly.macaroon',
-  //       '/mnt/lnd/readonly.macaroon',
-  //     ],
-  //     { user: 'root' },
-  //   )
-  //   await backendContainer.execFail(
-  //     ['cp', '/mnt/lnd-readonly/tls.cert', '/mnt/lnd/tls.cert'],
-  //     { user: 'root' },
-  //   )
-  //   await backendContainer.execFail(
-  //     ['chown', '1000:1000', configJsonDefaults.LND.MACAROON_PATH],
-  //     { user: 'root' },
-  //   )
-  // }
+  const mariaSub = await sdk.SubContainer.of(
+    effects,
+    { imageId: 'mariadb' },
+    sdk.Mounts.of().mountVolume({
+      volumeId: 'db',
+      subpath: null,
+      mountpoint: '/var/lib/mysql',
+      readonly: false,
+    }),
+    'mariadb-sub',
+  )
 
   /**
    *  ======================== Daemons ========================
    */
   return sdk.Daemons.of(effects, started)
     .addDaemon('mariadb', {
-      subcontainer: await sdk.SubContainer.of(
-        effects,
-        { imageId: 'mariadb' },
-        sdk.Mounts.of().mountVolume({
-          volumeId: 'db',
-          subpath: null,
-          mountpoint: '/var/lib/mysql',
-          readonly: false,
-        }),
-        'database',
-      ),
+      subcontainer: mariaSub,
       exec: {
         command: sdk.useEntrypoint(),
         env: {
+          MARIADB_RANDOM_ROOT_PASSWORD: '1',
           MYSQL_DATABASE: config.DATABASE.DATABASE,
           MYSQL_USER: config.DATABASE.USERNAME,
           MYSQL_PASSWORD: config.DATABASE.PASSWORD,
-          MYSQL_ROOT_PASSWORD: 'admin',
         },
       },
       ready: {
-        display: 'Database',
-        fn: () =>
-          sdk.healthCheck.checkPortListening(effects, dbPort, {
-            successMessage: 'The database is ready',
-            errorMessage: 'The database is not ready',
-          }),
+        gracePeriod: 120_000,
+        display: null,
+        fn: async () => {
+          const res = await mariaSub.exec([
+            'healthcheck.sh',
+            '--connect',
+            '--innodb_initialized',
+          ])
+
+          if (res.exitCode !== 0) {
+            return {
+              result: 'loading',
+              message: null,
+            }
+          }
+          return {
+            result: 'success',
+            message: null,
+          }
+        },
       },
       requires: [],
     })
     .addDaemon('api', {
-      subcontainer: backendContainer,
+      subcontainer: backendSub,
       exec: {
-        // command: ['node', '/backend/package/index.js'],
-        fn: async () => {
-          const whoami = await backendContainer.execFail(['whoami'])
-          console.log('whoami', whoami)
-          return {
-            command: [
-              '/backend/wait-for-it.sh',
-              'localhost:3306',
-              '--timeout=720',
-              '--strict',
-              '--',
-              './start.sh',
-            ],
-            user: 'root',
-          }
-        },
-        // command: ['/backend/wait-for-it.sh', 'localhost:3306', '--timeout=720', '--strict', '--', './start.sh'],
+        command: ['node', '/backend/package/index.js'],
+        user: 'root',
         env: {
+          // @TODO look into this
           NODE_OPTIONS: '--max-old-space-size=2048',
         },
       },
@@ -324,7 +240,17 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
     })
     .addHealthCheck('sync', { ready: syncHealthCheck, requires: ['api'] })
     .addDaemon('webui', {
-      subcontainer: frontendContainer,
+      subcontainer: await sdk.SubContainer.of(
+        effects,
+        { imageId: 'frontend' },
+        sdk.Mounts.of().mountVolume({
+          volumeId: 'main',
+          subpath: null,
+          mountpoint: '/root/data',
+          readonly: false,
+        }),
+        'user-interface',
+      ),
       exec: {
         command: sdk.useEntrypoint(),
         env: config.LIGHTNING.ENABLED

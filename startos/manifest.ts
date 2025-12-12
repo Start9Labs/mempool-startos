@@ -1,10 +1,4 @@
 import { setupManifest } from '@start9labs/start-sdk'
-import { SDKImageInputSpec } from '@start9labs/start-sdk/base/lib/types/ManifestTypes'
-
-const BUILD = process.env.BUILD || ''
-
-const arch =
-  BUILD === 'x86_64' || BUILD === 'aarch64' ? [BUILD] : ['x86_64', 'aarch64']
 
 export const manifest = setupManifest({
   id: 'mempool',
@@ -27,23 +21,17 @@ export const manifest = setupManifest({
       source: {
         dockerTag: 'mempool/frontend:v3.2.1',
       },
-      arch,
-    } as SDKImageInputSpec,
+    },
     backend: {
       source: {
         dockerTag: 'mempool/backend:v3.2.1',
       },
-      arch,
-    } as SDKImageInputSpec,
+    },
     mariadb: {
       source: {
         dockerTag: 'mariadb:10.4.32',
       },
-      arch,
-    } as SDKImageInputSpec,
-  },
-  hardwareRequirements: {
-    arch,
+    },
   },
   alerts: {
     install:
