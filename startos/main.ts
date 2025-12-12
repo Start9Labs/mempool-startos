@@ -15,23 +15,30 @@ import { readFile } from 'fs/promises'
 import { bitcoinConfDefaults } from 'bitcoind-startos/startos/utils'
 import { configJson } from './file-models/mempool-config.json'
 import { FileHelper } from '@start9labs/start-sdk'
-const cookieMount = '/mnt/bitcoind-readonly'
+const cookieMount = '/mnt/bitcoind/.cookie'
 
 /**
  * ======================== Mounts ========================
  */
 let backendMounts = sdk.Mounts.of()
   .mountVolume({
-    volumeId: 'backend',
+    volumeId: 'cache',
     subpath: null,
     mountpoint: '/backend/cache',
     readonly: false,
+  })
+  .mountVolume({
+    volumeId: 'config',
+    subpath: '/mempool-config.json',
+    mountpoint: '/backend/mempool-config.json',
+    readonly: false,
+    type: 'file',
   })
   .mountDependency({
     dependencyId: 'bitcoind',
     volumeId: 'main',
     subpath: null,
-    mountpoint: cookieMount,
+    mountpoint: '/mnt/bitcoind',
     readonly: false,
   })
 
@@ -71,12 +78,12 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
           mountpoint: clnMountpoint,
           readonly: true,
           type: 'directory',
-          idmap: [
-            {
-              fromId: 0,
-              toId: 1000,
-            }
-          ] 
+          // idmap: [
+          //   {
+          //     fromId: 0,
+          //     toId: 1000,
+          //   }
+          // ]
         })
         break
       default:
@@ -96,7 +103,7 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
   )
 
   // Restart on cookie change
-  await FileHelper.string(`${backendContainer.rootfs}/${cookieMount}/.cookie`)
+  await FileHelper.string(`${backendContainer.rootfs}/${cookieMount}`)
     .read()
     .const(effects)
 
@@ -104,9 +111,9 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
     effects,
     { imageId: 'frontend' },
     sdk.Mounts.of().mountVolume({
-      volumeId: 'frontend',
+      volumeId: 'main',
       subpath: null,
-      mountpoint: '/root',
+      mountpoint: '/root/data',
       readonly: false,
     }),
     'user-interface',
@@ -176,78 +183,74 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
   }
 
   // set permissions, needs to be in main container, not a temp
-  await backendContainer.execFail(['groupadd', '-g', '1000', 'memgroup'], {
-    user: 'root',
-  })
-  await backendContainer.execFail(
-    [
-      'useradd',
-      '-u',
-      '1000',
-      '-g',
-      '1000',
-      '-m',
-      '-d',
-      '/home/memuser',
-      'memuser',
-    ],
-    {
-      user: 'root',
-    },
-  )
-  await backendContainer.execFail(['chmod', '1000', '/backend/cache'], {
-    user: 'root',
-  })
-  await backendContainer.execFail(['chown', '1000:1000', '/backend/cache'], {
-    user: 'root',
-  })
-  await backendContainer.execFail(['chmod', 'a+rwx', './cache'], {
-    user: 'root',
-  })
-  await backendContainer.execFail(['chown', '1000:1000', './cache'], {
-    user: 'root',
-  })
-  await backendContainer.execFail(
-    ['cp', '/backend/cache/mempool-config.json', '/backend'],
-    { user: 'root' },
-  )
-  await backendContainer.execFail(['mkdir', '-p', '/mnt/bitcoind'], {
-    user: 'root',
-  })
-  await backendContainer.execFail(
-    ['cp', `${cookieMount}/.cookie`, '/mnt/bitcoind/.cookie'],
-    { user: 'root' },
-  )
-  await backendContainer.execFail(
-    ['chown', '1000:1000', '/mnt/bitcoind/.cookie'],
-    { user: 'root' },
-  )
+  // await backendContainer.execFail(['groupadd', '-g', '1000', 'memgroup'], {
+  //   user: 'root',
+  // })
+  // await backendContainer.execFail(
+  //   [
+  //     'useradd',
+  //     '-u',
+  //     '1000',
+  //     '-g',
+  //     '1000',
+  //     '-m',
+  //     '-d',
+  //     '/home/memuser',
+  //     'memuser',
+  //   ],
+  //   {
+  //     user: 'root',
+  //   },
+  // )
+  // await backendContainer.execFail(['chmod', '1000', '/backend/cache'], {
+  //   user: 'root',
+  // })
+  // await backendContainer.execFail(['chown', '1000:1000', '/backend/cache'], {
+  //   user: 'root',
+  // })
+  // await backendContainer.execFail(['chmod', 'a+rwx', './cache'], {
+  //   user: 'root',
+  // })
+  // await backendContainer.execFail(['chown', '1000:1000', './cache'], {
+  //   user: 'root',
+  // })
+  // await backendContainer.execFail(
+  //   ['cp', '/backend/cache/mempool-config.json', '/backend'],
+  //   { user: 'root' },
+  // )
+  // await backendContainer.execFail(['mkdir', '-p', '/mnt/bitcoind'], {
+  //   user: 'root',
+  // })
+  // await backendContainer.execFail(
+  //   ['cp', `${cookieMount}/.cookie`, '/mnt/bitcoind/.cookie'],
+  //   { user: 'root' },
+  // )
+  // await backendContainer.execFail(
+  //   ['chown', '1000:1000', '/mnt/bitcoind/.cookie'],
+  //   { user: 'root' },
+  // )
 
-  if (config.LIGHTNING.ENABLED && config.LIGHTNING.BACKEND === 'lnd') {
-    await backendContainer.execFail(['mkdir', '-p', '/mnt/lnd'], {
-      user: 'root',
-    })
-    await backendContainer.execFail(
-      [
-        'cp',
-        '/mnt/lnd-readonly/data/chain/bitcoin/mainnet/readonly.macaroon',
-        '/mnt/lnd/readonly.macaroon',
-      ],
-      { user: 'root' },
-    )
-    await backendContainer.execFail(
-      [
-        'cp',
-        '/mnt/lnd-readonly/tls.cert',
-        '/mnt/lnd/tls.cert',
-      ],
-      { user: 'root' },
-    )
-    await backendContainer.execFail(
-      ['chown', '1000:1000', configJsonDefaults.LND.MACAROON_PATH],
-      { user: 'root' },
-    )
-  }
+  // if (config.LIGHTNING.ENABLED && config.LIGHTNING.BACKEND === 'lnd') {
+  //   await backendContainer.execFail(['mkdir', '-p', '/mnt/lnd'], {
+  //     user: 'root',
+  //   })
+  //   await backendContainer.execFail(
+  //     [
+  //       'cp',
+  //       '/mnt/lnd-readonly/data/chain/bitcoin/mainnet/readonly.macaroon',
+  //       '/mnt/lnd/readonly.macaroon',
+  //     ],
+  //     { user: 'root' },
+  //   )
+  //   await backendContainer.execFail(
+  //     ['cp', '/mnt/lnd-readonly/tls.cert', '/mnt/lnd/tls.cert'],
+  //     { user: 'root' },
+  //   )
+  //   await backendContainer.execFail(
+  //     ['chown', '1000:1000', configJsonDefaults.LND.MACAROON_PATH],
+  //     { user: 'root' },
+  //   )
+  // }
 
   /**
    *  ======================== Daemons ========================
@@ -258,7 +261,7 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
         effects,
         { imageId: 'mariadb' },
         sdk.Mounts.of().mountVolume({
-          volumeId: 'mariadb',
+          volumeId: 'db',
           subpath: null,
           mountpoint: '/var/lib/mysql',
           readonly: false,
@@ -287,7 +290,23 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
     .addDaemon('api', {
       subcontainer: backendContainer,
       exec: {
-        command: ['node', '/backend/package/index.js'],
+        // command: ['node', '/backend/package/index.js'],
+        fn: async () => {
+          const whoami = await backendContainer.execFail(['whoami'])
+          console.log('whoami', whoami)
+          return {
+            command: [
+              '/backend/wait-for-it.sh',
+              'localhost:3306',
+              '--timeout=720',
+              '--strict',
+              '--',
+              './start.sh',
+            ],
+            user: 'root',
+          }
+        },
+        // command: ['/backend/wait-for-it.sh', 'localhost:3306', '--timeout=720', '--strict', '--', './start.sh'],
         env: {
           NODE_OPTIONS: '--max-old-space-size=2048',
         },

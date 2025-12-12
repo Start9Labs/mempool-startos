@@ -14,7 +14,7 @@ export const versionGraph = VersionGraph.of({
       { imageId: 'mariadb' },
       sdk.Mounts.of()
         .mountVolume({
-          volumeId: 'mariadb',
+          volumeId: 'db',
           subpath: null,
           mountpoint: '/var/lib/mysql',
           readonly: false,

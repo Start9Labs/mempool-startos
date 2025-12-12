@@ -21,7 +21,7 @@ export const manifest = setupManifest({
     short: 'A mempool and blockchain explorer and network visualizer.',
     long: 'Mempool is a fully featured visualizer, explorer, and API service that runs locally on your server, an open source project developed and operated for the benefit of the Bitcoin community, with a focus on the emerging transaction fee market to help our transition into a multi-layer ecosystem.',
   },
-  volumes: ['frontend', 'backend', 'mariadb'],
+  volumes: ['main', 'cache', 'db', 'config'],
   images: {
     frontend: {
       source: {

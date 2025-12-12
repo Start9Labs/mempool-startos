@@ -215,7 +215,7 @@ const shape = object({
 
 export const configJson = FileHelper.json(
   {
-    volumeId: 'backend',
+    volumeId: 'config',
     subpath: '/mempool-config.json',
   },
   shape,
