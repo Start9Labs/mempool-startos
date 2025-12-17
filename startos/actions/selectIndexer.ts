@@ -40,11 +40,11 @@ export const selectIndexer = sdk.Action.withInput(
 
     return {
       indexer:
-        configFile.ELECTRUM.HOST === 'electrs.startos'
-          ? 'fulcrum'
-          : configFile.ELECTRUM.HOST === 'fulcrum.startos'
-            ? 'fulcrum'
-            : 'none',
+        configFile.MEMPOOL.BACKEND === 'none'
+          ? 'none'
+          : configFile.ELECTRUM.HOST === 'electrs.startos'
+            ? 'electrum'
+            : 'fulcrum',
     } as ElectrsInputSpec
   },
 
