@@ -110,7 +110,7 @@ export const configJsonDefaults = {
     DEBUG_LOG_PATH: '',
   },
   ELECTRUM: {
-    HOST: 'electrs.startos',
+    HOST: 'electrs.startos' as const,
     PORT: electrsPort,
     TLS_ENABLED: false,
   },

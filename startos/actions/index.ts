@@ -1,7 +1,7 @@
 import { sdk } from '../sdk'
-import { enableAddressLookups } from './enableAddressLookups'
+import { selectIndexer } from './selectIndexer'
 import { enableLightning } from './enableLightning'
 
 export const actions = sdk.Actions.of()
-  .addAction(enableAddressLookups)
+  .addAction(selectIndexer)
   .addAction(enableLightning)

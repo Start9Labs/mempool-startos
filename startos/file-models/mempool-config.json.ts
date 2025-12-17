@@ -78,7 +78,9 @@ const shape = object({
     DEBUG_LOG_PATH: string.onMismatch(c.CORE_RPC.DEBUG_LOG_PATH),
   }),
   ELECTRUM: object({
-    HOST: string.optional().onMismatch(c.ELECTRUM.HOST),
+    HOST: literals('electrs.startos', 'fulcrum.startos')
+      .optional()
+      .onMismatch(c.ELECTRUM.HOST),
     PORT: number.optional().onMismatch(c.ELECTRUM.PORT),
     TLS_ENABLED: boolean.optional().onMismatch(c.ELECTRUM.TLS_ENABLED),
   }),

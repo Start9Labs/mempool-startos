@@ -55,7 +55,12 @@ export const manifest = setupManifest({
     electrs: {
       description: 'Provides an index for address lookups',
       optional: true,
-      s9pk: 'https://github.com/Start9Labs/electrs-startos/releases/download/v0.11.00.1-beta.0/electrs.s9pk',
+      s9pk: 'https://github.com/Start9Labs/electrs-startos/releases/download/v0.11.0.1-beta.0/electrs.s9pk',
+    },
+    fulcrum: {
+      description: 'Provides an index for address lookups',
+      optional: true,
+      s9pk: 'https://github.com/remcoros/fulcrum-startos/releases/download/v2.1.0-3-beta.1/fulcrum.s9pk',
     },
     'c-lightning': {
       description: 'Used to provide Lightning Network data',
