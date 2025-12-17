@@ -243,12 +243,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
       subcontainer: await sdk.SubContainer.of(
         effects,
         { imageId: 'frontend' },
-        sdk.Mounts.of().mountVolume({
-          volumeId: 'main',
-          subpath: null,
-          mountpoint: '/root/data',
-          readonly: false,
-        }),
+        null,
         'user-interface',
       ),
       exec: {
