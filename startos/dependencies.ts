@@ -1,10 +1,10 @@
 import { sdk } from './sdk'
 import { T } from '@start9labs/start-sdk'
-import { config } from 'bitcoind-startos/startos/actions/config/other'
+import { otherConfig } from 'bitcoind-startos/startos/actions/config/other'
 import { configJson } from './file-models/mempool-config.json'
 
 export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
-  await sdk.action.createTask(effects, 'bitcoind', config, 'critical', {
+  await sdk.action.createTask(effects, 'bitcoind', otherConfig, 'critical', {
     input: {
       kind: 'partial',
       value: {

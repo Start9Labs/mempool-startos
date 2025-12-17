@@ -39,7 +39,7 @@ let backendMounts = sdk.Mounts.of()
     readonly: false,
   })
 
-export const main = sdk.setupMain(async ({ effects, started }) => {
+export const main = sdk.setupMain(async ({ effects }) => {
   /**
    * ======================== Setup ========================
    */
@@ -181,7 +181,7 @@ export const main = sdk.setupMain(async ({ effects, started }) => {
   /**
    *  ======================== Daemons ========================
    */
-  return sdk.Daemons.of(effects, started)
+  return sdk.Daemons.of(effects)
     .addDaemon('mariadb', {
       subcontainer: mariaSub,
       exec: {
