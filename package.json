@@ -11,10 +11,10 @@
   "devDependencies": {
     "@types/node": "^22.1.0",
     "@vercel/ncc": "^0.38.1",
-    "prettier": "^3.2.5",
-    "typescript": "^5.4.3",
     "bitcoind-startos": "git+https://github.com/Start9Labs/bitcoind-startos.git#update/040",
-    "electrs-startos": "git+https://github.com/Start9Labs/electrs-startos.git#update/040"
+    "electrs-startos": "git+https://github.com/Start9Labs/electrs-startos.git#update/040",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.3"
   },
   "prettier": {
     "trailingComma": "all",
