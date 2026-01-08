@@ -4,23 +4,21 @@ import { configJson } from '../../file-models/mempool-config.json'
 import { configJsonDefaults } from '../../utils'
 
 export const v_3_2_1_4 = VersionInfo.of({
-  version: '3.2.1:4-beta.0',
+  version: '3.2.1:4-beta.1',
   releaseNotes: 'Updated for StartOS 0.4.0',
   migrations: {
     up: async ({ effects }) => {
       const custom = {} as any
       // get old config.yaml
-      const configYaml:
-        | {
-            'enable-electrs'?: boolean
-            indexer?: {
-              type: 'electrs' | 'fulcrum' | 'none'
-            }
-            lightning: {
-              type: 'cln' | 'lnd' | 'none'
-            }
-          }
-        | undefined = await readFile(
+      const configYaml: {
+        'enable-electrs'?: boolean
+        indexer?: {
+          type: 'electrs' | 'fulcrum' | 'none'
+        }
+        lightning: {
+          type: 'cln' | 'lnd' | 'none'
+        }
+      } | undefined = await readFile(
         '/media/startos/volumes/main/start9/config.yaml',
         'utf-8',
       ).then(YAML.parse, () => undefined)
