@@ -55,22 +55,34 @@ export const manifest = setupManifest({
     electrs: {
       description: 'Provides an index for address lookups',
       optional: true,
-      s9pk: 'https://github.com/Start9Labs/electrs-startos/releases/download/v0.11.0.1-beta.0/electrs.s9pk',
+      metadata: {
+        title: 'Electrs',
+        icon: 'https://github.com/Start9Labs/electrs-startos/blob/master/icon.png?raw=true',
+      },
     },
     fulcrum: {
       description: 'Provides an index for address lookups',
       optional: true,
-      s9pk: 'https://github.com/remcoros/fulcrum-startos/releases/download/v2.1.0-3-beta.1/fulcrum.s9pk',
+      metadata: {
+        title: 'Fulcrum',
+        icon: 'https://github.com/remcoros/fulcrum-startos/blob/master/icon.png?raw=true',
+      },
     },
     'c-lightning': {
       description: 'Used to provide Lightning Network data',
       optional: true,
-      s9pk: 'https://github.com/Start9Labs/cln-startos/releases/download/v25.12.0.1-beta.0/c-lightning.s9pk',
+      metadata: {
+        title: 'Core Lightning',
+        icon: 'https://github.com/Start9Labs/cln-startos/blob/master/icon.png?raw=true',
+      },
     },
     lnd: {
       description: 'Used to provide Lightning Network data',
       optional: true,
-      s9pk: 'https://github.com/Start9Labs/lnd-startos/releases/download/v0.20.0-beta.1-beta.1/lnd.s9pk',
+      metadata: {
+        title: 'LND',
+        icon: 'https://github.com/Start9Labs/lnd-startos/blob/master/icon.png?raw=true',
+      },
     },
   },
 })
