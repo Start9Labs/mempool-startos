@@ -1,12 +1,13 @@
 import { matches, FileHelper } from '@start9labs/start-sdk'
 import { configJsonDefaults as c } from '../utils'
+import { sdk } from '../sdk'
 const { object, string, boolean, number, array, literal, literals } = matches
 
 const shape = object({
   MEMPOOL: object({
     OFFICIAL: boolean.onMismatch(c.MEMPOOL.OFFICIAL),
     NETWORK: literals('mainnet', 'testnet').onMismatch(c.MEMPOOL.NETWORK),
-    BACKEND: literals('electrum', 'none').onMismatch(c.MEMPOOL.BACKEND),
+    BACKEND: literal('electrum').onMismatch(c.MEMPOOL.BACKEND),
     ENABLED: boolean.onMismatch(c.MEMPOOL.ENABLED),
     HTTP_PORT: number.onMismatch(c.MEMPOOL.HTTP_PORT),
     SPAWN_CLUSTER_PROCS: number.onMismatch(c.MEMPOOL.SPAWN_CLUSTER_PROCS),
@@ -217,7 +218,7 @@ const shape = object({
 
 export const configJson = FileHelper.json(
   {
-    volumeId: 'config',
+    base: sdk.volumes.config,
     subpath: '/mempool-config.json',
   },
   shape,

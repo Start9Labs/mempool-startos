@@ -3,8 +3,8 @@ import { readFile, rm } from 'fs/promises'
 import { configJson } from '../../file-models/mempool-config.json'
 import { configJsonDefaults } from '../../utils'
 
-export const v_3_2_1_4 = VersionInfo.of({
-  version: '3.2.1:4-beta.0',
+export const v_3_2_1_5_b0 = VersionInfo.of({
+  version: '3.2.1:5-beta.0',
   releaseNotes: 'Updated for StartOS 0.4.0',
   migrations: {
     up: async ({ effects }) => {

@@ -1,6 +1,5 @@
 import { T } from '@start9labs/start-sdk'
 import { bitcoinConfDefaults } from 'bitcoind-startos/startos/utils'
-import { port as electrsPort } from 'electrs-startos/startos/utils'
 
 export const uiPort = 8080
 export const apiPort = 8999
@@ -58,8 +57,8 @@ export const determineSyncResponse = (
 export const configJsonDefaults = {
   MEMPOOL: {
     OFFICIAL: false,
-    NETWORK: 'mainnet' as const,
-    BACKEND: 'none' as const,
+    NETWORK: 'mainnet',
+    BACKEND: 'electrum',
     ENABLED: true,
     HTTP_PORT: 8999,
     SPAWN_CLUSTER_PROCS: 0,
@@ -80,7 +79,7 @@ export const configJsonDefaults = {
     EXTERNAL_MAX_RETRY: 1,
     EXTERNAL_RETRY_INTERVAL: 0,
     USER_AGENT: 'mempool',
-    STDOUT_LOG_MIN_PRIORITY: 'info' as const,
+    STDOUT_LOG_MIN_PRIORITY: 'info',
     AUTOMATIC_POOLS_UPDATE: false,
     POOLS_JSON_URL:
       'https://raw.githubusercontent.com/mempool/mining-pools/master/pools-v2.json',
@@ -99,23 +98,22 @@ export const configJsonDefaults = {
     UNIX_SOCKET_PATH: '',
   },
   CORE_RPC: {
-    HOST: 'bitcoind.startos' as const,
+    HOST: 'bitcoind.startos',
     PORT: 8332,
     USERNAME: '',
     PASSWORD: '',
     TIMEOUT: 60000,
     COOKIE: true,
-    COOKIE_PATH:
-      `${btcMountpoint}/${bitcoinConfDefaults.rpccookiefile}` as const,
+    COOKIE_PATH: `${btcMountpoint}/${bitcoinConfDefaults.rpccookiefile}`,
     DEBUG_LOG_PATH: '',
   },
   ELECTRUM: {
-    HOST: 'electrs.startos' as const,
-    PORT: electrsPort,
+    HOST: undefined,
+    PORT: 50001,
     TLS_ENABLED: false,
   },
   ESPLORA: {
-    REST_API_URL: 'http://127.0.0.1:3000' as const,
+    REST_API_URL: 'http://127.0.0.1:3000',
     UNIX_SOCKET_PATH: '/tmp/esplora-bitcoin-mainnet',
     BATCH_QUERY_BASE_SIZE: 1000,
     RETRY_UNIX_SOCKET_AFTER: 30000,
@@ -138,17 +136,17 @@ export const configJsonDefaults = {
     HOST: '127.0.0.1',
     PORT: 3306,
     SOCKET: '',
-    DATABASE: 'mempool' as const,
-    USERNAME: 'mempool' as const,
+    DATABASE: 'mempool',
+    USERNAME: 'mempool',
     PASSWORD: 'password', // @TODO don't do this
     TIMEOUT: 180000,
     PID_DIR: '',
   },
   SYSLOG: {
     ENABLED: true,
-    HOST: '127.0.0.1' as const,
+    HOST: '127.0.0.1',
     PORT: 514,
-    MIN_PRIORITY: 'info' as const,
+    MIN_PRIORITY: 'info',
     FACILITY: 'local7',
   },
   STATISTICS: {
@@ -157,13 +155,13 @@ export const configJsonDefaults = {
   },
   MAXMIND: {
     ENABLED: false,
-    GEOLITE2_CITY: '/usr/local/share/GeoIP/GeoLite2-City.mmdb' as const,
-    GEOLITE2_ASN: '/usr/local/share/GeoIP/GeoLite2-ASN.mmdb' as const,
-    GEOIP2_ISP: '/usr/local/share/GeoIP/GeoIP2-ISP.mmdb' as const,
+    GEOLITE2_CITY: '/usr/local/share/GeoIP/GeoLite2-City.mmdb',
+    GEOLITE2_ASN: '/usr/local/share/GeoIP/GeoLite2-ASN.mmdb',
+    GEOIP2_ISP: '/usr/local/share/GeoIP/GeoIP2-ISP.mmdb',
   },
   LIGHTNING: {
     ENABLED: false,
-    BACKEND: 'lnd' as const,
+    BACKEND: 'lnd',
     STATS_REFRESH_INTERVAL: 3600,
     GRAPH_REFRESH_INTERVAL: 3600,
     LOGGER_UPDATE_INTERVAL: 30,
@@ -173,7 +171,7 @@ export const configJsonDefaults = {
   LND: {
     TLS_CERT_PATH: `${lndMountpoint}/tls.cert`,
     MACAROON_PATH: `${lndMountpoint}/readonly.macaroon`,
-    REST_API_URL: 'https://lnd.startos:8080' as const,
+    REST_API_URL: 'https://lnd.startos:8080',
     TIMEOUT: 10000,
   },
   CLIGHTNING: {
@@ -182,8 +180,8 @@ export const configJsonDefaults = {
   SOCKS5PROXY: {
     ENABLED: false,
     USE_ONION: true,
-    HOST: 'startos' as const,
-    PORT: 9050 as const,
+    HOST: 'startos',
+    PORT: 9050,
     USERNAME: '',
     PASSWORD: '',
   },
@@ -209,7 +207,7 @@ export const configJsonDefaults = {
     SERVERS: [],
   },
   MEMPOOL_SERVICES: {
-    API: 'https://mempool.space/api/v1/services' as const,
+    API: 'https://mempool.space/api/v1/services',
     ACCELERATIONS: false,
   },
   STRATUM: {
@@ -221,4 +219,4 @@ export const configJsonDefaults = {
     PAID: false,
     API_KEY: '',
   },
-}
+} as const

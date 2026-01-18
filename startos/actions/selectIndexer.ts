@@ -5,13 +5,12 @@ const { InputSpec, Value } = sdk
 const indexerInputSpec = InputSpec.of({
   indexer: Value.select({
     name: 'Select Indexer',
-    description: 'Select and indexer to use for address lookups',
+    description: 'Select an Electrum server to use for address lookups',
     values: {
-      none: 'None',
+      fulcrum: 'Fulcrum (recommended)',
       electrs: 'Electrs',
-      fulcrum: 'Fulcrum',
     },
-    default: 'none',
+    default: '' as any,
   }),
 })
 
@@ -35,33 +34,23 @@ export const selectIndexer = sdk.Action.withInput(
 
   // optionally pre-fill the input form
   async ({ effects }) => {
-    const configFile = await configJson.read().const(effects)
-    if (!configFile) throw new Error('Config file not found')
+    const indexer =
+      (await configJson
+        .read((c) => c.ELECTRUM.HOST?.split('.')[0])
+        .const(effects)) ?? undefined
 
     return {
-      indexer:
-        configFile.MEMPOOL.BACKEND === 'none'
-          ? 'none'
-          : configFile.ELECTRUM.HOST === 'electrs.startos'
-            ? 'electrum'
-            : 'fulcrum',
-    } as ElectrsInputSpec
+      indexer: indexer as any,
+    }
   },
 
   // the execution function
-  async ({ effects, input }) => {
-    if (input.indexer === 'electrs') {
-      await configJson.merge(effects, {
-        MEMPOOL: { BACKEND: 'electrum' },
-        ELECTRUM: { HOST: 'electrs.startos', PORT: 50001, TLS_ENABLED: false },
-      })
-    } else if (input.indexer === 'fulcrum') {
-      await configJson.merge(effects, {
-        MEMPOOL: { BACKEND: 'electrum' },
-        ELECTRUM: { HOST: 'fulcrum.startos', PORT: 50001, TLS_ENABLED: false },
-      })
-    } else {
-      await configJson.merge(effects, { MEMPOOL: { BACKEND: 'none' } })
-    }
-  },
+  async ({ effects, input }) =>
+    configJson.merge(effects, {
+      ELECTRUM: {
+        HOST: `${input.indexer}.startos`,
+        PORT: 50001,
+        TLS_ENABLED: false,
+      },
+    }),
 )

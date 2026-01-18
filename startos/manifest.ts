@@ -48,29 +48,41 @@ export const manifest = setupManifest({
       description: 'Used to subscribe to new block events.',
       optional: false,
       metadata: {
-        title: 'A Bitcoin Full Node',
+        title: 'Bitcoin',
         icon: 'https://bitcoin.org/img/icons/opengraph.png',
       },
     },
     electrs: {
       description: 'Provides an index for address lookups',
       optional: true,
-      s9pk: 'https://github.com/Start9Labs/electrs-startos/releases/download/v0.11.0.1-beta.0/electrs.s9pk',
+      metadata: {
+        title: 'Electrs',
+        icon: 'https://raw.githubusercontent.com/Start9Labs/electrs-startos/refs/heads/master/icon.png',
+      },
     },
     fulcrum: {
       description: 'Provides an index for address lookups',
       optional: true,
-      s9pk: 'https://github.com/remcoros/fulcrum-startos/releases/download/v2.1.0-3-beta.1/fulcrum.s9pk',
+      metadata: {
+        title: 'Fulcrum',
+        icon: 'https://raw.githubusercontent.com/Start9Labs/fulcrum-startos/master/icon.png',
+      },
     },
     'c-lightning': {
       description: 'Used to provide Lightning Network data',
       optional: true,
-      s9pk: 'https://github.com/Start9Labs/cln-startos/releases/download/v25.12.0.1-beta.0/c-lightning.s9pk',
+      metadata: {
+        title: 'Core Lightning',
+        icon: 'https://raw.githubusercontent.com/Start9Labs/cln-startos/refs/heads/master/icon.png',
+      },
     },
     lnd: {
       description: 'Used to provide Lightning Network data',
       optional: true,
-      s9pk: 'https://github.com/Start9Labs/lnd-startos/releases/download/v0.20.0-beta.1-beta.1/lnd.s9pk',
+      metadata: {
+        title: 'LND',
+        icon: 'https://raw.githubusercontent.com/Start9Labs/lnd-startos/update/040/icon.png',
+      },
     },
   },
 })

@@ -21,12 +21,11 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
   })
 
   let currentDeps = {} as Record<
-    'bitcoind' | 'lnd' | 'c-lightning' | 'electrs',
+    'bitcoind' | 'lnd' | 'c-lightning' | 'fulcrum' | 'electrs',
     T.DependencyRequirement
   >
 
   const lnData = await configJson.read((c) => c.LIGHTNING).const(effects)
-  const backend = await configJson.read((c) => c.MEMPOOL.BACKEND).const(effects)
   const electrumHost = await configJson
     .read((c) => c.ELECTRUM.HOST)
     .const(effects)
@@ -51,18 +50,18 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
     }
   }
 
-  if (backend === 'electrum' && electrumHost === 'electrs.startos') {
+  if (electrumHost === 'fulcrum.startos') {
+    currentDeps.fulcrum = {
+      id: 'fulcrum',
+      kind: 'running',
+      versionRange: '>=2.1.0:3-beta.1',
+      healthChecks: [],
+    }
+  } else if (electrumHost === 'electrs.startos') {
     currentDeps.electrs = {
       id: 'electrs',
       kind: 'running',
       versionRange: '>=0.10.10:0-alpha.2',
-      healthChecks: [],
-    }
-  } else if (backend === 'electrum' && electrumHost === 'fulcrum.startos') {
-    currentDeps.electrs = {
-      id: 'fulcrum',
-      kind: 'running',
-      versionRange: '>=2.1.0:3-beta.1',
       healthChecks: [],
     }
   }
