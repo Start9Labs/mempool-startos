@@ -9,8 +9,7 @@ export const manifest = setupManifest({
   supportSite: 'https://mempool.space/docs/faq',
   marketingSite: 'https://mempool.space',
   donationUrl: 'https://mempool.space/sponsor',
-  docsUrl:
-    'https://github.com/Start9Labs/mempool-startos/blob/update/040/docs/instructions.md',
+  docsUrl: 'https://mempool.space/docs/',
   description: {
     short: 'A mempool and blockchain explorer and network visualizer.',
     long: 'Mempool is a fully featured visualizer, explorer, and API service that runs locally on your server, an open source project developed and operated for the benefit of the Bitcoin community, with a focus on the emerging transaction fee market to help our transition into a multi-layer ecosystem.',
