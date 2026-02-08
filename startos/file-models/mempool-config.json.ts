@@ -119,7 +119,7 @@ const shape = object({
     SOCKET: literal(c.DATABASE.SOCKET).onMismatch(c.DATABASE.SOCKET),
     DATABASE: literal(c.DATABASE.DATABASE).onMismatch(c.DATABASE.DATABASE),
     USERNAME: literal(c.DATABASE.USERNAME).onMismatch(c.DATABASE.USERNAME),
-    PASSWORD: literal(c.DATABASE.PASSWORD).onMismatch(c.DATABASE.PASSWORD),
+    PASSWORD: string.onMismatch(c.DATABASE.PASSWORD),
     TIMEOUT: number.onMismatch(c.DATABASE.TIMEOUT),
     PID_DIR: string.onMismatch(c.DATABASE.PID_DIR),
   }),

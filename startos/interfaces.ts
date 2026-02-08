@@ -1,13 +1,14 @@
 import { sdk } from './sdk'
 import { uiPort } from './utils'
+import { i18n } from './i18n'
 
 export const setInterfaces = sdk.setupInterfaces(async ({ effects }) => {
   const uiMulti = sdk.MultiHost.of(effects, 'main')
   const uiMultiOrigin = await uiMulti.bindPort(uiPort, { protocol: 'http' })
   const ui = sdk.createInterface(effects, {
-    name: 'Web UI',
+    name: i18n('Web UI'),
     id: 'webui',
-    description: 'The web interface of Mempool',
+    description: i18n('The web interface of Mempool'),
     type: 'ui',
     schemeOverride: null,
     masked: false,

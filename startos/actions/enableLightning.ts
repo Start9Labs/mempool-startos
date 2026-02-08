@@ -1,17 +1,18 @@
 import { configJson } from '../file-models/mempool-config.json'
 import { sdk } from '../sdk'
 import { configJsonDefaults } from '../utils'
+import { i18n } from '../i18n'
 const { InputSpec, Value } = sdk
 
 export const lightningInputSpec = InputSpec.of({
   lightning: Value.select({
-    name: 'Lightning Node',
-    description: 'Select the internal node implementation',
+    name: i18n('Lightning Node'),
+    description: i18n('Select the internal node implementation'),
     default: 'none',
     values: {
-      lnd: 'LND',
-      cln: 'Core Lightning',
-      none: 'None',
+      lnd: i18n('LND'),
+      cln: i18n('Core Lightning'),
+      none: i18n('None'),
     },
   }),
 })
@@ -23,9 +24,10 @@ export const enableLightning = sdk.Action.withInput(
   'enable-lightning',
 
   async ({ effects }) => ({
-    name: 'Enable Lightning',
-    description:
+    name: i18n('Enable Lightning'),
+    description: i18n(
       'Use this setting to select the Lightning node used to serve network data to the Lightning tab in Mempool',
+    ),
     warning: null,
     allowedStatuses: 'any',
     group: null,

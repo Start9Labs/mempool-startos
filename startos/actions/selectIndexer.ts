@@ -1,14 +1,15 @@
 import { configJson } from '../file-models/mempool-config.json'
 import { sdk } from '../sdk'
+import { i18n } from '../i18n'
 const { InputSpec, Value } = sdk
 
 const indexerInputSpec = InputSpec.of({
   indexer: Value.select({
-    name: 'Select Indexer',
-    description: 'Select an Electrum server to use for address lookups',
+    name: i18n('Select Indexer'),
+    description: i18n('Select an Electrum server to use for address lookups'),
     values: {
-      fulcrum: 'Fulcrum (recommended)',
-      electrs: 'Electrs',
+      fulcrum: i18n('Fulcrum (recommended)'),
+      electrs: i18n('Electrs'),
     },
     default: '' as any,
   }),
@@ -21,8 +22,8 @@ export const selectIndexer = sdk.Action.withInput(
   'select-indexer',
 
   async ({ effects }) => ({
-    name: 'Select Indexer',
-    description: 'Enables address lookups via an internal indexer instance',
+    name: i18n('Select Indexer'),
+    description: i18n('Enables address lookups via an internal indexer instance'),
     warning: null,
     allowedStatuses: 'any',
     group: null,

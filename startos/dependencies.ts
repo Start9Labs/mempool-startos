@@ -2,6 +2,7 @@ import { sdk } from './sdk'
 import { T } from '@start9labs/start-sdk'
 import { otherConfig } from 'bitcoind-startos/startos/actions/config/other'
 import { configJson } from './file-models/mempool-config.json'
+import { i18n } from './i18n'
 
 export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
   await sdk.action.createTask(effects, 'bitcoind', otherConfig, 'critical', {
@@ -10,14 +11,12 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
       value: {
         prune: 0,
         txindex: true,
-        // mempool: {
-        //   maxmempool: 300, // TODO getSystemMemoryLimit
-        // },
       },
     },
     when: { condition: 'input-not-matches', once: false },
-    reason:
+    reason: i18n(
       'Mempool requires transaction indexing enabled and an unpruned bitcoin node.',
+    ),
   })
 
   let currentDeps = {} as Record<
@@ -75,15 +74,3 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
     },
   }
 })
-
-// async function getSystemMemoryLimit(effects: T.Effects) {
-//   try {
-//     const memdata = await effects.readFile({ volumeId: 'main', path: 'start9/system_mem_info'})
-//     // convert kb to mb
-//     const memMB = parseInt(memdata) / 1000
-//     return Math.round(memMB / 6)
-//   } catch (_e) {
-//     // recommended default is 300MB
-//     return 300
-//   }
-// }

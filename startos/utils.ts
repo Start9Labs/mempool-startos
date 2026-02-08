@@ -1,5 +1,15 @@
-import { T } from '@start9labs/start-sdk'
+import { T, utils } from '@start9labs/start-sdk'
 import { bitcoinConfDefaults } from 'bitcoind-startos/startos/utils'
+import { i18n } from './i18n'
+
+export const randomPassword = {
+  charset: 'a-z,A-Z,1-9',
+  len: 22,
+}
+
+export function getDbPassword(): string {
+  return utils.getDefaultString(randomPassword)
+}
 
 export const uiPort = 8080
 export const apiPort = 8999
@@ -27,29 +37,31 @@ export const determineSyncResponse = (
 ): T.NamedHealthCheckResult => {
   if (ibdStateRes.result.initialblockdownload) {
     return {
-      name: 'Transaction Indexer',
+      name: i18n('Transaction Indexer'),
       result: 'loading',
-      message:
+      message: i18n(
         'Initial blockchain download still in progress. Mempool will not display correctly until this is complete.',
+      ),
     }
   } else if (!txIndexRes.result.txindex.synced) {
     return {
-      name: 'Transaction Indexer',
+      name: i18n('Transaction Indexer'),
       result: 'loading',
-      message:
+      message: i18n(
         'Transaction Indexer is still syncing. Mempool will not display correctly until sync is complete.',
+      ),
     }
   } else if (txIndexRes.result.txindex.synced) {
     return {
-      name: 'Transaction Indexer',
+      name: i18n('Transaction Indexer'),
       result: 'success',
-      message: 'Fully synced.',
+      message: i18n('Fully synced.'),
     }
   } else {
     return {
-      name: 'Transaction Indexer',
+      name: i18n('Transaction Indexer'),
       result: 'starting',
-      message: 'Mempool is starting',
+      message: i18n('Mempool is starting'),
     }
   }
 }
@@ -138,7 +150,7 @@ export const configJsonDefaults = {
     SOCKET: '',
     DATABASE: 'mempool',
     USERNAME: 'mempool',
-    PASSWORD: 'password', // @TODO don't do this
+    PASSWORD: '',
     TIMEOUT: 180000,
     PID_DIR: '',
   },

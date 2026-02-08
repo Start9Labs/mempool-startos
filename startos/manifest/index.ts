@@ -1,4 +1,5 @@
 import { setupManifest } from '@start9labs/start-sdk'
+import { short, long, alertInstall, alertUpdate } from './i18n'
 
 export const manifest = setupManifest({
   id: 'mempool',
@@ -10,33 +11,31 @@ export const manifest = setupManifest({
   marketingSite: 'https://mempool.space',
   donationUrl: 'https://mempool.space/sponsor',
   docsUrl: 'https://mempool.space/docs/',
-  description: {
-    short: 'A mempool and blockchain explorer and network visualizer.',
-    long: 'Mempool is a fully featured visualizer, explorer, and API service that runs locally on your server, an open source project developed and operated for the benefit of the Bitcoin community, with a focus on the emerging transaction fee market to help our transition into a multi-layer ecosystem.',
-  },
+  description: { short, long },
   volumes: ['main', 'cache', 'db', 'config'],
   images: {
     frontend: {
       source: {
         dockerTag: 'mempool/frontend:v3.2.1',
       },
+      arch: ['x86_64', 'aarch64'],
     },
     backend: {
       source: {
         dockerTag: 'mempool/backend:v3.2.1',
       },
+      arch: ['x86_64', 'aarch64'],
     },
     mariadb: {
       source: {
         dockerTag: 'mariadb:10.4.32',
       },
+      arch: ['x86_64', 'aarch64'],
     },
   },
   alerts: {
-    install:
-      'When first running Mempool, previous block fee estimates will show as zero values until the service is able to catch up. Lookups may be slow or time out altogether while the service is still warming up, or if there are too many other things running on your system.',
-    update:
-      'Your mempool will need to reindex following an update, which can take up to an hour depending on your hardware.',
+    install: alertInstall,
+    update: alertUpdate,
     uninstall: null,
     restore: null,
     start: null,
@@ -80,7 +79,7 @@ export const manifest = setupManifest({
       optional: true,
       metadata: {
         title: 'LND',
-        icon: 'https://raw.githubusercontent.com/Start9Labs/lnd-startos/update/040/icon.png',
+        icon: 'https://raw.githubusercontent.com/Start9Labs/lnd-startos/refs/heads/master/icon.png',
       },
     },
   },

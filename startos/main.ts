@@ -13,6 +13,7 @@ import { readFile } from 'fs/promises'
 import { bitcoinConfDefaults } from 'bitcoind-startos/startos/utils'
 import { configJson } from './file-models/mempool-config.json'
 import { FileHelper } from '@start9labs/start-sdk'
+import { i18n } from './i18n'
 
 /**
  * ======================== Mounts ========================
@@ -43,7 +44,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
   /**
    * ======================== Setup ========================
    */
-  console.info('Starting Mempool...')
+  console.info(i18n('Starting Mempool...'))
 
   // ========================
   // Dependency setup & checks
@@ -108,7 +109,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
   // ========================
 
   const syncHealthCheck = {
-    display: 'Transaction Indexer',
+    display: i18n('Transaction Indexer'),
     fn: async () => {
       const auth = await readFile(
         `${backendSub.rootfs}/${btcMountpoint}/${bitcoinConfDefaults.rpccookiefile}`,
@@ -229,11 +230,11 @@ export const main = sdk.setupMain(async ({ effects }) => {
       },
       ready: {
         gracePeriod: 45_000,
-        display: 'API',
+        display: i18n('API'),
         fn: () =>
           sdk.healthCheck.checkPortListening(effects, apiPort, {
-            successMessage: 'The API is ready',
-            errorMessage: 'The API is not ready',
+            successMessage: i18n('The API is ready'),
+            errorMessage: i18n('The API is not ready'),
           }),
       },
       requires: ['mariadb'],
@@ -255,11 +256,11 @@ export const main = sdk.setupMain(async ({ effects }) => {
           : {},
       },
       ready: {
-        display: 'Web Interface',
+        display: i18n('Web Interface'),
         fn: () =>
           sdk.healthCheck.checkPortListening(effects, uiPort, {
-            successMessage: 'The web interface is ready',
-            errorMessage: 'The web interface is not ready',
+            successMessage: i18n('The web interface is ready'),
+            errorMessage: i18n('The web interface is not ready'),
           }),
       },
       requires: ['api'],
