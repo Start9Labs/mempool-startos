@@ -81,7 +81,7 @@ export const v_3_2_1_5_b0 = VersionInfo.of({
       }
 
       // Preserve existing password from config, or generate a new one
-      const existingConfig = await configJson.read().const(effects)
+      const existingConfig = await configJson.read().once()
       const dbPassword = existingConfig?.DATABASE?.PASSWORD || getDbPassword()
 
       await storeJson.write(effects, { dbPassword })
