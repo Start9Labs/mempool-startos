@@ -35,7 +35,7 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
         id: 'lnd',
         kind: 'running',
         versionRange: '>=0.19.3-beta:1-beta.0',
-        healthChecks: [],
+        healthChecks: ['lnd'],
       }
     }
 
@@ -69,8 +69,8 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
     ...currentDeps,
     bitcoind: {
       kind: 'running',
-      versionRange: '>=29.1:2-beta.0',
-      healthChecks: [],
+      versionRange: '>=28.3:0-beta.0',
+      healthChecks: ['bitcoind'],
     },
   }
 })

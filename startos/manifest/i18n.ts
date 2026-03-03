@@ -48,3 +48,43 @@ export const alertUpdate = {
   fr_FR:
     "Votre mempool devra etre reindexe apres une mise a jour, ce qui peut prendre jusqu'a une heure selon votre materiel.",
 }
+
+export const bitcoindDescription = {
+  en_US: 'Used to subscribe to new block events.',
+  es_ES: 'Se usa para suscribirse a nuevos eventos de bloques.',
+  de_DE: 'Wird verwendet, um neue Blockereignisse zu abonnieren.',
+  pl_PL: 'Uzywany do subskrybowania nowych zdarzen blokow.',
+  fr_FR: "Utilise pour s'abonner aux nouveaux evenements de blocs.",
+}
+
+export const electrsDescription = {
+  en_US: 'Provides an index for address lookups',
+  es_ES: 'Proporciona un indice para busquedas de direcciones',
+  de_DE: 'Bietet einen Index fur Adressabfragen',
+  pl_PL: 'Zapewnia indeks do wyszukiwania adresow',
+  fr_FR: 'Fournit un index pour les recherches d\'adresses',
+}
+
+export const fulcrumDescription = {
+  en_US: 'Provides an index for address lookups',
+  es_ES: 'Proporciona un indice para busquedas de direcciones',
+  de_DE: 'Bietet einen Index fur Adressabfragen',
+  pl_PL: 'Zapewnia indeks do wyszukiwania adresow',
+  fr_FR: 'Fournit un index pour les recherches d\'adresses',
+}
+
+export const clnDescription = {
+  en_US: 'Used to provide Lightning Network data',
+  es_ES: 'Se usa para proporcionar datos de la red Lightning',
+  de_DE: 'Wird verwendet, um Lightning-Netzwerkdaten bereitzustellen',
+  pl_PL: 'Uzywany do dostarczania danych sieci Lightning',
+  fr_FR: 'Utilise pour fournir les donnees du reseau Lightning',
+}
+
+export const lndDescription = {
+  en_US: 'Used to provide Lightning Network data',
+  es_ES: 'Se usa para proporcionar datos de la red Lightning',
+  de_DE: 'Wird verwendet, um Lightning-Netzwerkdaten bereitzustellen',
+  pl_PL: 'Uzywany do dostarczania danych sieci Lightning',
+  fr_FR: 'Utilise pour fournir les donnees du reseau Lightning',
+}

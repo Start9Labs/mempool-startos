@@ -1,16 +1,25 @@
 import { setupManifest } from '@start9labs/start-sdk'
-import { short, long, alertInstall, alertUpdate } from './i18n'
+import {
+  short,
+  long,
+  alertInstall,
+  alertUpdate,
+  bitcoindDescription,
+  electrsDescription,
+  fulcrumDescription,
+  clnDescription,
+  lndDescription,
+} from './i18n'
 
 export const manifest = setupManifest({
   id: 'mempool',
   title: 'Mempool',
   license: 'AGPL',
-  wrapperRepo: 'https://github.com/Start9Labs/mempool-wrapper',
+  packageRepo: 'https://github.com/Start9Labs/mempool-wrapper',
   upstreamRepo: 'https://github.com/mempool/mempool',
-  supportSite: 'https://mempool.space/docs/faq',
-  marketingSite: 'https://mempool.space',
+  marketingUrl: 'https://mempool.space',
   donationUrl: 'https://mempool.space/sponsor',
-  docsUrl: 'https://mempool.space/docs/',
+  docsUrls: ['https://mempool.space/docs/'],
   description: { short, long },
   volumes: ['main', 'cache', 'db', 'config'],
   images: {
@@ -36,14 +45,10 @@ export const manifest = setupManifest({
   alerts: {
     install: alertInstall,
     update: alertUpdate,
-    uninstall: null,
-    restore: null,
-    start: null,
-    stop: null,
   },
   dependencies: {
     bitcoind: {
-      description: 'Used to subscribe to new block events.',
+      description: bitcoindDescription,
       optional: false,
       metadata: {
         title: 'Bitcoin',
@@ -51,7 +56,7 @@ export const manifest = setupManifest({
       },
     },
     electrs: {
-      description: 'Provides an index for address lookups',
+      description: electrsDescription,
       optional: true,
       metadata: {
         title: 'Electrs',
@@ -59,7 +64,7 @@ export const manifest = setupManifest({
       },
     },
     fulcrum: {
-      description: 'Provides an index for address lookups',
+      description: fulcrumDescription,
       optional: true,
       metadata: {
         title: 'Fulcrum',
@@ -67,7 +72,7 @@ export const manifest = setupManifest({
       },
     },
     'c-lightning': {
-      description: 'Used to provide Lightning Network data',
+      description: clnDescription,
       optional: true,
       metadata: {
         title: 'Core Lightning',
@@ -75,7 +80,7 @@ export const manifest = setupManifest({
       },
     },
     lnd: {
-      description: 'Used to provide Lightning Network data',
+      description: lndDescription,
       optional: true,
       metadata: {
         title: 'LND',

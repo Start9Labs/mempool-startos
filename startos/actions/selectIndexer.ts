@@ -15,20 +15,19 @@ const indexerInputSpec = InputSpec.of({
   }),
 })
 
-const matchElectrsInputSpec = indexerInputSpec.validator
-type ElectrsInputSpec = typeof matchElectrsInputSpec._TYPE
-
 export const selectIndexer = sdk.Action.withInput(
   'select-indexer',
 
-  async ({ effects }) => ({
+  {
     name: i18n('Select Indexer'),
-    description: i18n('Enables address lookups via an internal indexer instance'),
+    description: i18n(
+      'Enables address lookups via an internal indexer instance',
+    ),
     warning: null,
     allowedStatuses: 'any',
     group: null,
     visibility: 'enabled',
-  }),
+  },
 
   // form input specification
   indexerInputSpec,

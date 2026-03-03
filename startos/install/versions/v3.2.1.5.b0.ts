@@ -1,8 +1,7 @@
 import { VersionInfo, IMPOSSIBLE, YAML } from '@start9labs/start-sdk'
 import { readFile, rm } from 'fs/promises'
 import { configJson } from '../../file-models/mempool-config.json'
-import { storeJson } from '../../file-models/store.json'
-import { configJsonDefaults, getDbPassword } from '../../utils'
+import { getDbPassword } from '../../utils'
 
 export const v_3_2_1_5_b0 = VersionInfo.of({
   version: '3.2.1:5-beta.0',
@@ -23,7 +22,11 @@ export const v_3_2_1_5_b0 = VersionInfo.of({
       const custom: {
         LIGHTNING?: { ENABLED: boolean; BACKEND?: 'lnd' | 'cln' }
         MEMPOOL?: { BACKEND: 'electrum' }
-        ELECTRUM?: { HOST: string; PORT: number; TLS_ENABLED: boolean }
+        ELECTRUM?: {
+          HOST: 'electrs.startos' | 'fulcrum.startos'
+          PORT: number
+          TLS_ENABLED: boolean
+        }
       } = {}
 
       // migrate from 0351 config.yaml if present
@@ -84,14 +87,10 @@ export const v_3_2_1_5_b0 = VersionInfo.of({
       const existingConfig = await configJson.read().once()
       const dbPassword = existingConfig?.DATABASE?.PASSWORD || getDbPassword()
 
-      await storeJson.write(effects, { dbPassword })
-      await configJson.write(effects, {
-        ...configJsonDefaults,
-        MEMPOOL: { ...configJsonDefaults.MEMPOOL, ...custom.MEMPOOL },
-        LIGHTNING: { ...configJsonDefaults.LIGHTNING, ...custom.LIGHTNING },
-        ELECTRUM: { ...configJsonDefaults.ELECTRUM, ...custom.ELECTRUM },
-        DATABASE: { ...configJsonDefaults.DATABASE, PASSWORD: dbPassword },
-      } as any)
+      await configJson.merge(effects, {
+        DATABASE: { PASSWORD: dbPassword },
+        ...custom,
+      })
     },
     down: IMPOSSIBLE,
   },

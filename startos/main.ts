@@ -1,16 +1,15 @@
 import { sdk } from './sdk'
 import {
   apiPort,
+  btcCookiePath,
   btcMountpoint,
   clnMountpoint,
-  configJsonDefaults,
   determineSyncResponse,
   IbdStateRes,
   TxIndexRes,
   uiPort,
 } from './utils'
 import { readFile } from 'fs/promises'
-import { bitcoinConfDefaults } from 'bitcoind-startos/startos/utils'
 import { configJson } from './file-models/mempool-config.json'
 import { FileHelper } from '@start9labs/start-sdk'
 import { i18n } from './i18n'
@@ -27,16 +26,16 @@ let backendMounts = sdk.Mounts.of()
   })
   .mountVolume({
     volumeId: 'config',
-    subpath: '/mempool-config.json',
+    subpath: 'mempool-config.json',
     mountpoint: '/backend/mempool-config.json',
-    readonly: false,
+    readonly: true,
     type: 'file',
   })
   .mountDependency({
     dependencyId: 'bitcoind',
     volumeId: 'main',
     subpath: null,
-    mountpoint: '/mnt/bitcoind',
+    mountpoint: btcMountpoint,
     readonly: false,
   })
 
@@ -69,16 +68,10 @@ export const main = sdk.setupMain(async ({ effects }) => {
         backendMounts = backendMounts.mountDependency({
           dependencyId: 'c-lightning',
           volumeId: 'main',
-          subpath: '/bitcoin',
+          subpath: 'bitcoin',
           mountpoint: clnMountpoint,
           readonly: true,
           type: 'directory',
-          // idmap: [
-          //   {
-          //     fromId: 0,
-          //     toId: 1000,
-          //   }
-          // ]
         })
         break
       default:
@@ -98,9 +91,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
   )
 
   // Restart on Bitcoin cookie change
-  await FileHelper.string(
-    `${backendSub.rootfs}/${configJsonDefaults.CORE_RPC.COOKIE_PATH}`,
-  )
+  await FileHelper.string(`${backendSub.rootfs}${btcCookiePath}`)
     .read()
     .const(effects)
 
@@ -111,12 +102,9 @@ export const main = sdk.setupMain(async ({ effects }) => {
   const syncHealthCheck = {
     display: i18n('Transaction Indexer'),
     fn: async () => {
-      const auth = await readFile(
-        `${backendSub.rootfs}/${btcMountpoint}/${bitcoinConfDefaults.rpccookiefile}`,
-        {
-          encoding: 'base64',
-        },
-      )
+      const auth = await readFile(`${backendSub.rootfs}${btcCookiePath}`, {
+        encoding: 'base64',
+      })
       const txIndexReq = fetch('http://bitcoind.startos:8332', {
         method: 'POST',
         headers: {
