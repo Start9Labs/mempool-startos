@@ -52,7 +52,7 @@ export const manifest = setupManifest({
       optional: false,
       metadata: {
         title: 'Bitcoin',
-        icon: 'https://bitcoin.org/img/icons/opengraph.png',
+        icon: 'https://raw.githubusercontent.com/Start9Labs/bitcoin-core-startos/refs/heads/040/30.2/dep-icon.svg',
       },
     },
     electrs: {
@@ -60,7 +60,7 @@ export const manifest = setupManifest({
       optional: true,
       metadata: {
         title: 'Electrs',
-        icon: 'https://raw.githubusercontent.com/Start9Labs/electrs-startos/refs/heads/master/icon.png',
+        icon: 'https://raw.githubusercontent.com/Start9Labs/electrs-startos/refs/heads/update/040/icon.svg',
       },
     },
     fulcrum: {
@@ -76,7 +76,7 @@ export const manifest = setupManifest({
       optional: true,
       metadata: {
         title: 'Core Lightning',
-        icon: 'https://raw.githubusercontent.com/Start9Labs/cln-startos/refs/heads/master/icon.png',
+        icon: 'https://raw.githubusercontent.com/Start9Labs/cln-startos/refs/heads/update/040/icon.svg',
       },
     },
     lnd: {
@@ -84,7 +84,7 @@ export const manifest = setupManifest({
       optional: true,
       metadata: {
         title: 'LND',
-        icon: 'https://raw.githubusercontent.com/Start9Labs/lnd-startos/refs/heads/master/icon.png',
+        icon: 'https://raw.githubusercontent.com/Start9Labs/lnd-startos/refs/heads/update/040/icon.svg',
       },
     },
   },
