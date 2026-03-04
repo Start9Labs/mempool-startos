@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="icon.png" alt="Mempool Logo" width="21%">
+  <img src="icon.svg" alt="Mempool Logo" width="21%">
 </p>
 
 # Mempool on StartOS
@@ -7,7 +7,7 @@
 > **Upstream docs:** <https://mempool.space/docs/>
 >
 > Everything not listed in this document should behave the same as upstream
-> Mempool v3.2.1. If a feature, setting, or behavior is not mentioned
+> Mempool. If a feature, setting, or behavior is not mentioned
 > here, the upstream documentation is accurate and fully applicable.
 
 [Mempool](https://github.com/mempool/mempool) is a fully featured mempool visualizer, blockchain explorer, and API service. It focuses on the emerging transaction fee market to help the transition into a multi-layer Bitcoin ecosystem.
@@ -34,13 +34,13 @@
 
 ## Image and Container Runtime
 
-| Property | Value |
-|----------|-------|
-| Frontend | `mempool/frontend:v3.2.1` |
-| Backend | `mempool/backend:v3.2.1` |
-| MariaDB | `mariadb:10.4.32` |
-| Architectures | x86_64, aarch64 |
-| Runtime | Three containers (Frontend + Backend + MariaDB) |
+| Property      | Value                                           |
+| ------------- | ----------------------------------------------- |
+| Frontend      | `mempool/frontend`                              |
+| Backend       | `mempool/backend`                               |
+| MariaDB       | `mariadb`                                       |
+| Architectures | x86_64, aarch64                                 |
+| Runtime       | Three containers (Frontend + Backend + MariaDB) |
 
 All images are upstream unmodified.
 
@@ -48,23 +48,23 @@ All images are upstream unmodified.
 
 ## Volume and Data Layout
 
-| Volume | Mount Point | Purpose |
-|--------|-------------|---------|
-| `cache` | `/backend/cache` | Mempool cache data |
-| `db` | `/var/lib/mysql` | MariaDB database |
-| `config` | — | Mempool configuration |
-| `main` | — | StartOS state |
+| Volume   | Mount Point      | Purpose               |
+| -------- | ---------------- | --------------------- |
+| `cache`  | `/backend/cache` | Mempool cache data    |
+| `db`     | `/var/lib/mysql` | MariaDB database      |
+| `config` | —                | Mempool configuration |
+| `main`   | —                | StartOS state         |
 
 ---
 
 ## Installation and First-Run Flow
 
-| Step | Upstream | StartOS |
-|------|----------|---------|
-| Installation | Docker Compose setup | Install from marketplace |
-| Bitcoin Core | Manual configuration | Auto-configured (txindex, no pruning) |
-| Database | Manual MariaDB setup | Automatic |
-| Indexer | Manual Electrum configuration | Select via action |
+| Step         | Upstream                      | StartOS                               |
+| ------------ | ----------------------------- | ------------------------------------- |
+| Installation | Docker Compose setup          | Install from marketplace              |
+| Bitcoin Core | Manual configuration          | Auto-configured (txindex, no pruning) |
+| Database     | Manual MariaDB setup          | Automatic                             |
+| Indexer      | Manual Electrum configuration | Select via action                     |
 
 **First-run steps:**
 
@@ -84,13 +84,13 @@ All images are upstream unmodified.
 
 ### Auto-Configured by StartOS
 
-| Setting | Value | Purpose |
-|---------|-------|---------|
-| `CORE_RPC.HOST` | `bitcoind.startos` | Bitcoin Core connection |
-| `CORE_RPC.COOKIE` | `true` | Cookie authentication |
-| `DATABASE.*` | Auto-configured | MariaDB connection |
-| `MEMPOOL.NETWORK` | `mainnet` | Bitcoin network |
-| `MEMPOOL.BACKEND` | `electrum` | Backend type |
+| Setting           | Value              | Purpose                 |
+| ----------------- | ------------------ | ----------------------- |
+| `CORE_RPC.HOST`   | `bitcoind.startos` | Bitcoin Core connection |
+| `CORE_RPC.COOKIE` | `true`             | Cookie authentication   |
+| `DATABASE.*`      | Auto-configured    | MariaDB connection      |
+| `MEMPOOL.NETWORK` | `mainnet`          | Bitcoin network         |
+| `MEMPOOL.BACKEND` | `electrum`         | Backend type            |
 
 ### Bitcoin Core Requirements
 
@@ -105,10 +105,10 @@ These are required for Mempool to function.
 
 ## Network Access and Interfaces
 
-| Interface | Port | Protocol | Purpose |
-|-----------|------|----------|---------|
-| Web UI | 8080 | HTTP | Mempool web interface |
-| API | 8999 | HTTP | Internal API (used by frontend) |
+| Interface | Port | Protocol | Purpose                         |
+| --------- | ---- | -------- | ------------------------------- |
+| Web UI    | 8080 | HTTP     | Mempool web interface           |
+| API       | 8999 | HTTP     | Internal API (used by frontend) |
 
 **Access methods (StartOS 0.4.0):**
 
@@ -123,13 +123,13 @@ These are required for Mempool to function.
 
 ### Select Indexer
 
-| Property | Value |
-|----------|-------|
-| ID | `select-indexer` |
-| Name | Select Indexer |
-| Visibility | Enabled |
-| Availability | Any status |
-| Purpose | Enable address lookups |
+| Property     | Value                  |
+| ------------ | ---------------------- |
+| ID           | `select-indexer`       |
+| Name         | Select Indexer         |
+| Visibility   | Enabled                |
+| Availability | Any status             |
+| Purpose      | Enable address lookups |
 
 **Options:**
 
@@ -140,13 +140,13 @@ Selecting an indexer enables address search and transaction history features.
 
 ### Enable Lightning
 
-| Property | Value |
-|----------|-------|
-| ID | `enable-lightning` |
-| Name | Enable Lightning |
-| Visibility | Enabled |
-| Availability | Any status |
-| Purpose | Add Lightning Network tab |
+| Property     | Value                     |
+| ------------ | ------------------------- |
+| ID           | `enable-lightning`        |
+| Name         | Enable Lightning          |
+| Visibility   | Enabled                   |
+| Availability | Any status                |
+| Purpose      | Add Lightning Network tab |
 
 **Options:**
 
@@ -158,13 +158,13 @@ Selecting an indexer enables address search and transaction history features.
 
 ## Dependencies
 
-| Dependency | Required | Purpose | Auto-Config |
-|------------|----------|---------|-------------|
-| Bitcoin Core | Yes | Blockchain data | txindex=true, prune=0 |
-| Electrs | Optional | Address lookups | Via action |
-| Fulcrum | Optional | Address lookups (recommended) | Via action |
-| LND | Optional | Lightning data | Via action |
-| Core Lightning | Optional | Lightning data | Via action |
+| Dependency     | Required | Purpose                       | Auto-Config           |
+| -------------- | -------- | ----------------------------- | --------------------- |
+| Bitcoin Core   | Yes      | Blockchain data               | txindex=true, prune=0 |
+| Electrs        | Optional | Address lookups               | Via action            |
+| Fulcrum        | Optional | Address lookups (recommended) | Via action            |
+| LND            | Optional | Lightning data                | Via action            |
+| Core Lightning | Optional | Lightning data                | Via action            |
 
 **Note:** Only one indexer (Electrs or Fulcrum) can be active at a time. Only one Lightning node (LND or CLN) can be active at a time.
 
@@ -188,12 +188,12 @@ Selecting an indexer enables address search and transaction history features.
 
 ## Health Checks
 
-| Check | Display Name | Method |
-|-------|--------------|--------|
-| MariaDB | (internal) | `healthcheck.sh --connect --innodb_initialized` |
-| API | API | Port 8999 listening (45s grace) |
-| Transaction Indexer | Transaction Indexer | Bitcoin Core txindex sync status |
-| Web Interface | Web Interface | Port 8080 listening |
+| Check               | Display Name        | Method                                          |
+| ------------------- | ------------------- | ----------------------------------------------- |
+| MariaDB             | (internal)          | `healthcheck.sh --connect --innodb_initialized` |
+| API                 | API                 | Port 8999 listening (45s grace)                 |
+| Transaction Indexer | Transaction Indexer | Bitcoin Core txindex sync status                |
+| Web Interface       | Web Interface       | Port 8080 listening                             |
 
 **Transaction Indexer messages:**
 
@@ -239,11 +239,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for build instructions and development wo
 
 ```yaml
 package_id: mempool
-upstream_version: 3.2.1
 images:
-  frontend: mempool/frontend:v3.2.1
-  backend: mempool/backend:v3.2.1
-  mariadb: mariadb:10.4.32
+  frontend: mempool/frontend
+  backend: mempool/backend
+  mariadb: mariadb
 architectures: [x86_64, aarch64]
 volumes:
   cache: /backend/cache

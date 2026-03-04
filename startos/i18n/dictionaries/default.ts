@@ -1,9 +1,9 @@
 export const DEFAULT_LANG = 'en_US'
 
 const dict = {
-  'Starting Mempool...': 0,
+  'Starting Mempool': 0,
   'Transaction Indexer': 1,
-  'API': 2,
+  API: 2,
   'The API is ready': 3,
   'The API is not ready': 4,
   'Web Interface': 5,
@@ -19,14 +19,14 @@ const dict = {
   'Enables address lookups via an internal indexer instance': 15,
   'Select an Electrum server to use for address lookups': 16,
   'Fulcrum (recommended)': 17,
-  'Electrs': 18,
+  Electrs: 18,
   'Lightning Node': 19,
   'Select the internal node implementation': 20,
   'Enable Lightning': 21,
   'Use this setting to select the Lightning node used to serve network data to the Lightning tab in Mempool': 22,
-  'LND': 23,
+  LND: 23,
   'Core Lightning': 24,
-  'None': 25,
+  None: 25,
   'Select which Electrum server to use for address lookups': 26,
   'Mempool requires transaction indexing enabled and an unpruned bitcoin node.': 27,
 } as const

@@ -1,3 +1,7 @@
+import { FileHelper } from '@start9labs/start-sdk'
+import { readFile } from 'fs/promises'
+import { configJson } from './file-models/mempool-config.json'
+import { i18n } from './i18n'
 import { sdk } from './sdk'
 import {
   apiPort,
@@ -9,41 +13,12 @@ import {
   TxIndexRes,
   uiPort,
 } from './utils'
-import { readFile } from 'fs/promises'
-import { configJson } from './file-models/mempool-config.json'
-import { FileHelper } from '@start9labs/start-sdk'
-import { i18n } from './i18n'
-
-/**
- * ======================== Mounts ========================
- */
-let backendMounts = sdk.Mounts.of()
-  .mountVolume({
-    volumeId: 'cache',
-    subpath: null,
-    mountpoint: '/backend/cache',
-    readonly: false,
-  })
-  .mountVolume({
-    volumeId: 'config',
-    subpath: 'mempool-config.json',
-    mountpoint: '/backend/mempool-config.json',
-    readonly: true,
-    type: 'file',
-  })
-  .mountDependency({
-    dependencyId: 'bitcoind',
-    volumeId: 'main',
-    subpath: null,
-    mountpoint: btcMountpoint,
-    readonly: false,
-  })
 
 export const main = sdk.setupMain(async ({ effects }) => {
   /**
    * ======================== Setup ========================
    */
-  console.info(i18n('Starting Mempool...'))
+  console.info(i18n('Starting Mempool'))
 
   // ========================
   // Dependency setup & checks
@@ -51,6 +26,28 @@ export const main = sdk.setupMain(async ({ effects }) => {
 
   const config = await configJson.read().const(effects)
   if (!config) throw new Error('Config file not found')
+
+  let backendMounts = sdk.Mounts.of()
+    .mountVolume({
+      volumeId: 'cache',
+      subpath: null,
+      mountpoint: '/backend/cache',
+      readonly: false,
+    })
+    .mountVolume({
+      volumeId: 'config',
+      subpath: 'mempool-config.json',
+      mountpoint: '/backend/mempool-config.json',
+      readonly: true,
+      type: 'file',
+    })
+    .mountDependency({
+      dependencyId: 'bitcoind',
+      volumeId: 'main',
+      subpath: null,
+      mountpoint: btcMountpoint,
+      readonly: false,
+    })
 
   if (config.LIGHTNING.ENABLED) {
     switch (config.LIGHTNING.BACKEND) {
@@ -174,7 +171,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
     .addDaemon('mariadb', {
       subcontainer: mariaSub,
       exec: {
-        command: sdk.useEntrypoint(),
+        command: sdk.useEntrypoint(['--bind-address=127.0.0.1']),
         env: {
           MARIADB_RANDOM_ROOT_PASSWORD: '1',
           MYSQL_DATABASE: config.DATABASE.DATABASE,

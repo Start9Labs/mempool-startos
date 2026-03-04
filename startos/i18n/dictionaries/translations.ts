@@ -2,7 +2,7 @@ import { LangDict } from './default'
 
 export default {
   es_ES: {
-    0: 'Iniciando Mempool...',
+    0: 'Iniciando Mempool',
     1: 'Indexador de transacciones',
     2: 'API',
     3: 'La API esta lista',
@@ -32,7 +32,7 @@ export default {
     27: 'Mempool requiere la indexacion de transacciones habilitada y un nodo bitcoin sin podar.',
   },
   de_DE: {
-    0: 'Mempool wird gestartet...',
+    0: 'Mempool wird gestartet',
     1: 'Transaktionsindexer',
     2: 'API',
     3: 'Die API ist bereit',
@@ -62,7 +62,7 @@ export default {
     27: 'Mempool erfordert aktivierte Transaktionsindizierung und einen nicht beschnittenen Bitcoin-Knoten.',
   },
   pl_PL: {
-    0: 'Uruchamianie Mempool...',
+    0: 'Uruchamianie Mempool',
     1: 'Indekser transakcji',
     2: 'API',
     3: 'API jest gotowe',
@@ -92,7 +92,7 @@ export default {
     27: 'Mempool wymaga wlaczonego indeksowania transakcji i nieprzycinanego wezla bitcoin.',
   },
   fr_FR: {
-    0: 'Demarrage de Mempool...',
+    0: 'Demarrage de Mempool',
     1: 'Indexeur de transactions',
     2: 'API',
     3: "L'API est prete",
@@ -119,6 +119,6 @@ export default {
     24: 'Core Lightning',
     25: 'Aucun',
     26: "Selectionnez le serveur Electrum a utiliser pour les recherches d'adresses",
-    27: 'Mempool necessite l\'indexation des transactions activee et un noeud bitcoin non elague.',
+    27: "Mempool necessite l'indexation des transactions activee et un noeud bitcoin non elague.",
   },
 } satisfies Record<string, LangDict>

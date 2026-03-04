@@ -1,21 +1,21 @@
 import { setupManifest } from '@start9labs/start-sdk'
 import {
-  short,
-  long,
   alertInstall,
   alertUpdate,
   bitcoindDescription,
+  clnDescription,
   electrsDescription,
   fulcrumDescription,
-  clnDescription,
   lndDescription,
+  long,
+  short,
 } from './i18n'
 
 export const manifest = setupManifest({
   id: 'mempool',
   title: 'Mempool',
   license: 'AGPL',
-  packageRepo: 'https://github.com/Start9Labs/mempool-wrapper',
+  packageRepo: 'https://github.com/Start9Labs/mempool-startos/tree/update/040',
   upstreamRepo: 'https://github.com/mempool/mempool',
   marketingUrl: 'https://mempool.space',
   donationUrl: 'https://mempool.space/sponsor',
