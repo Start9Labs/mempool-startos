@@ -1,10 +1,10 @@
-import { VersionInfo, IMPOSSIBLE, YAML } from '@start9labs/start-sdk'
+import { IMPOSSIBLE, VersionInfo, YAML } from '@start9labs/start-sdk'
 import { readFile, rm } from 'fs/promises'
 import { configJson } from '../../file-models/mempool-config.json'
 import { getDbPassword } from '../../utils'
 
-export const v_3_2_1_5_b0 = VersionInfo.of({
-  version: '3.2.1:5-beta.0',
+export const v_3_2_1_6_b0 = VersionInfo.of({
+  version: '3.2.1:6-beta.0',
   releaseNotes: {
     en_US:
       'Added internationalization support and improved security by auto-generating database passwords.',
