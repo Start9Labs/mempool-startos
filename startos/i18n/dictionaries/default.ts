@@ -28,7 +28,8 @@ const dict = {
   'Core Lightning': 24,
   None: 25,
   'Select which Electrum server to use for address lookups': 26,
-  'Mempool requires transaction indexing enabled and an unpruned bitcoin node.': 27,
+  'Mempool requires an unpruned Bitcoin node': 27,
+  'Mempool requires Bitcoin transaction indexing': 28,
 } as const
 
 export type I18nKey = keyof typeof dict

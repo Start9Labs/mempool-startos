@@ -1,6 +1,6 @@
 import { configJson } from '../file-models/mempool-config.json'
-import { sdk } from '../sdk'
 import { i18n } from '../i18n'
+import { sdk } from '../sdk'
 const { InputSpec, Value } = sdk
 
 const indexerInputSpec = InputSpec.of({
@@ -11,7 +11,7 @@ const indexerInputSpec = InputSpec.of({
       fulcrum: i18n('Fulcrum (recommended)'),
       electrs: i18n('Electrs'),
     },
-    default: '' as any,
+    default: 'fulcrum',
   }),
 })
 

@@ -1,22 +1,30 @@
-import { sdk } from './sdk'
 import { T } from '@start9labs/start-sdk'
-import { otherConfig } from 'bitcoind-startos/startos/actions/config/other'
+import { autoconfig } from 'bitcoind-startos/startos/actions/config/autoconfig'
 import { configJson } from './file-models/mempool-config.json'
 import { i18n } from './i18n'
+import { sdk } from './sdk'
 
 export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
-  await sdk.action.createTask(effects, 'bitcoind', otherConfig, 'critical', {
+  await sdk.action.createTask(effects, 'bitcoind', autoconfig, 'critical', {
     input: {
       kind: 'partial',
       value: {
-        prune: 0,
+        prune: undefined,
+      },
+    },
+    when: { condition: 'input-not-matches', once: false },
+    reason: i18n('Mempool requires an unpruned Bitcoin node'),
+  })
+
+  await sdk.action.createTask(effects, 'bitcoind', autoconfig, 'critical', {
+    input: {
+      kind: 'partial',
+      value: {
         txindex: true,
       },
     },
     when: { condition: 'input-not-matches', once: false },
-    reason: i18n(
-      'Mempool requires transaction indexing enabled and an unpruned bitcoin node.',
-    ),
+    reason: i18n('Mempool requires Bitcoin transaction indexing'),
   })
 
   let currentDeps = {} as Record<
