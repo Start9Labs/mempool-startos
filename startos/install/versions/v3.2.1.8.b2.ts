@@ -3,8 +3,8 @@ import { readFile, rm } from 'fs/promises'
 import { configJson } from '../../file-models/mempool-config.json'
 import { getDbPassword } from '../../utils'
 
-export const v_3_2_1_8_b1 = VersionInfo.of({
-  version: '3.2.1:8-beta.1',
+export const v_3_2_1_8_b2 = VersionInfo.of({
+  version: '3.2.1:8-beta.2',
   releaseNotes: {
     en_US:
       'Added internationalization support and improved security by auto-generating database passwords.',
