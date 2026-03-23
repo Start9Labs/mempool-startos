@@ -172,16 +172,22 @@ Selecting an indexer enables address search and transaction history features.
 
 ## Backups and Restore
 
-**Included in backup:**
+**Database:** Uses `mysqldump`/`mysql` for MariaDB instead of raw volume rsync. The dump is written directly to the backup target.
+
+**Volumes backed up via rsync:**
 
 - `main` volume — StartOS state
 - `cache` volume — Mempool cache
-- `db` volume — MariaDB database
 - `config` volume — Configuration
+
+**NOT included in backup:**
+
+- `db` volume — Not rsynced directly; database is captured via `mysqldump`
 
 **Restore behavior:**
 
 - All historical data restored
+- Database is rebuilt from dump via `mysql` import
 - May need time to re-sync recent blocks
 
 ---
@@ -268,10 +274,7 @@ health_checks:
   - api: port_listening 8999 (45s grace)
   - sync: txindex sync status
   - webui: port_listening 8080
-backup_volumes:
-  - main
-  - cache
-  - db
+backup_strategy: mysqldump (db) + volume rsync (main, cache, config)
   - config
 fixed_config:
   MEMPOOL.NETWORK: mainnet
