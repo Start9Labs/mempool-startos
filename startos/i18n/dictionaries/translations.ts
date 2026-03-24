@@ -29,8 +29,7 @@ export default {
     24: 'Core Lightning',
     25: 'Ninguno',
     26: 'Seleccione que servidor Electrum usar para busquedas de direcciones',
-    27: 'Mempool requiere un nodo Bitcoin sin podar',
-    28: 'Mempool requiere la indexacion de transacciones de Bitcoin',
+    27: 'Mempool requiere un nodo de archivo e indexacion de transacciones',
   },
   de_DE: {
     0: 'Mempool wird gestartet',
@@ -60,8 +59,7 @@ export default {
     24: 'Core Lightning',
     25: 'Keiner',
     26: 'Wahlen Sie den Electrum-Server fur Adressabfragen',
-    27: 'Mempool erfordert einen nicht beschnittenen Bitcoin-Knoten',
-    28: 'Mempool erfordert die Bitcoin-Transaktionsindizierung',
+    27: 'Mempool erfordert einen Archivknoten und Transaktionsindizierung',
   },
   pl_PL: {
     0: 'Uruchamianie Mempool',
@@ -91,8 +89,7 @@ export default {
     24: 'Core Lightning',
     25: 'Brak',
     26: 'Wybierz serwer Electrum do wyszukiwania adresow',
-    27: 'Mempool wymaga nieprzycinanego wezla Bitcoin',
-    28: 'Mempool wymaga indeksowania transakcji Bitcoin',
+    27: 'Mempool wymaga wezla archiwalnego i indeksowania transakcji',
   },
   fr_FR: {
     0: 'Demarrage de Mempool',
@@ -122,7 +119,6 @@ export default {
     24: 'Core Lightning',
     25: 'Aucun',
     26: "Selectionnez le serveur Electrum a utiliser pour les recherches d'adresses",
-    27: 'Mempool necessite un noeud Bitcoin non elague',
-    28: "Mempool necessite l'indexation des transactions Bitcoin",
+    27: "Mempool necessite un noeud d'archivage et l'indexation des transactions",
   },
 } satisfies Record<string, LangDict>

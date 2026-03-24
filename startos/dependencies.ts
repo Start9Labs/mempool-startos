@@ -10,21 +10,11 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
       kind: 'partial',
       value: {
         prune: undefined,
-      },
-    },
-    when: { condition: 'input-not-matches', once: false },
-    reason: i18n('Mempool requires an unpruned Bitcoin node'),
-  })
-
-  await sdk.action.createTask(effects, 'bitcoind', autoconfig, 'critical', {
-    input: {
-      kind: 'partial',
-      value: {
         txindex: true,
       },
     },
     when: { condition: 'input-not-matches', once: false },
-    reason: i18n('Mempool requires Bitcoin transaction indexing'),
+    reason: i18n('Mempool requires an archival node and transaction indexing'),
   })
 
   let currentDeps = {} as Record<

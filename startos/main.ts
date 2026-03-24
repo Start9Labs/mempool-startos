@@ -152,6 +152,13 @@ export const main = sdk.setupMain(async ({ effects }) => {
     },
   }
 
+  const frontendSub = await sdk.SubContainer.of(
+    effects,
+    { imageId: 'frontend' },
+    null,
+    'user-interface',
+  )
+
   const mariaSub = await sdk.SubContainer.of(
     effects,
     { imageId: 'mariadb' },
@@ -225,13 +232,16 @@ export const main = sdk.setupMain(async ({ effects }) => {
       requires: ['mariadb'],
     })
     .addHealthCheck('sync', { ready: syncHealthCheck, requires: ['api'] })
+    .addOneshot('webui-chown', {
+      subcontainer: frontendSub,
+      exec: {
+        command: ['chown', '-R', '1000:1000', '/var/log/nginx'],
+        user: 'root',
+      },
+      requires: ['api'],
+    })
     .addDaemon('webui', {
-      subcontainer: await sdk.SubContainer.of(
-        effects,
-        { imageId: 'frontend' },
-        null,
-        'user-interface',
-      ),
+      subcontainer: frontendSub,
       exec: {
         command: sdk.useEntrypoint(),
         env: config.LIGHTNING.ENABLED
@@ -248,6 +258,6 @@ export const main = sdk.setupMain(async ({ effects }) => {
             errorMessage: i18n('The web interface is not ready'),
           }),
       },
-      requires: ['api'],
+      requires: ['webui-chown'],
     })
 })
