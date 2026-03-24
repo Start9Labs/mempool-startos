@@ -232,14 +232,6 @@ export const main = sdk.setupMain(async ({ effects }) => {
       requires: ['mariadb'],
     })
     .addHealthCheck('sync', { ready: syncHealthCheck, requires: ['api'] })
-    .addOneshot('webui-chown', {
-      subcontainer: frontendSub,
-      exec: {
-        command: ['chown', '-R', '1000:1000', '/var/log/nginx'],
-        user: 'root',
-      },
-      requires: ['api'],
-    })
     .addDaemon('webui', {
       subcontainer: frontendSub,
       exec: {
@@ -258,6 +250,6 @@ export const main = sdk.setupMain(async ({ effects }) => {
             errorMessage: i18n('The web interface is not ready'),
           }),
       },
-      requires: ['webui-chown'],
+      requires: [],
     })
 })
