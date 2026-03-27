@@ -2,8 +2,8 @@ import { IMPOSSIBLE, VersionInfo, YAML } from '@start9labs/start-sdk'
 import { readFile, rm } from 'fs/promises'
 import { configJson } from '../file-models/mempool-config.json'
 
-export const v_3_2_1_8_b5 = VersionInfo.of({
-  version: '3.2.1:8-beta.5',
+export const v_3_2_1_8_b6 = VersionInfo.of({
+  version: '3.2.1:8-beta.6',
   releaseNotes: {
     en_US:
       'Fixed database migration from 0.3.5.1, consolidated dependency tasks, and fixed nginx log permissions.',

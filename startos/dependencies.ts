@@ -9,7 +9,7 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
     input: {
       kind: 'partial',
       value: {
-        prune: undefined,
+        prune: null,
         txindex: true,
       },
     },
