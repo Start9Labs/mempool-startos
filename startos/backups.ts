@@ -16,7 +16,6 @@ export const { createBackup, restoreInit } = sdk.setupBackups(async () =>
     engine: 'mariadb',
     readyCommand: ['healthcheck.sh', '--connect', '--innodb_initialized'],
   })
-    .addVolume('main')
     .addVolume('cache')
     .addVolume('config'),
 )
