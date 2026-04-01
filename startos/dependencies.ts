@@ -32,7 +32,7 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
       currentDeps.lnd = {
         id: 'lnd',
         kind: 'running',
-        versionRange: '>=0.20.1-beta:1-beta.3',
+        versionRange: '>=0.20.1-beta:1',
         healthChecks: ['lnd'],
       }
     }
@@ -41,7 +41,7 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
       currentDeps['c-lightning'] = {
         id: 'c-lightning',
         kind: 'running',
-        versionRange: '>=25.12.1:4-beta.5',
+        versionRange: '>=25.12.1:4',
         healthChecks: [],
       }
     }
@@ -51,14 +51,14 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
     currentDeps.fulcrum = {
       id: 'fulcrum',
       kind: 'running',
-      versionRange: '>=2.1.0:7-beta.4',
+      versionRange: '>=2.1.0:7',
       healthChecks: [],
     }
   } else if (electrumHost === 'electrs.startos') {
     currentDeps.electrs = {
       id: 'electrs',
       kind: 'running',
-      versionRange: '>=0.11.1:1-beta.4',
+      versionRange: '>=0.11.1:1',
       healthChecks: [],
     }
   }
@@ -67,7 +67,7 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
     ...currentDeps,
     bitcoind: {
       kind: 'running',
-      versionRange: '>=28.3:5-beta.4',
+      versionRange: '>=28.3:5',
       healthChecks: ['bitcoind'],
     },
   }

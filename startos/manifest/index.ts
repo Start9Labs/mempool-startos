@@ -15,7 +15,7 @@ export const manifest = setupManifest({
   id: 'mempool',
   title: 'Mempool',
   license: 'AGPL',
-  packageRepo: 'https://github.com/Start9Labs/mempool-startos/tree/update/040',
+  packageRepo: 'https://github.com/Start9Labs/mempool-startos',
   upstreamRepo: 'https://github.com/mempool/mempool',
   marketingUrl: 'https://mempool.space',
   donationUrl: 'https://mempool.space/sponsor',
@@ -52,7 +52,7 @@ export const manifest = setupManifest({
       optional: false,
       metadata: {
         title: 'Bitcoin',
-        icon: 'https://raw.githubusercontent.com/Start9Labs/bitcoin-core-startos/refs/heads/040/30.2/dep-icon.svg',
+        icon: 'https://raw.githubusercontent.com/Start9Labs/bitcoin-core-startos/refs/heads/30.x/dep-icon.svg',
       },
     },
     electrs: {
@@ -60,7 +60,7 @@ export const manifest = setupManifest({
       optional: true,
       metadata: {
         title: 'Electrs',
-        icon: 'https://raw.githubusercontent.com/Start9Labs/electrs-startos/refs/heads/update/040/icon.svg',
+        icon: 'https://raw.githubusercontent.com/Start9Labs/electrs-startos/refs/heads/master/icon.svg',
       },
     },
     fulcrum: {
@@ -76,7 +76,7 @@ export const manifest = setupManifest({
       optional: true,
       metadata: {
         title: 'Core Lightning',
-        icon: 'https://raw.githubusercontent.com/Start9Labs/cln-startos/refs/heads/update/040/icon.svg',
+        icon: 'https://raw.githubusercontent.com/Start9Labs/cln-startos/refs/heads/master/icon.svg',
       },
     },
     lnd: {
@@ -84,7 +84,7 @@ export const manifest = setupManifest({
       optional: true,
       metadata: {
         title: 'LND',
-        icon: 'https://raw.githubusercontent.com/Start9Labs/lnd-startos/refs/heads/update/040/icon.svg',
+        icon: 'https://raw.githubusercontent.com/Start9Labs/lnd-startos/refs/heads/master/icon.svg',
       },
     },
   },
