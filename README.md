@@ -22,9 +22,9 @@
 - [Configuration Management](#configuration-management)
 - [Network Access and Interfaces](#network-access-and-interfaces)
 - [Actions (StartOS UI)](#actions-startos-ui)
-- [Dependencies](#dependencies)
 - [Backups and Restore](#backups-and-restore)
 - [Health Checks](#health-checks)
+- [Dependencies](#dependencies)
 - [Limitations and Differences](#limitations-and-differences)
 - [What Is Unchanged from Upstream](#what-is-unchanged-from-upstream)
 - [Contributing](#contributing)
@@ -36,61 +36,61 @@
 
 | Property      | Value                                           |
 | ------------- | ----------------------------------------------- |
-| Frontend      | `mempool/frontend`                              |
-| Backend       | `mempool/backend`                               |
-| MariaDB       | `mariadb`                                       |
+| Frontend      | `mempool/frontend` (upstream, unmodified)       |
+| Backend       | `mempool/backend` (upstream, unmodified)        |
+| MariaDB       | `mariadb` (upstream, unmodified)                |
 | Architectures | x86_64, aarch64                                 |
 | Runtime       | Three containers (Frontend + Backend + MariaDB) |
-
-All images are upstream unmodified.
-
----
 
 ## Volume and Data Layout
 
 | Volume   | Mount Point      | Purpose               |
 | -------- | ---------------- | --------------------- |
+| `main`   | —                | StartOS state         |
 | `cache`  | `/backend/cache` | Mempool cache data    |
 | `db`     | `/var/lib/mysql` | MariaDB database      |
 | `config` | —                | Mempool configuration |
-| `main`   | —                | StartOS state         |
 
----
+StartOS-specific files:
+
+| File                                 | Volume   | Purpose                                    |
+| ------------------------------------ | -------- | ------------------------------------------ |
+| `mempool-config.json`                | `config` | Mempool backend configuration (managed by StartOS) |
 
 ## Installation and First-Run Flow
 
-| Step         | Upstream                      | StartOS                               |
-| ------------ | ----------------------------- | ------------------------------------- |
-| Installation | Docker Compose setup          | Install from marketplace              |
-| Bitcoin Core | Manual configuration          | Auto-configured (txindex, no pruning) |
-| Database     | Manual MariaDB setup          | Automatic                             |
-| Indexer      | Manual Electrum configuration | Select via action                     |
-
-**First-run steps:**
-
-1. Ensure Bitcoin Core is installed (will be auto-configured)
-2. Install Mempool from StartOS marketplace
-3. Wait for Bitcoin Core to sync and enable txindex
-4. Optionally run "Select Indexer" to enable address lookups
+1. Ensure Bitcoin Core is installed (will be auto-configured with `txindex=true` and `prune=0`)
+2. Install Mempool from the StartOS marketplace
+3. On install, StartOS creates a **critical task** to select an Electrum indexer for address lookups
+4. Wait for Bitcoin Core to sync and enable txindex
 5. Optionally run "Enable Lightning" for Lightning network data
 
 **Install alert:** Previous block fee estimates will show as zero until the service catches up. Lookups may be slow while warming up.
 
 **Update alert:** Mempool reindexes after updates, which can take up to an hour.
 
----
-
 ## Configuration Management
+
+Mempool is configured via `mempool-config.json`, managed by StartOS.
 
 ### Auto-Configured by StartOS
 
 | Setting           | Value              | Purpose                 |
 | ----------------- | ------------------ | ----------------------- |
 | `CORE_RPC.HOST`   | `bitcoind.startos` | Bitcoin Core connection |
+| `CORE_RPC.PORT`   | `8332`             | Bitcoin Core RPC port   |
 | `CORE_RPC.COOKIE` | `true`             | Cookie authentication   |
-| `DATABASE.*`      | Auto-configured    | MariaDB connection      |
+| `CORE_RPC.COOKIE_PATH` | `/mnt/bitcoind/.cookie` | Cookie file path |
+| `DATABASE.*`      | Auto-configured    | MariaDB connection (localhost, port 3306, auto-generated password) |
 | `MEMPOOL.NETWORK` | `mainnet`          | Bitcoin network         |
 | `MEMPOOL.BACKEND` | `electrum`         | Backend type            |
+| `SYSLOG.ENABLED`  | `false`            | Syslog disabled         |
+| `MAXMIND.ENABLED` | `false`            | GeoIP disabled          |
+| `REDIS.ENABLED`   | `false`            | Redis disabled          |
+| `REPLICATION.ENABLED` | `false`        | Replication disabled    |
+| `STRATUM.ENABLED` | `false`            | Stratum disabled        |
+| `SOCKS5PROXY.HOST` | `startos`         | Tor SOCKS proxy         |
+| `SOCKS5PROXY.PORT` | `9050`            | Tor SOCKS proxy port    |
 
 ### Bitcoin Core Requirements
 
@@ -101,113 +101,76 @@ StartOS automatically configures Bitcoin Core with:
 
 These are required for Mempool to function.
 
----
-
 ## Network Access and Interfaces
 
-| Interface | Port | Protocol | Purpose                         |
-| --------- | ---- | -------- | ------------------------------- |
-| Web UI    | 8080 | HTTP     | Mempool web interface           |
-| API       | 8999 | HTTP     | Internal API (used by frontend) |
+| Interface | Port | Protocol | Purpose               |
+| --------- | ---- | -------- | --------------------- |
+| Web UI    | 8080 | HTTP     | Mempool web interface |
 
-**Access methods (StartOS 0.4.0):**
-
-- LAN IP with unique port
-- `<hostname>.local` with unique port
-- Tor `.onion` address
-- Custom domains (if configured)
-
----
+The backend API runs on port 8999 internally but is not exposed as a separate interface.
 
 ## Actions (StartOS UI)
 
 ### Select Indexer
 
-| Property     | Value                  |
-| ------------ | ---------------------- |
-| ID           | `select-indexer`       |
-| Name         | Select Indexer         |
-| Visibility   | Enabled                |
-| Availability | Any status             |
-| Purpose      | Enable address lookups |
+- **Name:** Select Indexer
+- **Purpose:** Enable address lookups via an Electrum server instance
+- **Visibility:** Enabled
+- **Availability:** Any status
+- **Inputs:** Select one of: Fulcrum (recommended), Electrs
+- **Outputs:** None
 
-**Options:**
-
-- **Fulcrum** — Recommended, faster address lookups
-- **Electrs** — Alternative Electrum server
-
-Selecting an indexer enables address search and transaction history features.
+Selecting an indexer enables address search and transaction history features. Sets `ELECTRUM.HOST` and `ELECTRUM.PORT` in the configuration.
 
 ### Enable Lightning
 
-| Property     | Value                     |
-| ------------ | ------------------------- |
-| ID           | `enable-lightning`        |
-| Name         | Enable Lightning          |
-| Visibility   | Enabled                   |
-| Availability | Any status                |
-| Purpose      | Add Lightning Network tab |
+- **Name:** Enable Lightning
+- **Purpose:** Select the Lightning node used to serve network data to the Lightning tab
+- **Visibility:** Enabled
+- **Availability:** Any status
+- **Inputs:** Select one of: LND, Core Lightning, None
+- **Outputs:** None
 
-**Options:**
-
-- **LND** — Use LND for Lightning data
-- **Core Lightning** — Use CLN for Lightning data
-- **None** — Disable Lightning features
-
----
-
-## Dependencies
-
-| Dependency     | Required | Purpose                       | Auto-Config           |
-| -------------- | -------- | ----------------------------- | --------------------- |
-| Bitcoin Core   | Yes      | Blockchain data               | txindex=true, prune=0 |
-| Electrs        | Optional | Address lookups               | Via action            |
-| Fulcrum        | Optional | Address lookups (recommended) | Via action            |
-| LND            | Optional | Lightning data                | Via action            |
-| Core Lightning | Optional | Lightning data                | Via action            |
-
-**Note:** Only one indexer (Electrs or Fulcrum) can be active at a time. Only one Lightning node (LND or CLN) can be active at a time.
-
----
+When enabled, configures the `LIGHTNING` and `LND`/`CLIGHTNING` sections of the configuration and mounts the selected Lightning node's volume.
 
 ## Backups and Restore
 
 **Database:** Uses `mysqldump`/`mysql` for MariaDB instead of raw volume rsync. The dump is written directly to the backup target.
 
-**Volumes backed up via rsync:**
+**Volumes backed up:**
 
-- `main` volume — StartOS state
-- `cache` volume — Mempool cache
-- `config` volume — Configuration
+- `db` — MariaDB data (via mysqldump)
+- `cache` — Mempool cache
+- `config` — Configuration
 
 **NOT included in backup:**
 
-- `db` volume — Not rsynced directly; database is captured via `mysqldump`
+- `main` volume
 
-**Restore behavior:**
-
-- All historical data restored
-- Database is rebuilt from dump via `mysql` import
-- May need time to re-sync recent blocks
-
----
+**Restore behavior:** All historical data is restored. The database is rebuilt from the dump via `mysql` import. May need time to re-sync recent blocks.
 
 ## Health Checks
 
-| Check               | Display Name        | Method                                          |
-| ------------------- | ------------------- | ----------------------------------------------- |
-| MariaDB             | (internal)          | `healthcheck.sh --connect --innodb_initialized` |
-| API                 | API                 | Port 8999 listening (45s grace)                 |
-| Transaction Indexer | Transaction Indexer | Bitcoin Core txindex sync status                |
-| Web Interface       | Web Interface       | Port 8080 listening                             |
+| Check                  | Method                                          | Grace Period | Messages                                              |
+| ---------------------- | ----------------------------------------------- | ------------ | ----------------------------------------------------- |
+| **MariaDB**            | `healthcheck.sh --connect --innodb_initialized` | 120 seconds  | (internal, not displayed)                             |
+| **API**                | Port 8999 listening                             | 45 seconds   | Success: "The API is ready" / Error: "The API is not ready" |
+| **Transaction Indexer** | Bitcoin Core `getindexinfo` + `getblockchaininfo` RPC | Default | Loading: "Initial blockchain download still in progress" / Loading: "Transaction Indexer is still syncing" / Success: "Fully synced" |
+| **Web Interface**      | Port 8080 listening                             | Default      | Success: "The web interface is ready" / Error: "The web interface is not ready" |
 
-**Transaction Indexer messages:**
+## Dependencies
 
-- Loading: "Initial blockchain download still in progress"
-- Loading: "Transaction Indexer is still syncing"
-- Success: "Fully synced"
+| Dependency     | Required | Mounted Volume                     | Purpose                       | Auto-Config           |
+| -------------- | -------- | ---------------------------------- | ----------------------------- | --------------------- |
+| Bitcoin Core   | Yes      | `main` → `/mnt/bitcoind`          | Blockchain data via RPC       | txindex=true, prune=0 |
+| Electrs        | Optional | None                               | Address lookups (via action)  | Connects on port 50001 |
+| Fulcrum        | Optional | None                               | Address lookups (via action, recommended) | Connects on port 50001 |
+| LND            | Optional | `main` → `/mnt/lnd-readonly`      | Lightning data (via action)   | REST API + macaroon   |
+| Core Lightning | Optional | `bitcoin` → `/mnt/cln` (read-only)| Lightning data (via action)   | Unix socket           |
 
----
+Only one indexer (Electrs or Fulcrum) can be active at a time. Only one Lightning node (LND or CLN) can be active at a time.
+
+Bitcoin Core's `.cookie` file at `/mnt/bitcoind/.cookie` is used for RPC authentication.
 
 ## Limitations and Differences
 
@@ -217,8 +180,8 @@ Selecting an indexer enables address search and transaction history features.
 4. **Single Lightning node** — Cannot use both LND and CLN simultaneously
 5. **No MAXMIND geolocation** — GeoIP features disabled
 6. **No Redis** — Redis caching not available
-
----
+7. **No Stratum** — Stratum mining protocol disabled
+8. **No Replication** — Database replication disabled
 
 ## What Is Unchanged from Upstream
 
@@ -233,8 +196,6 @@ Selecting an indexer enables address search and transaction history features.
 - REST API
 - All web UI features
 
----
-
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for build instructions and development workflow.
@@ -245,47 +206,33 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for build instructions and development wo
 
 ```yaml
 package_id: mempool
+upstream_version: see manifest dockerTags
 images:
   frontend: mempool/frontend
   backend: mempool/backend
   mariadb: mariadb
 architectures: [x86_64, aarch64]
 volumes:
+  main: (StartOS state)
   cache: /backend/cache
   db: /var/lib/mysql
   config: (mempool-config.json)
-  main: (StartOS state)
 ports:
   ui: 8080
-  api: 8999
+  api: 8999 (internal)
 dependencies:
-  bitcoind:
-    required: true
-    auto_config: [txindex=true, prune=0]
-  electrs: optional (address lookups)
-  fulcrum: optional (address lookups, recommended)
-  lnd: optional (Lightning data)
-  c-lightning: optional (Lightning data)
+  - bitcoind (required, auto-config: txindex=true, prune=0)
+  - electrs (optional)
+  - fulcrum (optional)
+  - lnd (optional)
+  - c-lightning (optional)
 actions:
-  - select-indexer (enabled, any)
-  - enable-lightning (enabled, any)
+  - select-indexer
+  - enable-lightning
 health_checks:
-  - mariadb: healthcheck.sh
+  - mariadb: healthcheck.sh (120s grace)
   - api: port_listening 8999 (45s grace)
   - sync: txindex sync status
   - webui: port_listening 8080
-backup_strategy: mysqldump (db) + volume rsync (main, cache, config)
-  - config
-fixed_config:
-  MEMPOOL.NETWORK: mainnet
-  MEMPOOL.BACKEND: electrum
-  CORE_RPC.HOST: bitcoind.startos
-  DATABASE.HOST: 127.0.0.1
-not_available:
-  - Testnet/Signet networks
-  - Esplora backend
-  - MAXMIND geolocation
-  - Redis caching
-  - Multiple indexers
-  - Multiple Lightning nodes
+backup_strategy: mysqldump (db) + volume rsync (cache, config)
 ```
