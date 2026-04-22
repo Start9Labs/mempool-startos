@@ -1,16 +1,15 @@
-import { FileHelper } from '@start9labs/start-sdk'
-import { readFile } from 'fs/promises'
+import { totalmem } from 'os'
+import { manifest as bitcoinManifest } from 'bitcoin-core-startos/startos/manifest'
+import { manifest as clnManifest } from 'cln-startos/startos/manifest'
+import { manifest as lndManifest } from 'lnd-startos/startos/manifest'
 import { configJson } from './file-models/mempool-config.json'
 import { i18n } from './i18n'
 import { sdk } from './sdk'
 import {
   apiPort,
-  btcCookiePath,
   btcMountpoint,
   clnMountpoint,
-  determineSyncResponse,
-  IbdStateRes,
-  TxIndexRes,
+  lndMountpoint,
   uiPort,
 } from './utils'
 
@@ -27,6 +26,24 @@ export const main = sdk.setupMain(async ({ effects }) => {
   const config = await configJson.read().const(effects)
   if (!config) throw new Error('Config file not found')
 
+  // V8 old-space heap for the mempool backend, scaled to host RAM.
+  // Reserve 6 GB for the co-resident stack (Bitcoin Core post-sync,
+  // Fulcrum/Electrs, LND/CLN, StartOS and OS overhead) before computing
+  // our share. Indexing (audit/goggles/summaries/cpfp) is memory-hungry,
+  // so when any of those toggles is on we raise the floor and share a
+  // larger fraction of the remaining host RAM.
+  const RESERVED_MB = 6 * 1024
+  const totalMB = Math.floor(totalmem() / (1024 * 1024))
+  const effectiveMB = Math.max(0, totalMB - RESERVED_MB)
+  const anyIndexing =
+    config.MEMPOOL.BLOCKS_SUMMARIES_INDEXING ||
+    config.MEMPOOL.GOGGLES_INDEXING ||
+    config.MEMPOOL.AUDIT ||
+    config.MEMPOOL.CPFP_INDEXING
+  const backendMaxOldSpaceMB = anyIndexing
+    ? Math.max(4096, Math.min(8192, Math.floor(effectiveMB / 4)))
+    : Math.max(2048, Math.min(8192, Math.floor(effectiveMB / 8)))
+
   let backendMounts = sdk.Mounts.of()
     .mountVolume({
       volumeId: 'cache',
@@ -41,7 +58,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
       readonly: true,
       type: 'file',
     })
-    .mountDependency({
+    .mountDependency<typeof bitcoinManifest>({
       dependencyId: 'bitcoind',
       volumeId: 'main',
       subpath: null,
@@ -52,17 +69,17 @@ export const main = sdk.setupMain(async ({ effects }) => {
   if (config.LIGHTNING.ENABLED) {
     switch (config.LIGHTNING.BACKEND) {
       case 'lnd':
-        backendMounts = backendMounts.mountDependency({
+        backendMounts = backendMounts.mountDependency<typeof lndManifest>({
           dependencyId: 'lnd',
           volumeId: 'main',
           subpath: null,
-          mountpoint: '/mnt/lnd-readonly',
-          readonly: false,
+          mountpoint: lndMountpoint,
+          readonly: true,
           type: 'directory',
         })
         break
       case 'cln':
-        backendMounts = backendMounts.mountDependency({
+        backendMounts = backendMounts.mountDependency<typeof clnManifest>({
           dependencyId: 'c-lightning',
           volumeId: 'main',
           subpath: 'bitcoin',
@@ -86,71 +103,6 @@ export const main = sdk.setupMain(async ({ effects }) => {
     backendMounts,
     'backend-api',
   )
-
-  // Restart on Bitcoin cookie change
-  await FileHelper.string(`${backendSub.rootfs}${btcCookiePath}`)
-    .read()
-    .const(effects)
-
-  // ========================
-  // Additional health check(s)
-  // ========================
-
-  const syncHealthCheck = {
-    display: i18n('Transaction Indexer'),
-    fn: async () => {
-      const auth = await readFile(`${backendSub.rootfs}${btcCookiePath}`, {
-        encoding: 'base64',
-      })
-      const txIndexReq = fetch('http://bitcoind.startos:8332', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Basic ${auth}`,
-        },
-        body: JSON.stringify({
-          jsonrpc: '1.0',
-          id: 'sync-hck',
-          method: 'getindexinfo',
-          params: ['txindex'],
-        }),
-      })
-        .then(async (res: any) => {
-          const jsonRes = (await res.json()) as TxIndexRes
-          return jsonRes
-        })
-        .catch((e: any) => {
-          throw new Error(e)
-        })
-
-      const ibdStateReq = fetch('http://bitcoind.startos:8332', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Basic ${auth}`,
-        },
-        body: JSON.stringify({
-          jsonrpc: '1.0',
-          id: 'sync-hck',
-          method: 'getblockchaininfo',
-          params: [],
-        }),
-      })
-        .then(async (res: any) => {
-          const jsonRes = (await res.json()) as IbdStateRes
-          return jsonRes
-        })
-        .catch((e: any) => {
-          throw new Error(e)
-        })
-
-      const [txIndexRes, ibdStateRes] = await Promise.all([
-        txIndexReq,
-        ibdStateReq,
-      ])
-      return determineSyncResponse(txIndexRes, ibdStateRes)
-    },
-  }
 
   const frontendSub = await sdk.SubContainer.of(
     effects,
@@ -216,8 +168,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
         command: ['node', '/backend/package/index.js'],
         user: 'root',
         env: {
-          // @TODO look into this
-          NODE_OPTIONS: '--max-old-space-size=2048',
+          NODE_OPTIONS: `--max-old-space-size=${backendMaxOldSpaceMB}`,
         },
       },
       ready: {
@@ -231,7 +182,6 @@ export const main = sdk.setupMain(async ({ effects }) => {
       },
       requires: ['mariadb'],
     })
-    .addHealthCheck('sync', { ready: syncHealthCheck, requires: ['api'] })
     .addDaemon('webui', {
       subcontainer: frontendSub,
       exec: {

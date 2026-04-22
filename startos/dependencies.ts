@@ -1,5 +1,5 @@
 import { T } from '@start9labs/start-sdk'
-import { autoconfig } from 'bitcoind-startos/startos/actions/config/autoconfig'
+import { autoconfig } from 'bitcoin-core-startos/startos/actions/config/autoconfig'
 import { configJson } from './file-models/mempool-config.json'
 import { i18n } from './i18n'
 import { sdk } from './sdk'
@@ -32,8 +32,8 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
       currentDeps.lnd = {
         id: 'lnd',
         kind: 'running',
-        versionRange: '>=0.20.1-beta:1',
-        healthChecks: ['lnd'],
+        versionRange: '>=0.20.1-beta:2',
+        healthChecks: ['lnd', 'sync-progress'],
       }
     }
 
@@ -41,8 +41,8 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
       currentDeps['c-lightning'] = {
         id: 'c-lightning',
         kind: 'running',
-        versionRange: '>=25.12.1:4',
-        healthChecks: [],
+        versionRange: '>=25.12.1:8',
+        healthChecks: ['lightningd', 'check-synced'],
       }
     }
   }
@@ -51,15 +51,15 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
     currentDeps.fulcrum = {
       id: 'fulcrum',
       kind: 'running',
-      versionRange: '>=2.1.0:7',
-      healthChecks: [],
+      versionRange: '>=2.1.0:8',
+      healthChecks: ['primary', 'sync-progress'],
     }
   } else if (electrumHost === 'electrs.startos') {
     currentDeps.electrs = {
       id: 'electrs',
       kind: 'running',
-      versionRange: '>=0.11.1:1',
-      healthChecks: [],
+      versionRange: '>=0.11.1:2',
+      healthChecks: ['electrs', 'sync'],
     }
   }
 
@@ -67,8 +67,8 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
     ...currentDeps,
     bitcoind: {
       kind: 'running',
-      versionRange: '>=28.3:5',
-      healthChecks: ['bitcoind'],
+      versionRange: '>=28.3:7',
+      healthChecks: ['bitcoind', 'sync-progress'],
     },
   }
 })

@@ -25,13 +25,13 @@ export const manifest = setupManifest({
   images: {
     frontend: {
       source: {
-        dockerTag: 'mempool/frontend:v3.2.1',
+        dockerTag: 'mempool/frontend:v3.3.1',
       },
       arch: ['x86_64', 'aarch64'],
     },
     backend: {
       source: {
-        dockerTag: 'mempool/backend:v3.2.1',
+        dockerTag: 'mempool/backend:v3.3.1',
       },
       arch: ['x86_64', 'aarch64'],
     },
