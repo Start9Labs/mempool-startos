@@ -44,11 +44,11 @@
 
 ### Entrypoints
 
-| Container | Entrypoint                                                     | Notes                                                                       |
-| --------- | -------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| Frontend  | Upstream `docker-entrypoint.sh` (via `sdk.useEntrypoint()`)    | `LIGHTNING=true` injected when a Lightning node is configured               |
-| Backend   | Custom: `node /backend/package/index.js`                       | Runs as `root`; `NODE_OPTIONS=--max-old-space-size=<dynamic>` — sized to (host RAM − 6 GB reserve for Bitcoin/indexer/LN/OS). Baseline: 1/8 of the remainder, clamped 2048–8192 MB. With any indexing toggle on: 1/4, clamped 4096–8192 MB |
-| MariaDB   | Upstream `docker-entrypoint.sh` (via `sdk.useEntrypoint()`)    | `--bind-address=127.0.0.1` enforces loopback-only listener                  |
+| Container | Entrypoint                                                  | Notes                                                                                                                                                                                                                                      |
+| --------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Frontend  | Upstream `docker-entrypoint.sh` (via `sdk.useEntrypoint()`) | `LIGHTNING=true` injected when a Lightning node is configured                                                                                                                                                                              |
+| Backend   | Custom: `node /backend/package/index.js`                    | Runs as `root`; `NODE_OPTIONS=--max-old-space-size=<dynamic>` — sized to (host RAM − 6 GB reserve for Bitcoin/indexer/LN/OS). Baseline: 1/8 of the remainder, clamped 2048–8192 MB. With any indexing toggle on: 1/4, clamped 4096–8192 MB |
+| MariaDB   | Upstream `docker-entrypoint.sh` (via `sdk.useEntrypoint()`) | `--bind-address=127.0.0.1` enforces loopback-only listener                                                                                                                                                                                 |
 
 ## Volume and Data Layout
 
@@ -61,9 +61,9 @@
 
 StartOS-specific files:
 
-| File                                 | Volume   | Purpose                                    |
-| ------------------------------------ | -------- | ------------------------------------------ |
-| `mempool-config.json`                | `config` | Mempool backend configuration (managed by StartOS) |
+| File                  | Volume   | Purpose                                            |
+| --------------------- | -------- | -------------------------------------------------- |
+| `mempool-config.json` | `config` | Mempool backend configuration (managed by StartOS) |
 
 ## Installation and First-Run Flow
 
@@ -86,36 +86,36 @@ Mempool is configured via `mempool-config.json`, managed by StartOS.
 
 ### Auto-Configured by StartOS
 
-| Setting                             | Value                                    | Purpose                                                            |
-| ----------------------------------- | ---------------------------------------- | ------------------------------------------------------------------ |
-| `CORE_RPC.HOST`                     | `bitcoind.startos`                       | Bitcoin Core connection                                            |
-| `CORE_RPC.PORT`                     | `8332`                                   | Bitcoin Core RPC port                                              |
-| `CORE_RPC.COOKIE`                   | `true`                                   | Cookie authentication                                              |
-| `CORE_RPC.COOKIE_PATH`              | `/mnt/bitcoind/.cookie`                  | Cookie file path                                                   |
-| `DATABASE.HOST` / `.PORT`           | `127.0.0.1` / `3306`                     | Localhost-only MariaDB sidecar                                     |
-| `DATABASE.DATABASE` / `.USERNAME`   | `mempool` / `mempool`                    |                                                                    |
-| `DATABASE.PASSWORD`                 | Auto-generated on install (22 chars)    | Written to `mempool-config.json`                                   |
-| `MEMPOOL.NETWORK`                   | `mainnet`                                | Bitcoin network                                                    |
-| `MEMPOOL.BACKEND`                   | `electrum`                               | Backend type                                                       |
-| `SYSLOG.ENABLED`                    | `false`                                  | Syslog disabled                                                    |
-| `MAXMIND.ENABLED`                   | `false`                                  | GeoIP disabled                                                     |
-| `REDIS.ENABLED`                     | `false`                                  | Redis disabled                                                     |
-| `REPLICATION.ENABLED`               | `false`                                  | Replication disabled                                               |
-| `STRATUM.ENABLED`                   | `false`                                  | Stratum disabled                                                   |
-| `SOCKS5PROXY.HOST` / `.PORT`        | `startos` / `9050`                       | Tor SOCKS proxy (only used if `SOCKS5PROXY.ENABLED=true`)          |
+| Setting                           | Value                                | Purpose                                                   |
+| --------------------------------- | ------------------------------------ | --------------------------------------------------------- |
+| `CORE_RPC.HOST`                   | `bitcoind.startos`                   | Bitcoin Core connection                                   |
+| `CORE_RPC.PORT`                   | `8332`                               | Bitcoin Core RPC port                                     |
+| `CORE_RPC.COOKIE`                 | `true`                               | Cookie authentication                                     |
+| `CORE_RPC.COOKIE_PATH`            | `/mnt/bitcoind/.cookie`              | Cookie file path                                          |
+| `DATABASE.HOST` / `.PORT`         | `127.0.0.1` / `3306`                 | Localhost-only MariaDB sidecar                            |
+| `DATABASE.DATABASE` / `.USERNAME` | `mempool` / `mempool`                |                                                           |
+| `DATABASE.PASSWORD`               | Auto-generated on install (22 chars) | Written to `mempool-config.json`                          |
+| `MEMPOOL.NETWORK`                 | `mainnet`                            | Bitcoin network                                           |
+| `MEMPOOL.BACKEND`                 | `electrum`                           | Backend type                                              |
+| `SYSLOG.ENABLED`                  | `false`                              | Syslog disabled                                           |
+| `MAXMIND.ENABLED`                 | `false`                              | GeoIP disabled                                            |
+| `REDIS.ENABLED`                   | `false`                              | Redis disabled                                            |
+| `REPLICATION.ENABLED`             | `false`                              | Replication disabled                                      |
+| `STRATUM.ENABLED`                 | `false`                              | Stratum disabled                                          |
+| `SOCKS5PROXY.HOST` / `.PORT`      | `startos` / `9050`                   | Tor SOCKS proxy (only used if `SOCKS5PROXY.ENABLED=true`) |
 
 ### Written by Actions
 
-| Setting                                         | Action             | Notes                                                      |
-| ----------------------------------------------- | ------------------ | ---------------------------------------------------------- |
-| `ELECTRUM.HOST` / `.PORT` / `.TLS_ENABLED`      | Select Indexer     | `fulcrum.startos` or `electrs.startos`, port `50001`, TLS off |
-| `LIGHTNING.ENABLED` / `.BACKEND`                | Enable Lightning   | Backend is `lnd` or `cln`                                  |
-| `LND.TLS_CERT_PATH` / `.MACAROON_PATH`          | Enable Lightning   | Paths under the LND mount                                  |
-| `CLIGHTNING.SOCKET`                             | Enable Lightning   | `lightning-rpc` socket under the CLN mount                 |
-| `MEMPOOL.BLOCKS_SUMMARIES_INDEXING`             | Configure Indexing | Default off                                                |
-| `MEMPOOL.GOGGLES_INDEXING`                      | Configure Indexing | Default off                                                |
-| `MEMPOOL.AUDIT`                                 | Configure Indexing | Default off; requires `BLOCKS_SUMMARIES_INDEXING`          |
-| `MEMPOOL.CPFP_INDEXING`                         | Configure Indexing | Default off                                                |
+| Setting                                    | Action             | Notes                                                         |
+| ------------------------------------------ | ------------------ | ------------------------------------------------------------- |
+| `ELECTRUM.HOST` / `.PORT` / `.TLS_ENABLED` | Select Indexer     | `fulcrum.startos` or `electrs.startos`, port `50001`, TLS off |
+| `LIGHTNING.ENABLED` / `.BACKEND`           | Enable Lightning   | Backend is `lnd` or `cln`                                     |
+| `LND.TLS_CERT_PATH` / `.MACAROON_PATH`     | Enable Lightning   | Paths under the LND mount                                     |
+| `CLIGHTNING.SOCKET`                        | Enable Lightning   | `lightning-rpc` socket under the CLN mount                    |
+| `MEMPOOL.BLOCKS_SUMMARIES_INDEXING`        | Configure Indexing | Default off                                                   |
+| `MEMPOOL.GOGGLES_INDEXING`                 | Configure Indexing | Default off                                                   |
+| `MEMPOOL.AUDIT`                            | Configure Indexing | Default off; requires `BLOCKS_SUMMARIES_INDEXING`             |
+| `MEMPOOL.CPFP_INDEXING`                    | Configure Indexing | Default off                                                   |
 
 ### Bitcoin Core Requirements
 
@@ -201,13 +201,13 @@ Sync status is no longer checked internally. Mempool gates on its dependencies' 
 
 ## Dependencies
 
-| Dependency     | Required | Version Range       | Health Gate                          | Mounted Volume (Dep Volume → Mount Point)  | Purpose                                   |
-| -------------- | -------- | ------------------- | ------------------------------------ | ------------------------------------------ | ----------------------------------------- |
-| Bitcoin Core   | Yes      | `>=28.3:7`          | `bitcoind`, `sync-progress`          | `main` → `/mnt/bitcoind`                   | Blockchain data via RPC                   |
-| Fulcrum        | Optional | `>=2.1.0:7`         | `primary`, `sync-progress`           | None                                       | Address lookups (recommended indexer)     |
-| Electrs        | Optional | `>=0.11.1:1`        | `electrs`, `sync`                    | None                                       | Address lookups (alternate indexer)       |
-| LND            | Optional | `>=0.20.1-beta:1`   | `lnd`, `sync-progress`               | `main` → `/mnt/lnd` (read-only)            | Lightning Network data (REST API + macaroon) |
-| Core Lightning | Optional | `>=25.12.1:4`       | `lightningd`, `check-synced`         | `main/bitcoin` → `/mnt/cln` (read-only)    | Lightning Network data (Unix socket)      |
+| Dependency     | Required | Version Range     | Health Gate                  | Mounted Volume (Dep Volume → Mount Point) | Purpose                                      |
+| -------------- | -------- | ----------------- | ---------------------------- | ----------------------------------------- | -------------------------------------------- |
+| Bitcoin Core   | Yes      | `>=28.3:7`        | `bitcoind`, `sync-progress`  | `main` → `/mnt/bitcoind`                  | Blockchain data via RPC                      |
+| Fulcrum        | Optional | `>=2.1.0:7`       | `primary`, `sync-progress`   | None                                      | Address lookups (recommended indexer)        |
+| Electrs        | Optional | `>=0.11.1:1`      | `electrs`, `sync`            | None                                      | Address lookups (alternate indexer)          |
+| LND            | Optional | `>=0.20.1-beta:1` | `lnd`, `sync-progress`       | `main` → `/mnt/lnd` (read-only)           | Lightning Network data (REST API + macaroon) |
+| Core Lightning | Optional | `>=25.12.1:4`     | `lightningd`, `check-synced` | `main/bitcoin` → `/mnt/cln` (read-only)   | Lightning Network data (Unix socket)         |
 
 Only one indexer (Electrs or Fulcrum) can be active at a time. Only one Lightning node (LND or CLN) can be active at a time. Optional dependencies are only registered when selected by the corresponding action.
 
@@ -264,20 +264,20 @@ ports:
 dependencies:
   bitcoind:
     required: true
-    version_range: ">=28.3:7"
-    required_config: { txindex: true, prune: unset }
+    version_range: '>=28.3:7'
+    required_config: { txindex: true, prune: 0 }
   fulcrum:
     required: false
-    version_range: ">=2.1.0:7"
+    version_range: '>=2.1.0:7'
   electrs:
     required: false
-    version_range: ">=0.11.1:1"
+    version_range: '>=0.11.1:1'
   lnd:
     required: false
-    version_range: ">=0.20.1-beta:1"
+    version_range: '>=0.20.1-beta:1'
   c-lightning:
     required: false
-    version_range: ">=25.12.1:4"
+    version_range: '>=25.12.1:4'
 startos_managed_env_vars:
   mariadb:
     - MARIADB_RANDOM_ROOT_PASSWORD

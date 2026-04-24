@@ -2,8 +2,8 @@ import { IMPOSSIBLE, VersionInfo, YAML } from '@start9labs/start-sdk'
 import { readFile, rm, writeFile } from 'fs/promises'
 import { configJson } from '../file-models/mempool-config.json'
 
-export const v_3_3_1_0 = VersionInfo.of({
-  version: '3.3.1:0',
+export const v_3_3_1_1 = VersionInfo.of({
+  version: '3.3.1:1',
   releaseNotes: {
     en_US:
       'Updates Mempool to upstream v3.3.1, bringing Taproot script tree visualization, sighash highlighting, stale block comparisons, annex goggles, sub-1-sat/vB support, ephemeral dust, PSBT signature previews, decimal fee recommendations, and new API endpoints. Adds a new "Configure Indexing" action so you can opt in to block summaries, goggles, block audits, and CPFP indexing.',

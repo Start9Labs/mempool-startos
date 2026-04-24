@@ -9,7 +9,7 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
     input: {
       kind: 'partial',
       value: {
-        prune: null,
+        prune: 0,
         txindex: true,
       },
     },
@@ -51,14 +51,14 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
     currentDeps.fulcrum = {
       id: 'fulcrum',
       kind: 'running',
-      versionRange: '>=2.1.0:8',
+      versionRange: '>=2.1.0:9',
       healthChecks: ['primary', 'sync-progress'],
     }
   } else if (electrumHost === 'electrs.startos') {
     currentDeps.electrs = {
       id: 'electrs',
       kind: 'running',
-      versionRange: '>=0.11.1:2',
+      versionRange: '>=0.11.1:3',
       healthChecks: ['electrs', 'sync'],
     }
   }
@@ -67,7 +67,7 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
     ...currentDeps,
     bitcoind: {
       kind: 'running',
-      versionRange: '>=28.3:7',
+      versionRange: '>=28.3:8',
       healthChecks: ['bitcoind', 'sync-progress'],
     },
   }
