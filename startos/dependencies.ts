@@ -1,8 +1,14 @@
 import { T } from '@start9labs/start-sdk'
-import { autoconfig } from 'bitcoin-core-startos/startos/actions/config/autoconfig'
+import type { Action } from '@start9labs/start-sdk/base/lib/actions/setupActions'
+import { autoconfig as _autoconfig } from 'bitcoin-core-startos/startos/actions/config/autoconfig'
 import { configJson } from './file-models/mempool-config.json'
 import { i18n } from './i18n'
 import { sdk } from './sdk'
+
+const autoconfig = _autoconfig as unknown as Action<
+  'autoconfig',
+  (typeof _autoconfig)['_INPUT']
+>
 
 export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
   await sdk.action.createTask(effects, 'bitcoind', autoconfig, 'critical', {

@@ -2,14 +2,14 @@ import { IMPOSSIBLE, VersionInfo, YAML } from '@start9labs/start-sdk'
 import { readFile, rm, writeFile } from 'fs/promises'
 import { configJson } from '../file-models/mempool-config.json'
 
-export const v_3_3_1_2 = VersionInfo.of({
-  version: '3.3.1:2',
+export const v_3_3_1_3 = VersionInfo.of({
+  version: '3.3.1:3',
   releaseNotes: {
-    en_US: 'Internal updates (start-sdk 1.3.3)',
-    es_ES: 'Actualizaciones internas (start-sdk 1.3.3)',
-    de_DE: 'Interne Aktualisierungen (start-sdk 1.3.3)',
-    pl_PL: 'Aktualizacje wewnętrzne (start-sdk 1.3.3)',
-    fr_FR: 'Mises à jour internes (start-sdk 1.3.3)',
+    en_US: 'Internal updates (start-sdk 1.5.0)',
+    es_ES: 'Actualizaciones internas (start-sdk 1.5.0)',
+    de_DE: 'Interne Aktualisierungen (start-sdk 1.5.0)',
+    pl_PL: 'Aktualizacje wewnętrzne (start-sdk 1.5.0)',
+    fr_FR: 'Mises à jour internes (start-sdk 1.5.0)',
   },
   migrations: {
     up: async ({ effects }) => {
