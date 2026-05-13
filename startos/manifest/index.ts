@@ -19,7 +19,6 @@ export const manifest = setupManifest({
   upstreamRepo: 'https://github.com/mempool/mempool',
   marketingUrl: 'https://mempool.space',
   donationUrl: 'https://mempool.space/sponsor',
-  docsUrls: ['https://mempool.space/docs/'],
   description: { short, long },
   volumes: ['main', 'cache', 'db', 'config'],
   images: {

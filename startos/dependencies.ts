@@ -5,17 +5,28 @@ import { i18n } from './i18n'
 import { sdk } from './sdk'
 
 export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
-  await sdk.action.createTask(effects, 'bitcoind', autoconfig, 'critical', {
-    input: {
-      kind: 'partial',
-      value: {
-        prune: 0,
-        txindex: true,
+  // bitcoin-core-startos pins start-sdk 1.3.x so its Action type is a distinct
+  // module instance from our 1.5.x — structurally identical but TS infers
+  // GetActionInputType as never. Drop to any until the sibling bumps.
+  await sdk.action.createTask(
+    effects,
+    'bitcoind',
+    autoconfig as any,
+    'critical',
+    {
+      input: {
+        kind: 'partial',
+        value: {
+          prune: 0,
+          txindex: true,
+        },
       },
+      when: { condition: 'input-not-matches', once: false },
+      reason: i18n(
+        'Mempool requires an archival node and transaction indexing',
+      ),
     },
-    when: { condition: 'input-not-matches', once: false },
-    reason: i18n('Mempool requires an archival node and transaction indexing'),
-  })
+  )
 
   let currentDeps = {} as Record<
     'bitcoind' | 'lnd' | 'c-lightning' | 'fulcrum' | 'electrs',
