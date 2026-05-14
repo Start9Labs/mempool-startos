@@ -72,7 +72,7 @@ StartOS-specific files:
 3. On install, StartOS creates a **critical task** to select an Electrum indexer for address lookups
 4. Mempool will not start until Bitcoin Core (and the selected indexer, and the Lightning backend if configured) report healthy via their StartOS health checks — see [Health Checks](#health-checks)
 5. Optionally run "Enable Lightning" for Lightning network data
-6. Optionally run "Configure Indexing" to opt in to block-summary, goggles, audit, and/or CPFP indexing
+6. Optionally run "Indexing and Performance" to change the performance profile, toggle statistics, or opt in to block-summary, goggles, audit, and/or CPFP indexing
 
 On first install, StartOS auto-generates a 22-character MariaDB password and writes it to `mempool-config.json`. The database is localhost-only.
 
@@ -106,16 +106,19 @@ Mempool is configured via `mempool-config.json`, managed by StartOS.
 
 ### Written by Actions
 
-| Setting                                    | Action             | Notes                                                         |
-| ------------------------------------------ | ------------------ | ------------------------------------------------------------- |
-| `ELECTRUM.HOST` / `.PORT` / `.TLS_ENABLED` | Select Indexer     | `fulcrum.startos` or `electrs.startos`, port `50001`, TLS off |
-| `LIGHTNING.ENABLED` / `.BACKEND`           | Enable Lightning   | Backend is `lnd` or `cln`                                     |
-| `LND.TLS_CERT_PATH` / `.MACAROON_PATH`     | Enable Lightning   | Paths under the LND mount                                     |
-| `CLIGHTNING.SOCKET`                        | Enable Lightning   | `lightning-rpc` socket under the CLN mount                    |
-| `MEMPOOL.BLOCKS_SUMMARIES_INDEXING`        | Configure Indexing | Default off                                                   |
-| `MEMPOOL.GOGGLES_INDEXING`                 | Configure Indexing | Default off                                                   |
-| `MEMPOOL.AUDIT`                            | Configure Indexing | Default off; requires `BLOCKS_SUMMARIES_INDEXING`             |
-| `MEMPOOL.CPFP_INDEXING`                    | Configure Indexing | Default off                                                   |
+| Setting                                    | Action                   | Notes                                                         |
+| ------------------------------------------ | ------------------------ | ------------------------------------------------------------- |
+| `ELECTRUM.HOST` / `.PORT` / `.TLS_ENABLED` | Select Indexer           | `fulcrum.startos` or `electrs.startos`, port `50001`, TLS off |
+| `LIGHTNING.ENABLED` / `.BACKEND`           | Enable Lightning         | Backend is `lnd` or `cln`                                     |
+| `LND.TLS_CERT_PATH` / `.MACAROON_PATH`     | Enable Lightning         | Paths under the LND mount                                     |
+| `CLIGHTNING.SOCKET`                        | Enable Lightning         | `lightning-rpc` socket under the CLN mount                    |
+| `MEMPOOL.POLL_RATE_MS`                     | Indexing and Performance | `8000` (Low-CPU) / `4000` (Balanced) / `2000` (Responsive)    |
+| `MEMPOOL.MEMPOOL_BLOCKS_AMOUNT`            | Indexing and Performance | `4` (Low-CPU) / `6` (Balanced) / `8` (Responsive)             |
+| `STATISTICS.ENABLED`                       | Indexing and Performance | Default on                                                    |
+| `MEMPOOL.BLOCKS_SUMMARIES_INDEXING`        | Indexing and Performance | Default off                                                   |
+| `MEMPOOL.GOGGLES_INDEXING`                 | Indexing and Performance | Default off                                                   |
+| `MEMPOOL.AUDIT`                            | Indexing and Performance | Default off; requires `BLOCKS_SUMMARIES_INDEXING`             |
+| `MEMPOOL.CPFP_INDEXING`                    | Indexing and Performance | Default off                                                   |
 
 ### Bitcoin Core Requirements
 
@@ -158,20 +161,39 @@ Selecting an indexer enables address search and transaction history features. Se
 
 When enabled, configures the `LIGHTNING` and `LND`/`CLIGHTNING` sections of the configuration and mounts the selected Lightning node's volume.
 
-### Configure Indexing
+### Indexing and Performance
 
-- **Name:** Configure Indexing
-- **Purpose:** Opt in to richer block visualizations and audit data by enabling backend indexing features
+- **Name:** Indexing and Performance
+- **Purpose:** Tune backend CPU/responsiveness, toggle the statistics service, and opt in to optional indexing features
 - **Visibility:** Enabled
 - **Availability:** Any status
-- **Inputs:** Four independent toggles — Block Summaries Indexing, Goggles Indexing, Block Audit (requires Block Summaries Indexing), CPFP Indexing
+- **Inputs:**
+  - **Performance Profile** — one of `low-cpu` / `balanced` / `responsive`
+  - **Enable Statistics** — toggle (default on)
+  - **Block Summaries Indexing** — toggle (default off)
+  - **Goggles Indexing** — toggle (default off)
+  - **Block Audit** — toggle (default off; requires Block Summaries Indexing)
+  - **CPFP Indexing** — toggle (default off)
 - **Outputs:** None
 
-All four toggles are off by default, matching upstream. Enabling any of them triggers a historical backfill on the next service restart, which can take several hours and consume significant disk space. Sets the `MEMPOOL.BLOCKS_SUMMARIES_INDEXING`, `MEMPOOL.GOGGLES_INDEXING`, `MEMPOOL.AUDIT`, and `MEMPOOL.CPFP_INDEXING` fields in the configuration.
+Sets `MEMPOOL.POLL_RATE_MS`, `MEMPOOL.MEMPOOL_BLOCKS_AMOUNT`, `STATISTICS.ENABLED`, `MEMPOOL.BLOCKS_SUMMARIES_INDEXING`, `MEMPOOL.GOGGLES_INDEXING`, `MEMPOOL.AUDIT`, and `MEMPOOL.CPFP_INDEXING` on the configuration. Changes apply on the next service restart.
 
-**RAM requirement:** The action rejects any combination that enables at least one toggle when the host has less than ~16 GB of total RAM (threshold: 15 GiB). Backend indexing competes with Bitcoin Core's dbcache, the selected Electrum indexer, and any Lightning node, so enabling it on a low-memory device is likely to OOM one of the services in the stack.
+**Performance profile.** The Mempool backend recomputes a Rust-based block-template projection on every poll; the cost scales with poll frequency and projection depth, and on healthy nodes this loop is the dominant background CPU consumer. The profile picks both together:
 
-**Heap behavior:** When any toggle is on, the backend's V8 heap is raised on the next restart so indexing has room to work. The formula subtracts a 6 GB reserve for the co-resident stack (Bitcoin Core, the selected indexer, any Lightning node, StartOS) and then takes 1/4 of the remainder, clamped 4–8 GB. A 16 GB box gets a 4 GB heap; a 32 GB box gets ~6.5 GB; ≥40 GB gets the 8 GB max.
+| Preset             | `POLL_RATE_MS` | `MEMPOOL_BLOCKS_AMOUNT` | Notes                                             |
+| ------------------ | -------------- | ----------------------- | ------------------------------------------------- |
+| Low-CPU (default)  | 8000           | 4                       | Recommended for low-power devices                 |
+| Balanced           | 4000           | 6                       |                                                   |
+| Responsive         | 2000           | 8                       | Matches upstream in-source default; highest CPU   |
+
+New installs land on Low-CPU. Existing installs are migrated to Low-CPU on upgrade; run the action afterwards to pick Balanced or Responsive if you prefer.
+
+**Statistics.** When on (default, matching upstream), the backend samples mempool throughput at 1 Hz and writes periodic statistics rows to MariaDB to power the dashboard charts. Turning it off stops the sampler and the writes; saves background CPU and disk I/O at the cost of the tx/s + vbytes/s charts.
+
+**Indexing.** All four indexing toggles are off by default, matching upstream. Enabling any of them triggers a historical backfill on the next service restart, which can take several hours and consume significant disk space.
+
+- **RAM requirement:** The action rejects any submission with at least one indexing toggle on when the host has less than ~16 GB of total RAM (threshold: 15 GiB). Backend indexing competes with Bitcoin Core's dbcache, the selected Electrum indexer, and any Lightning node, so enabling it on a low-memory device is likely to OOM one of the services in the stack.
+- **Heap behavior:** When any indexing toggle is on, the backend's V8 heap is raised on the next restart so indexing has room to work. The formula subtracts a 6 GB reserve for the co-resident stack (Bitcoin Core, the selected indexer, any Lightning node, StartOS) and then takes 1/4 of the remainder, clamped 4–8 GB. A 16 GB box gets a 4 GB heap; a 32 GB box gets ~6.5 GB; ≥40 GB gets the 8 GB max.
 
 ## Backups and Restore
 
@@ -291,7 +313,7 @@ startos_managed_env_vars:
 actions:
   - select-indexer
   - enable-lightning
-  - configure-indexing
+  - indexing-and-performance
 health_checks:
   - mariadb: healthcheck.sh (120s grace)
   - api: port_listening 8999 (45s grace)

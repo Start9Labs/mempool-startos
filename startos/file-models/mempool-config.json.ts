@@ -1,6 +1,12 @@
 import { FileHelper, z } from '@start9labs/start-sdk'
 import { sdk } from '../sdk'
-import { btcMountpoint, lndMountpoint, clnMountpoint } from '../utils'
+import {
+  btcMountpoint,
+  lndMountpoint,
+  clnMountpoint,
+  PROFILES,
+  DEFAULT_PROFILE,
+} from '../utils'
 
 const mempoolSection = z.object({
   // enforced
@@ -12,14 +18,16 @@ const mempoolSection = z.object({
   HTTP_PORT: z.number().catch(8999),
   SPAWN_CLUSTER_PROCS: z.number().catch(0),
   API_URL_PREFIX: z.string().catch('/api/v1/'),
-  POLL_RATE_MS: z.number().catch(2000),
+  POLL_RATE_MS: z.number().catch(PROFILES[DEFAULT_PROFILE].POLL_RATE_MS),
   CACHE_DIR: z.string().catch('./cache'),
   CACHE_ENABLED: z.boolean().catch(true),
   CLEAR_PROTECTION_MINUTES: z.number().catch(20),
   RECOMMENDED_FEE_PERCENTILE: z.number().catch(50),
   BLOCK_WEIGHT_UNITS: z.number().catch(4000000),
   INITIAL_BLOCKS_AMOUNT: z.number().catch(8),
-  MEMPOOL_BLOCKS_AMOUNT: z.number().catch(8),
+  MEMPOOL_BLOCKS_AMOUNT: z.number().catch(
+    PROFILES[DEFAULT_PROFILE].MEMPOOL_BLOCKS_AMOUNT,
+  ),
   INDEXING_BLOCKS_AMOUNT: z.number().catch(52560),
   BLOCKS_SUMMARIES_INDEXING: z.boolean().catch(false),
   GOGGLES_INDEXING: z.boolean().catch(false),
