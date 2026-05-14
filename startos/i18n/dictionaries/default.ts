@@ -36,6 +36,19 @@ const dict = {
   'CPFP Indexing': 37,
   'Historically indexes CPFP (Child-Pays-For-Parent) relationships, enabling the full CPFP view on older blocks.': 38,
   'Indexing features require at least 16 GB of system RAM. This device has less than 16 GB available and cannot safely run backend indexing alongside Bitcoin Core and the selected Electrum backend.': 39,
+  'Configure Performance': 40,
+  'Select a CPU/responsiveness profile. The Mempool backend recomputes a projection of upcoming blocks on every poll; this action controls how often that happens and how deep the projection goes. Changes apply on the next service restart.': 41,
+  'Performance Profile': 42,
+  'Low-CPU: poll bitcoind every 8s and project 4 future blocks — recommended for low-power devices. Balanced: poll every 4s, project 6 blocks. Responsive: poll every 2s, project 8 blocks — matches the upstream in-source default and uses the most CPU.': 43,
+  'Low-CPU (recommended)': 44,
+  Balanced: 45,
+  Responsive: 46,
+  'Configure Statistics': 47,
+  'Toggle the backend mempool statistics service. Changes apply on the next service restart.': 48,
+  'Enable Statistics': 49,
+  'Collects mempool statistics (transactions per second, vbytes per second) for the dashboard charts. Disabling stops the 1 Hz sampler and the periodic statistics writes to MariaDB, reducing background CPU and disk I/O on low-power devices.': 50,
+  'Indexing and Performance': 51,
+  'Tune backend behavior: poll/projection profile, mempool statistics, and optional indexing features. Changes apply on the next service restart. Enabling any indexing toggle triggers a historical backfill on the next start, which can take several hours and consume significant disk space; indexing requires at least 16 GB of system RAM and is rejected on lower-memory devices.': 52,
 } as const
 
 export type I18nKey = keyof typeof dict
