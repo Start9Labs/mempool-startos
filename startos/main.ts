@@ -1,4 +1,5 @@
 import { totalmem } from 'os'
+import { FileHelper } from '@start9labs/start-sdk'
 import { manifest as bitcoinManifest } from 'bitcoin-core-startos/startos/manifest'
 import { manifest as clnManifest } from 'cln-startos/startos/manifest'
 import { manifest as lndManifest } from 'lnd-startos/startos/manifest'
@@ -63,7 +64,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
       volumeId: 'main',
       subpath: null,
       mountpoint: btcMountpoint,
-      readonly: false,
+      readonly: true,
     })
 
   if (config.LIGHTNING.ENABLED) {
@@ -103,6 +104,12 @@ export const main = sdk.setupMain(async ({ effects }) => {
     backendMounts,
     'backend-api',
   )
+
+  // Restart if Bitcoin .cookie changes (bitcoind regenerates it on every start,
+  // so a cached RPC cookie would otherwise go stale after a bitcoind restart).
+  await FileHelper.string(`${backendSub.rootfs}${btcMountpoint}/.cookie`)
+    .read()
+    .const(effects)
 
   const frontendSub = await sdk.SubContainer.of(
     effects,
