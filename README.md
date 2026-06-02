@@ -180,13 +180,11 @@ Sets `MEMPOOL.POLL_RATE_MS`, `MEMPOOL.MEMPOOL_BLOCKS_AMOUNT`, `STATISTICS.ENABLE
 
 **Performance profile.** The Mempool backend recomputes a Rust-based block-template projection on every poll; the cost scales with poll frequency and projection depth, and on healthy nodes this loop is the dominant background CPU consumer. The profile picks both together:
 
-| Preset             | `POLL_RATE_MS` | `MEMPOOL_BLOCKS_AMOUNT` | Notes                                             |
-| ------------------ | -------------- | ----------------------- | ------------------------------------------------- |
-| Low-CPU (default)  | 8000           | 4                       | Recommended for low-power devices                 |
-| Balanced           | 4000           | 6                       |                                                   |
-| Responsive         | 2000           | 8                       | Matches upstream in-source default; highest CPU   |
-
-New installs land on Low-CPU. Existing installs are migrated to Low-CPU on upgrade; run the action afterwards to pick Balanced or Responsive if you prefer.
+| Preset            | `POLL_RATE_MS` | `MEMPOOL_BLOCKS_AMOUNT` | Notes                                           |
+| ----------------- | -------------- | ----------------------- | ----------------------------------------------- |
+| Low-CPU (default) | 8000           | 4                       | Recommended for low-power devices               |
+| Balanced          | 4000           | 6                       |                                                 |
+| Responsive        | 2000           | 8                       | Matches upstream in-source default; highest CPU |
 
 **Statistics.** When on (default, matching upstream), the backend samples mempool throughput at 1 Hz and writes periodic statistics rows to MariaDB to power the dashboard charts. Turning it off stops the sampler and the writes; saves background CPU and disk I/O at the cost of the tx/s + vbytes/s charts.
 
