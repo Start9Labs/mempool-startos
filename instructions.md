@@ -2,7 +2,7 @@
 
 ## Documentation
 
-- [Mempool documentation](https://mempool.space/docs/) — upstream API reference, configuration, and feature documentation.
+- [Mempool project README](https://github.com/mempool/mempool/blob/master/README.md) — upstream project overview and installation reference.
 
 ## What you get on StartOS
 
