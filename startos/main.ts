@@ -200,6 +200,11 @@ export const main = sdk.setupMain(async ({ effects }) => {
             errorMessage: i18n('The web interface is not ready'),
           }),
       },
-      requires: [],
+      // The frontend reverse-proxies the API/websocket to the backend and is
+      // non-functional without it. Gating on 'api' makes the 'webui' health a
+      // truthful "Mempool is usable" signal — StartOS holds/stops webui while
+      // api isn't healthy and restarts it when api recovers — which dependents
+      // (e.g. Am I Exposed) rely on.
+      requires: ['api'],
     })
 })

@@ -1,18 +1,18 @@
 import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '3.3.1:9',
+  version: '3.3.1:10',
   releaseNotes: {
     en_US:
-      'Fixes the Performance Profile being reset to Low-CPU on every update — your chosen profile is now preserved across updates.',
+      'The web interface now starts only after the backend API is ready, so it no longer briefly serves before the backend is reachable.',
     es_ES:
-      'Corrige el restablecimiento del Perfil de Rendimiento a CPU Baja en cada actualización; ahora se conserva el perfil que elijas entre actualizaciones.',
+      'La interfaz web ahora se inicia solo después de que la API del backend esté lista, de modo que ya no se sirve brevemente antes de que el backend sea accesible.',
     de_DE:
-      'Behebt das Zurücksetzen des Leistungsprofils auf Niedrige CPU bei jeder Aktualisierung; das gewählte Profil bleibt nun über Aktualisierungen hinweg erhalten.',
+      'Die Weboberfläche startet jetzt erst, wenn die Backend-API bereit ist, und wird nicht mehr kurzzeitig ausgeliefert, bevor das Backend erreichbar ist.',
     pl_PL:
-      'Naprawia resetowanie profilu wydajności do Niskiego CPU przy każdej aktualizacji; wybrany profil jest teraz zachowywany między aktualizacjami.',
+      'Interfejs sieciowy uruchamia się teraz dopiero po gotowości API backendu, więc nie jest już przez chwilę serwowany, zanim backend stanie się osiągalny.',
     fr_FR:
-      'Corrige la réinitialisation du profil de performance sur CPU faible à chaque mise à jour ; le profil choisi est désormais conservé d’une mise à jour à l’autre.',
+      'L’interface web ne démarre désormais qu’une fois l’API du backend prête, et n’est donc plus servie brièvement avant que le backend soit joignable.',
   },
   migrations: {
     up: async ({ effects }) => {},
