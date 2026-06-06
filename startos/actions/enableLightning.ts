@@ -1,6 +1,6 @@
 import { configJson } from '../file-models/mempool-config.json'
 import { sdk } from '../sdk'
-import { lndMountpoint, clnMountpoint } from '../utils'
+import { clnMountpoint, lndCertPath, lndMacaroonPath } from '../utils'
 import { i18n } from '../i18n'
 const { InputSpec, Value } = sdk
 
@@ -54,8 +54,8 @@ export const enableLightning = sdk.Action.withInput(
         await configJson.merge(effects, {
           LIGHTNING: { ENABLED: true, BACKEND: 'lnd' },
           LND: {
-            TLS_CERT_PATH: `${lndMountpoint}/tls.cert`,
-            MACAROON_PATH: `${lndMountpoint}/readonly.macaroon`,
+            TLS_CERT_PATH: lndCertPath,
+            MACAROON_PATH: lndMacaroonPath,
           },
         })
         break
