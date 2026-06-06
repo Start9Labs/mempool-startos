@@ -2,8 +2,9 @@ import { FileHelper, z } from '@start9labs/start-sdk'
 import { sdk } from '../sdk'
 import {
   btcMountpoint,
-  lndMountpoint,
   clnMountpoint,
+  lndCertPath,
+  lndMacaroonPath,
   PROFILES,
   DEFAULT_PROFILE,
 } from '../utils'
@@ -131,12 +132,8 @@ const lightningSection = z.object({
 
 const lndSection = z.object({
   // enforced
-  TLS_CERT_PATH: z
-    .literal(`${lndMountpoint}/tls.cert`)
-    .catch(`${lndMountpoint}/tls.cert`),
-  MACAROON_PATH: z
-    .literal(`${lndMountpoint}/readonly.macaroon`)
-    .catch(`${lndMountpoint}/readonly.macaroon`),
+  TLS_CERT_PATH: z.literal(lndCertPath).catch(lndCertPath),
+  MACAROON_PATH: z.literal(lndMacaroonPath).catch(lndMacaroonPath),
   REST_API_URL: z
     .literal('https://lnd.startos:8080')
     .catch('https://lnd.startos:8080'),

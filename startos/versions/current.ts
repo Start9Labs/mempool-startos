@@ -1,18 +1,18 @@
 import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '3.3.1:10',
+  version: '3.3.1:11',
   releaseNotes: {
     en_US:
-      'The web interface now starts only after the backend API is ready, so it no longer briefly serves before the backend is reachable.',
+      'Fixes the Lightning tab never loading with an LND backend (corrected the read-only macaroon path).',
     es_ES:
-      'La interfaz web ahora se inicia solo después de que la API del backend esté lista, de modo que ya no se sirve brevemente antes de que el backend sea accesible.',
+      'Corrige que la pestaña Lightning nunca cargara con un backend LND (se corrigió la ruta de la macaroon de solo lectura).',
     de_DE:
-      'Die Weboberfläche startet jetzt erst, wenn die Backend-API bereit ist, und wird nicht mehr kurzzeitig ausgeliefert, bevor das Backend erreichbar ist.',
+      'Behebt, dass der Lightning-Tab mit einem LND-Backend nie geladen wurde (Pfad der Read-only-Macaroon korrigiert).',
     pl_PL:
-      'Interfejs sieciowy uruchamia się teraz dopiero po gotowości API backendu, więc nie jest już przez chwilę serwowany, zanim backend stanie się osiągalny.',
+      'Naprawia brak ładowania zakładki Lightning przy backendzie LND (poprawiono ścieżkę macaroon tylko do odczytu).',
     fr_FR:
-      'L’interface web ne démarre désormais qu’une fois l’API du backend prête, et n’est donc plus servie brièvement avant que le backend soit joignable.',
+      "Corrige l'onglet Lightning qui ne se chargeait jamais avec un backend LND (chemin de la macaroon en lecture seule corrigé).",
   },
   migrations: {
     up: async ({ effects }) => {},

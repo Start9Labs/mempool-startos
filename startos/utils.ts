@@ -16,6 +16,9 @@ export const btcMountpoint = '/mnt/bitcoind'
 export const lndMountpoint = '/mnt/lnd'
 export const clnMountpoint = '/mnt/cln'
 
+export const lndCertPath = `${lndMountpoint}/tls.cert`
+export const lndMacaroonPath = `${lndMountpoint}/data/chain/bitcoin/mainnet/readonly.macaroon`
+
 // Performance profile presets. POLL_RATE_MS is the main-loop period;
 // MEMPOOL_BLOCKS_AMOUNT is the depth of the Rust GBT projection. Both
 // scale backend CPU roughly linearly. Single source of truth — referenced
