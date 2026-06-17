@@ -47,7 +47,7 @@
 | Container | Entrypoint                                                  | Notes                                                                                                                                                                                                                                      |
 | --------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Frontend  | Upstream `docker-entrypoint.sh` (via `sdk.useEntrypoint()`) | `LIGHTNING=true` injected when a Lightning node is configured                                                                                                                                                                              |
-| Backend   | Custom: `node /backend/package/index.js`                    | Runs as `root`; `NODE_OPTIONS=--max-old-space-size=<dynamic>` — sized to (host RAM − 6 GB reserve for Bitcoin/indexer/LN/OS). Baseline: 1/8 of the remainder, clamped 2048–8192 MB. With any indexing toggle on: 1/4, clamped 4096–8192 MB |
+| Backend   | Custom: `node /backend/package/index.js`                    | Runs as `root`; `NODE_OPTIONS=--max-old-space-size=<dynamic>` — sized to (host RAM − 6 GB reserve for Bitcoin/indexer/LN/OS). Baseline: 1/8 of the remainder, clamped 2048–8192 MB; on hosts with <10 GB total RAM the baseline is pinned to 1024 MB so the backend can't balloon and OOM-kill a sibling. With any indexing toggle on: 1/4, clamped 4096–8192 MB |
 | MariaDB   | Upstream `docker-entrypoint.sh` (via `sdk.useEntrypoint()`) | `--bind-address=127.0.0.1` enforces loopback-only listener                                                                                                                                                                                 |
 
 ## Volume and Data Layout
@@ -161,6 +161,8 @@ Selecting an indexer enables address search and transaction history features. Se
 
 When enabled, configures the `LIGHTNING` and `LND`/`CLIGHTNING` sections of the configuration and mounts the selected Lightning node's volume.
 
+On hosts with less than ~16 GB of total RAM (threshold: 15 GiB) the action carries a confirmation **warning**: the Lightning network-graph sync is memory-intensive, and running it alongside Bitcoin Core and an Electrum indexer on a low-memory device can push the system into out-of-memory crashes. It is a warning, not a hard gate — the user can still proceed.
+
 ### Indexing and Performance
 
 - **Name:** Indexing and Performance
@@ -191,7 +193,7 @@ Sets `MEMPOOL.POLL_RATE_MS`, `MEMPOOL.MEMPOOL_BLOCKS_AMOUNT`, `STATISTICS.ENABLE
 **Indexing.** All four indexing toggles are off by default, matching upstream. Enabling any of them triggers a historical backfill on the next service restart, which can take several hours and consume significant disk space.
 
 - **RAM requirement:** The action rejects any submission with at least one indexing toggle on when the host has less than ~16 GB of total RAM (threshold: 15 GiB). Backend indexing competes with Bitcoin Core's dbcache, the selected Electrum indexer, and any Lightning node, so enabling it on a low-memory device is likely to OOM one of the services in the stack.
-- **Heap behavior:** When any indexing toggle is on, the backend's V8 heap is raised on the next restart so indexing has room to work. The formula subtracts a 6 GB reserve for the co-resident stack (Bitcoin Core, the selected indexer, any Lightning node, StartOS) and then takes 1/4 of the remainder, clamped 4–8 GB. A 16 GB box gets a 4 GB heap; a 32 GB box gets ~6.5 GB; ≥40 GB gets the 8 GB max.
+- **Heap behavior:** When any indexing toggle is on, the backend's V8 heap is raised on the next restart so indexing has room to work. The formula subtracts a 6 GB reserve for the co-resident stack (Bitcoin Core, the selected indexer, any Lightning node, StartOS) and then takes 1/4 of the remainder, clamped 4–8 GB. A 16 GB box gets a 4 GB heap; a 32 GB box gets ~6.5 GB; ≥40 GB gets the 8 GB max. With indexing off, the baseline heap is 1/8 of the remainder clamped 2–8 GB, except on hosts with <10 GB total RAM where it is pinned to 1 GB — on an 8 GB box the 2 GB floor exceeds free RAM and lets the backend grow until the kernel OOM-kills a sibling service (Fulcrum, in observed reports), so the tighter cap keeps Mempool's footprint bounded.
 
 ## Backups and Restore
 

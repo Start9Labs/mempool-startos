@@ -49,6 +49,7 @@ const dict = {
   'Collects mempool statistics (transactions per second, vbytes per second) for the dashboard charts. Disabling stops the 1 Hz sampler and the periodic statistics writes to MariaDB, reducing background CPU and disk I/O on low-power devices.': 50,
   'Indexing and Performance': 51,
   'Tune backend behavior: poll/projection profile, mempool statistics, and optional indexing features. Changes apply on the next service restart. Enabling any indexing toggle triggers a historical backfill on the next start, which can take several hours and consume significant disk space; indexing requires at least 16 GB of system RAM and is rejected on lower-memory devices.': 52,
+  'Lightning network data is memory-intensive. Running it alongside Bitcoin Core and an Electrum indexer on a system with less than 16 GB of RAM can trigger out-of-memory crashes that take down Mempool or one of its dependencies. Enable only if you have RAM headroom to spare.': 53,
 } as const
 
 export type I18nKey = keyof typeof dict

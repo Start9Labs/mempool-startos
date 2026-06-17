@@ -50,6 +50,7 @@ export default {
     50: 'Recopila estadisticas de mempool (transacciones por segundo, vbytes por segundo) para los graficos del panel. Desactivarlo detiene el muestreador de 1 Hz y las escrituras periodicas a MariaDB, reduciendo el uso de CPU en segundo plano y la E/S de disco en dispositivos de baja potencia.',
     51: 'Indexacion y rendimiento',
     52: 'Ajusta el comportamiento del backend: perfil de consulta/proyeccion, estadisticas de mempool y funciones opcionales de indexacion. Los cambios se aplican al siguiente reinicio del servicio. Activar cualquier opcion de indexacion desencadena un llenado historico en el siguiente arranque, que puede tardar varias horas y consumir espacio de disco significativo; la indexacion requiere al menos 16 GB de RAM y se rechaza en dispositivos con menos memoria.',
+    53: 'Los datos de la red Lightning consumen mucha memoria. Ejecutarlos junto con Bitcoin Core y un indexador Electrum en un sistema con menos de 16 GB de RAM puede provocar fallos por falta de memoria que tumben Mempool o una de sus dependencias. Active esta opcion solo si dispone de memoria de sobra.',
   },
   de_DE: {
     0: 'Mempool wird gestartet',
@@ -100,6 +101,7 @@ export default {
     50: 'Sammelt Mempool-Statistiken (Transaktionen pro Sekunde, vBytes pro Sekunde) fuer die Dashboard-Diagramme. Beim Deaktivieren wird der 1-Hz-Sampler gestoppt und die periodischen Statistik-Schreibvorgaenge in MariaDB entfallen, was die Hintergrund-CPU-Last und die Festplatten-E/A auf leistungsschwachen Geraeten reduziert.',
     51: 'Indexierung und Leistung',
     52: 'Optimiert das Verhalten des Backends: Abfrage-/Projektionsprofil, Mempool-Statistik und optionale Indexierungsfunktionen. Aenderungen werden beim naechsten Dienstneustart wirksam. Das Aktivieren einer Indexierungsoption loest beim naechsten Start einen historischen Abgleich aus, der mehrere Stunden dauern und viel Speicherplatz beanspruchen kann; die Indexierung erfordert mindestens 16 GB Arbeitsspeicher und wird auf Geraeten mit weniger Speicher abgelehnt.',
+    53: 'Lightning-Netzwerkdaten sind speicherintensiv. Werden sie zusammen mit Bitcoin Core und einem Electrum-Indexer auf einem System mit weniger als 16 GB Arbeitsspeicher ausgefuehrt, kann dies zu Speichermangel-Abstuerzen fuehren, die Mempool oder eine seiner Abhaengigkeiten lahmlegen. Aktivieren Sie dies nur, wenn Sie genug freien Arbeitsspeicher haben.',
   },
   pl_PL: {
     0: 'Uruchamianie Mempool',
@@ -150,6 +152,7 @@ export default {
     50: 'Zbiera statystyki mempool (transakcje na sekunde, vbajty na sekunde) dla wykresow panelu. Wylaczenie zatrzymuje sampler 1 Hz i okresowe zapisy statystyk do MariaDB, zmniejszajac uzycie CPU w tle i operacje I/O dysku na urzadzeniach o niskiej mocy.',
     51: 'Indeksowanie i wydajnosc',
     52: 'Dostosowuje zachowanie backendu: profil odpytywania/projekcji, statystyki mempool i opcjonalne funkcje indeksowania. Zmiany sa stosowane przy nastepnym ponownym uruchomieniu uslugi. Wlaczenie dowolnej opcji indeksowania uruchomi historyczne uzupelnienie przy nastepnym starcie, co moze zajac wiele godzin i zuzyc znaczna ilosc miejsca na dysku; indeksowanie wymaga co najmniej 16 GB pamieci RAM i jest odrzucane na urzadzeniach z mniejsza iloscia pamieci.',
+    53: 'Dane sieci Lightning sa pamieciozerne. Uruchamianie ich razem z Bitcoin Core i indekserem Electrum w systemie z mniej niz 16 GB pamieci RAM moze powodowac awarie z powodu braku pamieci, ktore wylaczaja Mempool lub jedna z jego zaleznosci. Wlacz tylko, jesli masz zapas wolnej pamieci.',
   },
   fr_FR: {
     0: 'Demarrage de Mempool',
@@ -200,5 +203,6 @@ export default {
     50: "Collecte les statistiques mempool (transactions par seconde, vbytes par seconde) pour les graphiques du tableau de bord. Le desactiver arrete l'echantillonneur a 1 Hz et les ecritures periodiques en base MariaDB, reduisant l'utilisation CPU en arriere-plan et les E/S disque sur les appareils a faible puissance.",
     51: 'Indexation et performances',
     52: "Ajuste le comportement du backend : profil d'interrogation/projection, statistiques mempool et fonctionnalites d'indexation optionnelles. Les changements prennent effet au prochain redemarrage du service. L'activation de toute option d'indexation declenche un remplissage historique au prochain demarrage, qui peut prendre plusieurs heures et consommer un espace disque important ; l'indexation necessite au moins 16 Go de RAM et est rejetee sur les appareils disposant de moins de memoire.",
+    53: "Les donnees du reseau Lightning sont gourmandes en memoire. Les executer avec Bitcoin Core et un indexeur Electrum sur un systeme disposant de moins de 16 Go de RAM peut provoquer des plantages par manque de memoire qui font tomber Mempool ou l'une de ses dependances. N'activez cette option que si vous disposez de memoire libre en reserve.",
   },
 } satisfies Record<string, LangDict>
