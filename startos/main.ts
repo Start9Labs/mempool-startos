@@ -31,10 +31,13 @@ export const main = sdk.setupMain(async ({ effects }) => {
   // Fulcrum/Electrs, LND/CLN, StartOS and OS overhead) before computing
   // our share. Indexing (audit/goggles/summaries/cpfp) is memory-hungry,
   // so when any of those toggles is on we raise the floor and share a
-  // larger fraction of the remaining host RAM.
+  // larger fraction of the remaining host RAM. On <=8 GB hosts the 2 GB
+  // baseline floor exceeds free RAM and lets RSS balloon until the kernel
+  // OOM-kills a sibling (e.g. Fulcrum), so we cap the backend tighter there.
   const RESERVED_MB = 6 * 1024
   const totalMB = Math.floor(totalmem() / (1024 * 1024))
   const effectiveMB = Math.max(0, totalMB - RESERVED_MB)
+  const lowRam = totalMB < 10 * 1024
   const anyIndexing =
     config.MEMPOOL.BLOCKS_SUMMARIES_INDEXING ||
     config.MEMPOOL.GOGGLES_INDEXING ||
@@ -42,7 +45,9 @@ export const main = sdk.setupMain(async ({ effects }) => {
     config.MEMPOOL.CPFP_INDEXING
   const backendMaxOldSpaceMB = anyIndexing
     ? Math.max(4096, Math.min(8192, Math.floor(effectiveMB / 4)))
-    : Math.max(2048, Math.min(8192, Math.floor(effectiveMB / 8)))
+    : lowRam
+      ? 1024
+      : Math.max(2048, Math.min(8192, Math.floor(effectiveMB / 8)))
 
   let backendMounts = sdk.Mounts.of()
     .mountVolume({
