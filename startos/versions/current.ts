@@ -1,18 +1,13 @@
 import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '3.3.1:12',
+  version: '3.3.1:13',
   releaseNotes: {
-    en_US: `- Cap the backend heap on hosts with 8 GB of RAM or less to reduce out-of-memory crashes.
-- Warn before enabling Lightning on hosts with less than 16 GB of RAM.`,
-    es_ES: `- Limita la memoria del backend en equipos con 8 GB de RAM o menos para reducir los fallos por falta de memoria.
-- Advierte antes de habilitar Lightning en equipos con menos de 16 GB de RAM.`,
-    de_DE: `- Begrenzt den Backend-Speicher auf Systemen mit 8 GB Arbeitsspeicher oder weniger, um Speichermangel-Abstuerze zu reduzieren.
-- Warnt vor dem Aktivieren von Lightning auf Systemen mit weniger als 16 GB Arbeitsspeicher.`,
-    pl_PL: `- Ogranicza pamiec backendu na urzadzeniach z 8 GB pamieci RAM lub mniej, aby zmniejszyc liczbe awarii z powodu braku pamieci.
-- Ostrzega przed wlaczeniem Lightning na urzadzeniach z mniej niz 16 GB pamieci RAM.`,
-    fr_FR: `- Limite la memoire du backend sur les hotes disposant de 8 Go de RAM ou moins pour reduire les plantages par manque de memoire.
-- Avertit avant d'activer Lightning sur les hotes disposant de moins de 16 Go de RAM.`,
+    en_US: `- Fix a startup crash on hosts with 8 GB of RAM or less: the backend heap cap was set below what the backend needs to load its disk cache, causing a JavaScript heap out-of-memory crash on every start.`,
+    es_ES: `- Corrige un fallo de inicio en equipos con 8 GB de RAM o menos: el limite de memoria del backend estaba por debajo de lo que necesita para cargar su cache en disco, provocando un fallo por falta de memoria en cada arranque.`,
+    de_DE: `- Behebt einen Startabsturz auf Systemen mit 8 GB Arbeitsspeicher oder weniger: Das Backend-Speicherlimit lag unter dem Bedarf zum Laden des Festplatten-Caches und verursachte bei jedem Start einen Speichermangel-Absturz.`,
+    pl_PL: `- Naprawia awarie uruchamiania na urzadzeniach z 8 GB pamieci RAM lub mniej: limit pamieci backendu byl nizszy niz potrzebny do zaladowania pamieci podrecznej na dysku, co powodowalo awarie z powodu braku pamieci przy kazdym starcie.`,
+    fr_FR: `- Corrige un plantage au demarrage sur les hotes disposant de 8 Go de RAM ou moins : la limite de memoire du backend etait inferieure a ce dont il a besoin pour charger son cache disque, provoquant un plantage par manque de memoire a chaque demarrage.`,
   },
   migrations: {
     up: async ({ effects }) => {},
