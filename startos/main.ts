@@ -26,18 +26,16 @@ export const main = sdk.setupMain(async ({ effects }) => {
   const config = await configJson.read().const(effects)
   if (!config) throw new Error('Config file not found')
 
-  // V8 old-space heap for the mempool backend, scaled to host RAM.
-  // Reserve 6 GB for the co-resident stack (Bitcoin Core post-sync,
-  // Fulcrum/Electrs, LND/CLN, StartOS and OS overhead) before computing
-  // our share. Indexing (audit/goggles/summaries/cpfp) is memory-hungry,
-  // so when any of those toggles is on we raise the floor and share a
-  // larger fraction of the remaining host RAM. On <=8 GB hosts the 2 GB
-  // baseline floor exceeds free RAM and lets RSS balloon until the kernel
-  // OOM-kills a sibling (e.g. Fulcrum), so we cap the backend tighter there.
+  // V8 old-space heap for the mempool backend, scaled to host RAM. This is
+  // a ceiling, not a reservation: setting it below the backend's working set
+  // doesn't free RAM, it just turns a rare system-OOM into a guaranteed
+  // self-OOM. The backend needs >1 GB to restore its disk cache at startup,
+  // so an earlier 1 GB low-RAM cap crashed it on every boot even with system
+  // RAM free (start-os#3326). Keep a 2 GB non-indexing floor; indexing
+  // (audit/goggles/summaries/cpfp) is heavier, so raise the floor there.
   const RESERVED_MB = 6 * 1024
   const totalMB = Math.floor(totalmem() / (1024 * 1024))
   const effectiveMB = Math.max(0, totalMB - RESERVED_MB)
-  const lowRam = totalMB < 10 * 1024
   const anyIndexing =
     config.MEMPOOL.BLOCKS_SUMMARIES_INDEXING ||
     config.MEMPOOL.GOGGLES_INDEXING ||
@@ -45,9 +43,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
     config.MEMPOOL.CPFP_INDEXING
   const backendMaxOldSpaceMB = anyIndexing
     ? Math.max(4096, Math.min(8192, Math.floor(effectiveMB / 4)))
-    : lowRam
-      ? 1024
-      : Math.max(2048, Math.min(8192, Math.floor(effectiveMB / 8)))
+    : Math.max(2048, Math.min(8192, Math.floor(effectiveMB / 8)))
 
   let backendMounts = sdk.Mounts.of()
     .mountVolume({
