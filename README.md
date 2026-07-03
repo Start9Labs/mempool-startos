@@ -47,7 +47,7 @@
 | Container | Entrypoint                                                  | Notes                                                                                                                                                                                                                                      |
 | --------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Frontend  | Upstream `docker-entrypoint.sh` (via `sdk.useEntrypoint()`) | `LIGHTNING=true` injected when a Lightning node is configured                                                                                                                                                                              |
-| Backend   | Custom: `node /backend/package/index.js`                    | Runs as `root`; `NODE_OPTIONS=--max-old-space-size=<dynamic>` — sized to (host RAM − 6 GB reserve for Bitcoin/indexer/LN/OS). Baseline: 1/8 of the remainder, clamped 2048–8192 MB; on hosts with <10 GB total RAM the baseline is pinned to 1024 MB so the backend can't balloon and OOM-kill a sibling. With any indexing toggle on: 1/4, clamped 4096–8192 MB |
+| Backend   | Custom: `/bin/sh` boot guard, then `node /backend/package/index.js` | Runs as `root`. The boot guard drops the on-disk cache when the previous start never became healthy — breaking a heap-OOM boot loop — then execs node. `NODE_OPTIONS=--max-old-space-size=<dynamic>` — sized to (host RAM − 6 GB reserve for Bitcoin/indexer/LN/OS): 1/3 of the remainder, clamped 2048–8192 MB (a 16 GB host gets ~3.3 GB); with any indexing toggle on, 1/2, clamped 4096–8192 MB |
 | MariaDB   | Upstream `docker-entrypoint.sh` (via `sdk.useEntrypoint()`) | `--bind-address=127.0.0.1` enforces loopback-only listener                                                                                                                                                                                 |
 
 ## Volume and Data Layout
@@ -193,7 +193,20 @@ Sets `MEMPOOL.POLL_RATE_MS`, `MEMPOOL.MEMPOOL_BLOCKS_AMOUNT`, `STATISTICS.ENABLE
 **Indexing.** All four indexing toggles are off by default, matching upstream. Enabling any of them triggers a historical backfill on the next service restart, which can take several hours and consume significant disk space.
 
 - **RAM requirement:** The action rejects any submission with at least one indexing toggle on when the host has less than ~16 GB of total RAM (threshold: 15 GiB). Backend indexing competes with Bitcoin Core's dbcache, the selected Electrum indexer, and any Lightning node, so enabling it on a low-memory device is likely to OOM one of the services in the stack.
-- **Heap behavior:** When any indexing toggle is on, the backend's V8 heap is raised on the next restart so indexing has room to work. The formula subtracts a 6 GB reserve for the co-resident stack (Bitcoin Core, the selected indexer, any Lightning node, StartOS) and then takes 1/4 of the remainder, clamped 4–8 GB. A 16 GB box gets a 4 GB heap; a 32 GB box gets ~6.5 GB; ≥40 GB gets the 8 GB max. With indexing off, the baseline heap is 1/8 of the remainder clamped 2–8 GB, except on hosts with <10 GB total RAM where it is pinned to 1 GB — on an 8 GB box the 2 GB floor exceeds free RAM and lets the backend grow until the kernel OOM-kills a sibling service (Fulcrum, in observed reports), so the tighter cap keeps Mempool's footprint bounded.
+- **Heap behavior:** The backend's V8 `--max-old-space-size` ceiling scales with host RAM. It subtracts a 6 GB reserve for the co-resident stack (Bitcoin Core, the selected indexer, any Lightning node, StartOS) and shares the remainder: with indexing off, 1/3 clamped 2–8 GB (a 16 GB host gets ~3.3 GB, a 32 GB host the 8 GB max); with any indexing toggle on, 1/2 clamped 4–8 GB. This is a ceiling, not a reservation — the backend's steady-state heap sits well under it, so a higher ceiling does not raise normal RAM use, it only lets a transient startup peak (reloading the on-disk mempool/RBF cache) finish instead of crashing with "JavaScript heap out of memory". A cache too large to reload even under the ceiling is handled by the boot guard (see [Clear Backend Cache](#clear-backend-cache)), not by enlarging the heap.
+
+### Clear Backend Cache
+
+- **Name:** Clear Backend Cache
+- **Purpose:** Delete the backend's on-disk mempool/RBF cache so it is rebuilt from live data on the next start
+- **Visibility:** Enabled
+- **Availability:** Only when stopped
+- **Inputs:** None
+- **Outputs:** Confirmation message
+
+Recovers a backend stuck failing to start with a "JavaScript heap out of memory" error while reloading an oversized cache. Deleting the cache costs only a short mempool resync and recent RBF history; blocks, the MariaDB database, and settings are untouched. `allowedStatuses: only-stopped` avoids racing the backend's own cache writes — stop Mempool, run the action, start it.
+
+**Automatic recovery.** The same clearing happens on its own, without this action. The `api` daemon's command is a `/bin/sh` boot guard that writes a `.starting` sentinel into the cache volume and then execs node; the `api` health check removes the sentinel on the first healthy report. If a start crashes before becoming healthy (the OOM boot-loop case), the sentinel survives, so the next start's guard finds it, clears the cache, and lets node rebuild from live data. A boot loop therefore self-heals within one restart cycle; this action is the manual override.
 
 ## Backups and Restore
 
@@ -314,6 +327,7 @@ actions:
   - select-indexer
   - enable-lightning
   - indexing-and-performance
+  - clear-backend-cache
 health_checks:
   - mariadb: healthcheck.sh (120s grace)
   - api: port_listening 8999 (45s grace)

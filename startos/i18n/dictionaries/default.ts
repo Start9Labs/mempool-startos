@@ -50,6 +50,11 @@ const dict = {
   'Indexing and Performance': 51,
   'Tune backend behavior: poll/projection profile, mempool statistics, and optional indexing features. Changes apply on the next service restart. Enabling any indexing toggle triggers a historical backfill on the next start, which can take several hours and consume significant disk space; indexing requires at least 16 GB of system RAM and is rejected on lower-memory devices.': 52,
   'Lightning network data is memory-intensive. Running it alongside Bitcoin Core and an Electrum indexer on a system with less than 16 GB of RAM can trigger out-of-memory crashes that take down Mempool or one of its dependencies. Enable only if you have RAM headroom to spare.': 53,
+  'Clear Backend Cache': 54,
+  'Delete the on-disk cache used by the Mempool backend (mempool and RBF data). Use this if the backend fails to start with a JavaScript heap out-of-memory error while loading its cache. The cache is rebuilt from Bitcoin Core and the selected indexer on the next start; you lose only a short mempool resync and recent RBF history, while blocks, database, and settings are untouched. Stop Mempool before running this action.': 55,
+  'This deletes the backend cache. Mempool rebuilds it automatically on the next start.': 56,
+  'Backend Cache Cleared': 57,
+  'The backend cache has been deleted. Start Mempool to rebuild it.': 58,
 } as const
 
 export type I18nKey = keyof typeof dict
