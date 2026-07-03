@@ -84,12 +84,13 @@ On first install, StartOS auto-generates a 22-character MariaDB password and wri
 
 Mempool is configured via `mempool-config.json`, managed by StartOS.
 
+Dependency network addresses are **resolved over the LXC bridge** at runtime and pinned into the config before the backend starts (see `startos/init/watchHosts.ts`); `.startos` DNS is no longer used in StartOS 2.0. This affects `CORE_RPC.HOST`/`PORT` (bitcoind), `ELECTRUM.HOST`/`PORT` (the selected indexer), and `LND.REST_API_URL` — their stored values are dynamic bridge addresses, and the config's `.catch` defaults (`bitcoind.startos:8332` etc.) are only fallbacks.
+
 ### Auto-Configured by StartOS
 
 | Setting                           | Value                                | Purpose                                                   |
 | --------------------------------- | ------------------------------------ | --------------------------------------------------------- |
-| `CORE_RPC.HOST`                   | `bitcoind.startos`                   | Bitcoin Core connection                                   |
-| `CORE_RPC.PORT`                   | `8332`                               | Bitcoin Core RPC port                                     |
+| `CORE_RPC.HOST` / `.PORT`         | bitcoind's LXC-bridge address        | Bitcoin Core RPC connection, resolved at runtime          |
 | `CORE_RPC.COOKIE`                 | `true`                               | Cookie authentication                                     |
 | `CORE_RPC.COOKIE_PATH`            | `/mnt/bitcoind/.cookie`              | Cookie file path                                          |
 | `DATABASE.HOST` / `.PORT`         | `127.0.0.1` / `3306`                 | Localhost-only MariaDB sidecar                            |
@@ -108,7 +109,7 @@ Mempool is configured via `mempool-config.json`, managed by StartOS.
 
 | Setting                                    | Action                   | Notes                                                         |
 | ------------------------------------------ | ------------------------ | ------------------------------------------------------------- |
-| `ELECTRUM.HOST` / `.PORT` / `.TLS_ENABLED` | Select Indexer           | `fulcrum.startos` or `electrs.startos`, port `50001`, TLS off |
+| `ELECTRUM.INDEXER`                         | Select Indexer           | `fulcrum` or `electrs` — the stable choice; `ELECTRUM.HOST`/`.PORT` (TLS off) are then resolved to that indexer's bridge address at runtime |
 | `LIGHTNING.ENABLED` / `.BACKEND`           | Enable Lightning         | Backend is `lnd` or `cln`                                     |
 | `LND.TLS_CERT_PATH` / `.MACAROON_PATH`     | Enable Lightning         | Paths under the LND mount                                     |
 | `CLIGHTNING.SOCKET`                        | Enable Lightning         | `lightning-rpc` socket under the CLN mount                    |
@@ -148,7 +149,7 @@ The backend API runs on port 8999 internally but is not exposed as a separate in
 - **Inputs:** Select one of: Fulcrum (recommended), Electrs
 - **Outputs:** None
 
-Selecting an indexer enables address search and transaction history features. Sets `ELECTRUM.HOST` and `ELECTRUM.PORT` in the configuration.
+Selecting an indexer enables address search and transaction history features. Records the choice in `ELECTRUM.INDEXER`; the indexer's `ELECTRUM.HOST`/`.PORT` are then resolved over the LXC bridge at runtime.
 
 ### Enable Lightning
 
@@ -276,7 +277,7 @@ Bitcoin Core's `.cookie` file at `/mnt/bitcoind/.cookie` is used for RPC authent
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for build instructions and development workflow.
+Build and development workflow follow the StartOS packaging guide: <https://docs.start9.com/packaging>. Keep `README.md`, `instructions.md`, and `AGENTS.md` in sync with any change to user-visible behavior or package structure.
 
 ---
 

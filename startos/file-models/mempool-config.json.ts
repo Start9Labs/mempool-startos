@@ -65,9 +65,10 @@ const mempoolSection = z.object({
 })
 
 const coreRpcSection = z.object({
-  // enforced
-  HOST: z.literal('bitcoind.startos').catch('bitcoind.startos'),
-  PORT: z.literal(8332).catch(8332),
+  // Resolved to bitcoind's LXC-bridge address at runtime (see init/watchHosts);
+  // the legacy `bitcoind.startos:8332` catches are just defaults now.
+  HOST: z.string().catch('bitcoind.startos'),
+  PORT: z.number().catch(8332),
   COOKIE_PATH: z
     .literal(`${btcMountpoint}/.cookie`)
     .catch(`${btcMountpoint}/.cookie`),
@@ -80,11 +81,12 @@ const coreRpcSection = z.object({
 })
 
 const electrumSection = z.object({
-  // configurable
-  HOST: z
-    .enum(['electrs.startos', 'fulcrum.startos'])
-    .optional()
-    .catch(undefined),
+  // Which indexer the user selected (the stable discriminator, read by
+  // dependencies.ts / Select Indexer). HOST holds the indexer's LXC-bridge
+  // address, resolved from INDEXER at runtime (see init/watchHosts); it is no
+  // longer the `<indexer>.startos` selector it once was.
+  INDEXER: z.enum(['electrs', 'fulcrum']).optional().catch(undefined),
+  HOST: z.string().optional().catch(undefined),
   PORT: z.number().optional().catch(50001),
   TLS_ENABLED: z.boolean().optional().catch(false),
 })
@@ -134,9 +136,9 @@ const lndSection = z.object({
   // enforced
   TLS_CERT_PATH: z.literal(lndCertPath).catch(lndCertPath),
   MACAROON_PATH: z.literal(lndMacaroonPath).catch(lndMacaroonPath),
-  REST_API_URL: z
-    .literal('https://lnd.startos:8080')
-    .catch('https://lnd.startos:8080'),
+  // Resolved to LND's LXC-bridge REST address at runtime (see init/watchHosts);
+  // the legacy `https://lnd.startos:8080` catch is just a default now.
+  REST_API_URL: z.string().catch('https://lnd.startos:8080'),
   // configurable
   TIMEOUT: z.number().catch(10000),
 })

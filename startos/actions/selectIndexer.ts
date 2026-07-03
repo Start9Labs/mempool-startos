@@ -1,4 +1,5 @@
 import { configJson } from '../file-models/mempool-config.json'
+import { selectedIndexer } from '../indexer'
 import { i18n } from '../i18n'
 import { sdk } from '../sdk'
 const { InputSpec, Value } = sdk
@@ -34,23 +35,17 @@ export const selectIndexer = sdk.Action.withInput(
 
   // optionally pre-fill the input form
   async ({ effects }) => {
-    const indexer =
-      (await configJson
-        .read((c) => c.ELECTRUM.HOST?.split('.')[0])
-        .const(effects)) ?? undefined
+    const indexer = await selectedIndexer(effects)
 
     return {
       indexer: indexer as any,
     }
   },
 
-  // the execution function
+  // the execution function. Record the choice; init/watchHosts resolves the
+  // indexer's LXC-bridge address into ELECTRUM.HOST/PORT on the next start.
   async ({ effects, input }) =>
     configJson.merge(effects, {
-      ELECTRUM: {
-        HOST: `${input.indexer}.startos`,
-        PORT: 50001,
-        TLS_ENABLED: false,
-      },
+      ELECTRUM: { INDEXER: input.indexer },
     }),
 )

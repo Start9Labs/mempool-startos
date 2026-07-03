@@ -125,21 +125,21 @@ export const main = sdk.setupMain(async ({ effects }) => {
   // Set containers
   // ========================
 
-  const backendSub = await sdk.SubContainer.of(
+  const backendSub = sdk.SubContainer.of(
     effects,
     { imageId: 'backend' },
     backendMounts,
     'backend-api',
   )
 
-  const frontendSub = await sdk.SubContainer.of(
+  const frontendSub = sdk.SubContainer.of(
     effects,
     { imageId: 'frontend' },
     null,
     'user-interface',
   )
 
-  const mariaSub = await sdk.SubContainer.of(
+  const mariaSub = sdk.SubContainer.of(
     effects,
     { imageId: 'mariadb' },
     sdk.Mounts.of().mountVolume({
