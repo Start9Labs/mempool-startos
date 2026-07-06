@@ -37,11 +37,8 @@ export const watchHosts = sdk.setupOnInit(async (effects, _) => {
     effects,
     {
       ...(bitcoind && { CORE_RPC: hostPort(bitcoind) }),
-      ...(indexer && {
-        ELECTRUM: {
-          INDEXER: indexer,
-          ...(electrum && { ...hostPort(electrum), TLS_ENABLED: false }),
-        },
+      ...(electrum && {
+        ELECTRUM: { ...hostPort(electrum), TLS_ENABLED: false },
       }),
       ...(lndRest && { LND: { REST_API_URL: `https://${lndRest}` } }),
     },

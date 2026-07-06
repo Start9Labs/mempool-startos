@@ -18,7 +18,7 @@ export const manifest = setupManifest({
   marketingUrl: 'https://mempool.space',
   donationUrl: 'https://mempool.space/sponsor',
   description: { short, long },
-  volumes: ['main', 'cache', 'db', 'config'],
+  volumes: ['main', 'cache', 'db', 'config', 'startos'],
   images: {
     frontend: {
       source: {

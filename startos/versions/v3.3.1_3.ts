@@ -1,6 +1,7 @@
 import { IMPOSSIBLE, VersionInfo, YAML } from '@start9labs/start-sdk'
 import { readFile, rm, writeFile } from 'fs/promises'
 import { configJson } from '../file-models/mempool-config.json'
+import { storeJson } from '../file-models/store.json'
 
 export const v_3_3_1_3 = VersionInfo.of({
   version: '3.3.1:3',
@@ -36,7 +37,6 @@ export const v_3_3_1_3 = VersionInfo.of({
           DATABASE?: { PASSWORD: string }
           LIGHTNING?: { ENABLED: boolean; BACKEND?: 'lnd' | 'cln' }
           MEMPOOL?: { BACKEND: 'electrum' }
-          ELECTRUM?: { INDEXER: 'electrs' | 'fulcrum' }
         } = { DATABASE: { PASSWORD: 'mempool' } }
 
         if (lightning && lightning.type !== 'none') {
@@ -51,9 +51,10 @@ export const v_3_3_1_3 = VersionInfo.of({
             (indexer.type === 'electrs' || indexer.type === 'fulcrum'))
         ) {
           custom.MEMPOOL = { BACKEND: 'electrum' }
-          custom.ELECTRUM = {
-            INDEXER: indexer?.type === 'fulcrum' ? 'fulcrum' : 'electrs',
-          }
+          // Indexer choice is StartOS state (store.json), not upstream config.
+          await storeJson.merge(effects, {
+            indexer: indexer?.type === 'fulcrum' ? 'fulcrum' : 'electrs',
+          })
         }
 
         await configJson.merge(effects, custom)

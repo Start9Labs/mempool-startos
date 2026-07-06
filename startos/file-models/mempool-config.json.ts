@@ -81,11 +81,10 @@ const coreRpcSection = z.object({
 })
 
 const electrumSection = z.object({
-  // Which indexer the user selected (the stable discriminator, read by
-  // dependencies.ts / Select Indexer). HOST holds the indexer's LXC-bridge
-  // address, resolved from INDEXER at runtime (see init/watchHosts); it is no
-  // longer the `<indexer>.startos` selector it once was.
-  INDEXER: z.enum(['electrs', 'fulcrum']).optional().catch(undefined),
+  // The selected indexer's LXC-bridge address, resolved at runtime (see
+  // init/watchHosts); absent until the indexer resolves — no fake placeholder
+  // is written. Which indexer is selected is StartOS state kept in store.json,
+  // not here (HOST is the same bridge IP whichever indexer is chosen).
   HOST: z.string().optional().catch(undefined),
   PORT: z.number().optional().catch(50001),
   TLS_ENABLED: z.boolean().optional().catch(false),

@@ -1,5 +1,6 @@
 import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
 import { configJson } from '../file-models/mempool-config.json'
+import { storeJson } from '../file-models/store.json'
 
 export const current = VersionInfo.of({
   version: '3.3.1:15',
@@ -18,18 +19,18 @@ export const current = VersionInfo.of({
   migrations: {
     up: async ({ effects }) => {
       // Before this version the indexer selector lived in ELECTRUM.HOST as
-      // `<indexer>.startos` (there was no ELECTRUM.INDEXER field). Seed the new
-      // discriminator once from that legacy value; init/watchHosts then fills
-      // HOST/PORT with the resolved bridge address (or a loopback placeholder).
+      // `<indexer>.startos`. It is now StartOS state in store.json; seed it once
+      // from that legacy value (unless already set). init/watchHosts then fills
+      // ELECTRUM.HOST/PORT with the resolved bridge address.
+      const existing = await storeJson.read((s) => s.indexer).once()
+      if (existing) return
       const legacyHost = await configJson.read((c) => c.ELECTRUM.HOST).once()
       if (
         legacyHost === 'electrs.startos' ||
         legacyHost === 'fulcrum.startos'
       ) {
-        await configJson.merge(effects, {
-          ELECTRUM: {
-            INDEXER: legacyHost === 'fulcrum.startos' ? 'fulcrum' : 'electrs',
-          },
+        await storeJson.merge(effects, {
+          indexer: legacyHost === 'fulcrum.startos' ? 'fulcrum' : 'electrs',
         })
       }
     },

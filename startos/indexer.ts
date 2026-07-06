@@ -1,5 +1,5 @@
 import { T } from '@start9labs/start-sdk'
-import { configJson } from './file-models/mempool-config.json'
+import { storeJson } from './file-models/store.json'
 import { bridgeAddress } from './utils'
 
 export type Indexer = 'electrs' | 'fulcrum'
@@ -15,18 +15,15 @@ const INDEXER_HOSTS: Record<Indexer, { packageId: string; hostId: string }> = {
 const electrumPort = 50001
 
 /**
- * The user's selected Electrum indexer, read from the dedicated ELECTRUM.INDEXER
- * discriminator. Installs from before that field existed are bootstrapped from
- * the legacy `<indexer>.startos` value by the 3.3.1:15 migration, so no runtime
- * fallback is needed here.
+ * The user's selected Electrum indexer, StartOS state held in store.json (not in
+ * the upstream mempool-config.json). Installs predating store.json are seeded
+ * from the legacy `<indexer>.startos` value in ELECTRUM.HOST by the 3.3.1:15
+ * migration, so no runtime fallback is needed here.
  */
 export async function selectedIndexer(
   effects: T.Effects,
 ): Promise<Indexer | undefined> {
-  return (
-    (await configJson.read((c) => c.ELECTRUM.INDEXER).const(effects)) ??
-    undefined
-  )
+  return (await storeJson.read((s) => s.indexer).const(effects)) ?? undefined
 }
 
 /**
