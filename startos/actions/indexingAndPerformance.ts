@@ -58,7 +58,10 @@ const inputSpec = InputSpec.of({
   }),
 })
 
-function matchPerformanceProfile(pollRateMs: number, blocksAmount: number): PerformanceProfile {
+function matchPerformanceProfile(
+  pollRateMs: number,
+  blocksAmount: number,
+): PerformanceProfile {
   for (const [name, p] of Object.entries(PROFILES) as [
     PerformanceProfile,
     (typeof PROFILES)[PerformanceProfile],
@@ -94,7 +97,10 @@ export const indexingAndPerformance = sdk.Action.withInput(
     if (!config) throw new Error('Config file not found')
     const { MEMPOOL, STATISTICS } = config
     return {
-      profile: matchPerformanceProfile(MEMPOOL.POLL_RATE_MS, MEMPOOL.MEMPOOL_BLOCKS_AMOUNT),
+      profile: matchPerformanceProfile(
+        MEMPOOL.POLL_RATE_MS,
+        MEMPOOL.MEMPOOL_BLOCKS_AMOUNT,
+      ),
       STATISTICS_ENABLED: STATISTICS.ENABLED,
       BLOCKS_SUMMARIES_INDEXING: MEMPOOL.BLOCKS_SUMMARIES_INDEXING,
       GOGGLES_INDEXING: MEMPOOL.GOGGLES_INDEXING,
@@ -112,7 +118,7 @@ export const indexingAndPerformance = sdk.Action.withInput(
     if (wantsIndexing && totalmem() < MIN_INDEXING_MEM_BYTES) {
       throw new Error(
         i18n(
-          'Indexing features require at least 16 GB of system RAM. This device has less than 16 GB available and cannot safely run backend indexing alongside Bitcoin Core and the selected Electrum backend.',
+          'Indexing features require at least 16 GB of system RAM. This device has less than 16 GB available and cannot safely run backend indexing alongside Bitcoin and the selected Electrum backend.',
         ),
       )
     }

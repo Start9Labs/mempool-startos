@@ -33,10 +33,11 @@ export const lndMacaroonPath = `${lndMountpoint}/data/chain/bitcoin/mainnet/read
  * and never on a routine dependency update. Chain `.once()` in an action
  * context. `fallbackPort` keeps the value non-null while the dependency is
  * absent — sanctioned only for an allocator-guaranteed port such as tor's SOCKS
- * 9050 (Mempool has none, so its callers get `null` and substitute a loopback
- * placeholder). Reads `net.assignedPort`, never an addressInfo hostname, so a
- * disabled binding (e.g. LND locked) doesn't flap the value. Drop-in for the
- * planned SDK `sdk.host.getBridgeAddress`.
+ * 9050 (Mempool has none, so its callers get `null` while the dependency is
+ * absent and omit the config field rather than write a fake address). Reads
+ * `net.assignedPort`, never an addressInfo hostname, so a disabled binding
+ * (e.g. LND locked) doesn't flap the value. Drop-in for the planned SDK
+ * `sdk.host.getBridgeAddress`.
  */
 export function bridgeAddress(
   effects: T.Effects,
@@ -69,7 +70,8 @@ export function bridgeAddress(
         const port =
           host?.bindings[opts.internalPort]?.net.assignedPort ??
           opts.fallbackPort
-        return port != null ? `${osIp}:${port}` : null
+        if (port == null) return null
+        return `${osIp}:${port}`
       },
     )
   }
@@ -81,29 +83,29 @@ export function bridgeAddress(
 
 /**
  * bitcoind's RPC bridge address (`<osIp>:8332`) for mempool-config's `CORE_RPC`,
- * replacing `bitcoind.startos:8332`. Falls back to a loopback placeholder while
- * bitcoind is absent so a stale bridge address never lingers; the `.const()`
- * heals when bitcoind reappears.
+ * replacing `bitcoind.startos:8332`. `null` while bitcoind is absent — the
+ * caller then omits `CORE_RPC` rather than writing a fake address; the
+ * `.const()` heals with the real address when bitcoind reappears.
  */
-export const bitcoindRpcBridge = async (effects: T.Effects) =>
-  (await bridgeAddress(effects, {
+export const bitcoindRpcBridge = (effects: T.Effects) =>
+  bridgeAddress(effects, {
     packageId: 'bitcoind',
     hostId: rpcHostId,
     internalPort: rpcPort,
-  }).const()) ?? `127.0.0.1:${rpcPort}`
+  }).const()
 
 /**
  * LND's REST bridge address (`<osIp>:8080`), the base for `LND.REST_API_URL`.
  * LND terminates its own TLS against the mounted `tls.cert`, so the caller
- * prefixes `https://`. Resolves `null` until LND's REST binding publishes at
- * wallet-unlock; falls back to a loopback placeholder meanwhile.
+ * prefixes `https://`. `null` until LND's REST binding publishes at
+ * wallet-unlock — the caller then omits `LND` rather than writing a fake URL.
  */
-export const lndRestBridge = async (effects: T.Effects) =>
-  (await bridgeAddress(effects, {
+export const lndRestBridge = (effects: T.Effects) =>
+  bridgeAddress(effects, {
     packageId: 'lnd',
     hostId: controlHostId,
     internalPort: restPort,
-  }).const()) ?? `127.0.0.1:${restPort}`
+  }).const()
 
 // Performance profile presets. POLL_RATE_MS is the main-loop period;
 // MEMPOOL_BLOCKS_AMOUNT is the depth of the Rust GBT projection. Both

@@ -55,7 +55,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
   // host up to ~22 GB RAM (the /8 share never cleared the 2 GB floor), so a
   // 16 GB host whose cache needed >2 GB to reload crashed with "JavaScript heap
   // out of memory" on every start (start-os#3326). Reserve 6 GB for the
-  // co-resident stack (Bitcoin Core, the Electrum indexer, any Lightning node,
+  // co-resident stack (Bitcoin, the Electrum indexer, any Lightning node,
   // StartOS/OS) and share the remainder: 1/3 with indexing off (2 GB floor),
   // 1/2 with any indexing toggle on (4 GB floor, heavier working set). A cache
   // too large to reload even under this ceiling is handled by the boot guard on

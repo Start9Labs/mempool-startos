@@ -9,7 +9,16 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
   await sdk.action.createTask(effects, 'bitcoind', autoconfig, 'critical', {
     input: {
       kind: 'partial',
-      accept: [{ prune: 0, txindex: true }],
+      // bitcoind.conf omits `prune` entirely when the node is unpruned (an
+      // absent key equals the default), so the `prune: 0` entry never matches
+      // an archival node and the critical task would never clear. start-core's
+      // is_partial_of treats a `null` accept value as "key may be missing", so
+      // the second entry matches the unpruned case. `null` needs a cast past
+      // DeepPartial, which types `prune` as `number | undefined`.
+      accept: [
+        { prune: 0, txindex: true },
+        { prune: null as unknown as number, txindex: true },
+      ],
       set: { prune: 0, txindex: true },
     },
     when: { condition: 'input-not-matches', once: false },

@@ -26,9 +26,9 @@ const mempoolSection = z.object({
   RECOMMENDED_FEE_PERCENTILE: z.number().catch(50),
   BLOCK_WEIGHT_UNITS: z.number().catch(4000000),
   INITIAL_BLOCKS_AMOUNT: z.number().catch(8),
-  MEMPOOL_BLOCKS_AMOUNT: z.number().catch(
-    PROFILES[DEFAULT_PROFILE].MEMPOOL_BLOCKS_AMOUNT,
-  ),
+  MEMPOOL_BLOCKS_AMOUNT: z
+    .number()
+    .catch(PROFILES[DEFAULT_PROFILE].MEMPOOL_BLOCKS_AMOUNT),
   INDEXING_BLOCKS_AMOUNT: z.number().catch(52560),
   BLOCKS_SUMMARIES_INDEXING: z.boolean().catch(false),
   GOGGLES_INDEXING: z.boolean().catch(false),
@@ -66,8 +66,8 @@ const mempoolSection = z.object({
 
 const coreRpcSection = z.object({
   // Resolved to bitcoind's LXC-bridge address at runtime (see init/watchHosts);
-  // this loopback placeholder is only the default before that resolves.
-  HOST: z.string().catch('127.0.0.1'),
+  // absent until bitcoind resolves — no fake placeholder is written.
+  HOST: z.string().optional().catch(undefined),
   PORT: z.number().catch(8332),
   COOKIE_PATH: z
     .literal(`${btcMountpoint}/.cookie`)
@@ -137,8 +137,8 @@ const lndSection = z.object({
   TLS_CERT_PATH: z.literal(lndCertPath).catch(lndCertPath),
   MACAROON_PATH: z.literal(lndMacaroonPath).catch(lndMacaroonPath),
   // Resolved to LND's LXC-bridge REST address at runtime (see init/watchHosts);
-  // this loopback placeholder is only the default before that resolves.
-  REST_API_URL: z.string().catch('https://127.0.0.1:8080'),
+  // absent until LND resolves — no fake placeholder is written.
+  REST_API_URL: z.string().optional().catch(undefined),
   // configurable
   TIMEOUT: z.number().catch(10000),
 })

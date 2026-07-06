@@ -17,29 +17,33 @@ const hostPort = (addr: string) => {
  * changes only when the address itself does, so this re-runs — and main
  * restarts the backend — exactly on a dependency's install / uninstall /
  * port-change (and on an indexer/backend selection change), never on a routine
- * dependency update. An absent dependency resolves to a loopback placeholder
- * (rather than latching a recycled address) and heals automatically when the
- * dependency returns.
+ * dependency update. An absent dependency resolves to `null` and is omitted from
+ * the config entirely (no fake placeholder address is written); the write heals
+ * automatically when the dependency returns.
  */
 export const watchHosts = sdk.setupOnInit(async (effects, _) => {
   const indexer = await selectedIndexer(effects)
   const lightning = await configJson.read((c) => c.LIGHTNING).const(effects)
   const lndEnabled = lightning?.ENABLED && lightning.BACKEND === 'lnd'
 
+  // Always subscribe to bitcoind's reactive address; the indexer/LND reads stay
+  // gated on selection. A `null` means the dependency is absent — omit its
+  // section rather than write an unreachable address.
+  const bitcoind = await bitcoindRpcBridge(effects)
+  const electrum = indexer ? await electrumBridge(effects, indexer) : null
+  const lndRest = lndEnabled ? await lndRestBridge(effects) : null
+
   await configJson.merge(
     effects,
     {
-      CORE_RPC: hostPort(await bitcoindRpcBridge(effects)),
+      ...(bitcoind && { CORE_RPC: hostPort(bitcoind) }),
       ...(indexer && {
         ELECTRUM: {
           INDEXER: indexer,
-          ...hostPort(await electrumBridge(effects, indexer)),
-          TLS_ENABLED: false,
+          ...(electrum && { ...hostPort(electrum), TLS_ENABLED: false }),
         },
       }),
-      ...(lndEnabled && {
-        LND: { REST_API_URL: `https://${await lndRestBridge(effects)}` },
-      }),
+      ...(lndRest && { LND: { REST_API_URL: `https://${lndRest}` } }),
     },
     { allowWriteAfterConst: true },
   )

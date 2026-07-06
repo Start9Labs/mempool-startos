@@ -67,10 +67,10 @@ StartOS-specific files:
 
 ## Installation and First-Run Flow
 
-1. Ensure Bitcoin Core is installed. Mempool creates a critical task on Bitcoin Core requiring `txindex=true` and pruning to be disabled; the task re-appears any time those conditions stop being met
+1. Ensure Bitcoin is installed. Mempool creates a critical task on Bitcoin requiring `txindex=true` and pruning to be disabled; the task re-appears any time those conditions stop being met
 2. Install Mempool from the StartOS marketplace
 3. On install, StartOS creates a **critical task** to select an Electrum indexer for address lookups
-4. Mempool will not start until Bitcoin Core (and the selected indexer, and the Lightning backend if configured) report healthy via their StartOS health checks — see [Health Checks](#health-checks)
+4. Mempool will not start until Bitcoin (and the selected indexer, and the Lightning backend if configured) report healthy via their StartOS health checks — see [Health Checks](#health-checks)
 5. Optionally run "Enable Lightning" for Lightning network data
 6. Optionally run "Indexing and Performance" to change the performance profile, toggle statistics, or opt in to block-summary, goggles, audit, and/or CPFP indexing
 
@@ -84,13 +84,13 @@ On first install, StartOS auto-generates a 22-character MariaDB password and wri
 
 Mempool is configured via `mempool-config.json`, managed by StartOS.
 
-Dependency network addresses are **resolved over the LXC bridge** at runtime and pinned into the config before the backend starts (see `startos/init/watchHosts.ts`); `.startos` DNS is no longer used in StartOS 2.0. This affects `CORE_RPC.HOST`/`PORT` (bitcoind), `ELECTRUM.HOST`/`PORT` (the selected indexer), and `LND.REST_API_URL` — their stored values are dynamic bridge addresses read reactively from each binding's assigned port, so `watchHosts` re-resolves (and main restarts the backend) only when an address actually changes, never on a routine dependency update. While a dependency is absent the field holds a `127.0.0.1` loopback placeholder (also the config's `.catch` default) and heals automatically when the dependency returns.
+Dependency network addresses are **resolved over the LXC bridge** at runtime and pinned into the config before the backend starts (see `startos/init/watchHosts.ts`); `.startos` DNS is no longer used in StartOS 2.0. This affects `CORE_RPC.HOST`/`PORT` (bitcoind), `ELECTRUM.HOST`/`PORT` (the selected indexer), and `LND.REST_API_URL` — their stored values are dynamic bridge addresses read reactively from each binding's assigned port, so `watchHosts` re-resolves (and main restarts the backend) only when an address actually changes, never on a routine dependency update. While a dependency is absent its config section is simply left unwritten (the backend cannot dial it and the health checks show it) and heals automatically when the dependency returns.
 
 ### Auto-Configured by StartOS
 
 | Setting                           | Value                                | Purpose                                                   |
 | --------------------------------- | ------------------------------------ | --------------------------------------------------------- |
-| `CORE_RPC.HOST` / `.PORT`         | bitcoind's LXC-bridge address        | Bitcoin Core RPC connection, resolved at runtime          |
+| `CORE_RPC.HOST` / `.PORT`         | bitcoind's LXC-bridge address        | Bitcoin RPC connection, resolved at runtime               |
 | `CORE_RPC.COOKIE`                 | `true`                               | Cookie authentication                                     |
 | `CORE_RPC.COOKIE_PATH`            | `/mnt/bitcoind/.cookie`              | Cookie file path                                          |
 | `DATABASE.HOST` / `.PORT`         | `127.0.0.1` / `3306`                 | Localhost-only MariaDB sidecar                            |
@@ -121,9 +121,9 @@ Dependency network addresses are **resolved over the LXC bridge** at runtime and
 | `MEMPOOL.AUDIT`                            | Indexing and Performance | Default off; requires `BLOCKS_SUMMARIES_INDEXING`             |
 | `MEMPOOL.CPFP_INDEXING`                    | Indexing and Performance | Default off                                                   |
 
-### Bitcoin Core Requirements
+### Bitcoin Requirements
 
-Mempool creates a **critical task** on the Bitcoin Core dependency that requires:
+Mempool creates a **critical task** on the Bitcoin dependency that requires:
 
 - `txindex=true` — Transaction indexing must be enabled
 - `prune` must be unset — pruning must be disabled
@@ -162,7 +162,7 @@ Selecting an indexer enables address search and transaction history features. Re
 
 When enabled, configures the `LIGHTNING` and `LND`/`CLIGHTNING` sections of the configuration and mounts the selected Lightning node's volume.
 
-On hosts with less than ~16 GB of total RAM (threshold: 15 GiB) the action carries a confirmation **warning**: the Lightning network-graph sync is memory-intensive, and running it alongside Bitcoin Core and an Electrum indexer on a low-memory device can push the system into out-of-memory crashes. It is a warning, not a hard gate — the user can still proceed.
+On hosts with less than ~16 GB of total RAM (threshold: 15 GiB) the action carries a confirmation **warning**: the Lightning network-graph sync is memory-intensive, and running it alongside Bitcoin and an Electrum indexer on a low-memory device can push the system into out-of-memory crashes. It is a warning, not a hard gate — the user can still proceed.
 
 ### Indexing and Performance
 
@@ -193,8 +193,8 @@ Sets `MEMPOOL.POLL_RATE_MS`, `MEMPOOL.MEMPOOL_BLOCKS_AMOUNT`, `STATISTICS.ENABLE
 
 **Indexing.** All four indexing toggles are off by default, matching upstream. Enabling any of them triggers a historical backfill on the next service restart, which can take several hours and consume significant disk space.
 
-- **RAM requirement:** The action rejects any submission with at least one indexing toggle on when the host has less than ~16 GB of total RAM (threshold: 15 GiB). Backend indexing competes with Bitcoin Core's dbcache, the selected Electrum indexer, and any Lightning node, so enabling it on a low-memory device is likely to OOM one of the services in the stack.
-- **Heap behavior:** The backend's V8 `--max-old-space-size` ceiling scales with host RAM. It subtracts a 6 GB reserve for the co-resident stack (Bitcoin Core, the selected indexer, any Lightning node, StartOS) and shares the remainder: with indexing off, 1/3 clamped 2–8 GB (a 16 GB host gets ~3.3 GB, a 32 GB host the 8 GB max); with any indexing toggle on, 1/2 clamped 4–8 GB. This is a ceiling, not a reservation — the backend's steady-state heap sits well under it, so a higher ceiling does not raise normal RAM use, it only lets a transient startup peak (reloading the on-disk mempool/RBF cache) finish instead of crashing with "JavaScript heap out of memory". A cache too large to reload even under the ceiling is handled by the boot guard (see [Clear Backend Cache](#clear-backend-cache)), not by enlarging the heap.
+- **RAM requirement:** The action rejects any submission with at least one indexing toggle on when the host has less than ~16 GB of total RAM (threshold: 15 GiB). Backend indexing competes with Bitcoin's dbcache, the selected Electrum indexer, and any Lightning node, so enabling it on a low-memory device is likely to OOM one of the services in the stack.
+- **Heap behavior:** The backend's V8 `--max-old-space-size` ceiling scales with host RAM. It subtracts a 6 GB reserve for the co-resident stack (Bitcoin, the selected indexer, any Lightning node, StartOS) and shares the remainder: with indexing off, 1/3 clamped 2–8 GB (a 16 GB host gets ~3.3 GB, a 32 GB host the 8 GB max); with any indexing toggle on, 1/2 clamped 4–8 GB. This is a ceiling, not a reservation — the backend's steady-state heap sits well under it, so a higher ceiling does not raise normal RAM use, it only lets a transient startup peak (reloading the on-disk mempool/RBF cache) finish instead of crashing with "JavaScript heap out of memory". A cache too large to reload even under the ceiling is handled by the boot guard (see [Clear Backend Cache](#clear-backend-cache)), not by enlarging the heap.
 
 ### Clear Backend Cache
 
@@ -241,7 +241,7 @@ Sync status is no longer checked internally. Mempool gates on its dependencies' 
 
 | Dependency     | Required | Version Range     | Health Gate                  | Mounted Volume (Dep Volume → Mount Point) | Purpose                                      |
 | -------------- | -------- | ----------------- | ---------------------------- | ----------------------------------------- | -------------------------------------------- |
-| Bitcoin Core   | Yes      | `>=28.3:7`        | `bitcoind`, `sync-progress`  | `main` → `/mnt/bitcoind`                  | Blockchain data via RPC                      |
+| Bitcoin        | Yes      | `>=28.3:7`        | `bitcoind`, `sync-progress`  | `main` → `/mnt/bitcoind`                  | Blockchain data via RPC                      |
 | Fulcrum        | Optional | `>=2.1.0:7`       | `primary`, `sync-progress`   | None                                      | Address lookups (recommended indexer)        |
 | Electrs        | Optional | `>=0.11.1:1`      | `electrs`, `sync`            | None                                      | Address lookups (alternate indexer)          |
 | LND            | Optional | `>=0.20.1-beta:1` | `lnd`, `sync-progress`       | `main` → `/mnt/lnd` (read-only)           | Lightning Network data (REST API + macaroon) |
@@ -249,7 +249,7 @@ Sync status is no longer checked internally. Mempool gates on its dependencies' 
 
 Only one indexer (Electrs or Fulcrum) can be active at a time. Only one Lightning node (LND or CLN) can be active at a time. Optional dependencies are only registered when selected by the corresponding action.
 
-Bitcoin Core's `.cookie` file at `/mnt/bitcoind/.cookie` is used for RPC authentication.
+Bitcoin's `.cookie` file at `/mnt/bitcoind/.cookie` is used for RPC authentication.
 
 ## Limitations and Differences
 

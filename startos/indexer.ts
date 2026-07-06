@@ -31,17 +31,15 @@ export async function selectedIndexer(
 
 /**
  * The selected indexer's plaintext (non-TLS) Electrum bridge address
- * (`<osIp>:50001`), replacing `<indexer>.startos:50001`. Falls back to a
- * loopback placeholder while the indexer is absent so a stale bridge address
- * never lingers; the `.const()` heals when it reappears.
+ * (`<osIp>:50001`), replacing `<indexer>.startos:50001`. `null` while the
+ * indexer is absent — the caller then omits `ELECTRUM.HOST`/`PORT` rather than
+ * writing a fake address; the `.const()` heals when it reappears.
  */
-export const electrumBridge = async (effects: T.Effects, indexer: Indexer) => {
+export const electrumBridge = (effects: T.Effects, indexer: Indexer) => {
   const { packageId, hostId } = INDEXER_HOSTS[indexer]
-  return (
-    (await bridgeAddress(effects, {
-      packageId,
-      hostId,
-      internalPort: electrumPort,
-    }).const()) ?? `127.0.0.1:${electrumPort}`
-  )
+  return bridgeAddress(effects, {
+    packageId,
+    hostId,
+    internalPort: electrumPort,
+  }).const()
 }
