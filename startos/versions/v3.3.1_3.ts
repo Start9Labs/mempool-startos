@@ -36,11 +36,7 @@ export const v_3_3_1_3 = VersionInfo.of({
           DATABASE?: { PASSWORD: string }
           LIGHTNING?: { ENABLED: boolean; BACKEND?: 'lnd' | 'cln' }
           MEMPOOL?: { BACKEND: 'electrum' }
-          ELECTRUM?: {
-            HOST: 'electrs.startos' | 'fulcrum.startos'
-            PORT: number
-            TLS_ENABLED: boolean
-          }
+          ELECTRUM?: { INDEXER: 'electrs' | 'fulcrum' }
         } = { DATABASE: { PASSWORD: 'mempool' } }
 
         if (lightning && lightning.type !== 'none') {
@@ -56,12 +52,7 @@ export const v_3_3_1_3 = VersionInfo.of({
         ) {
           custom.MEMPOOL = { BACKEND: 'electrum' }
           custom.ELECTRUM = {
-            HOST:
-              indexer?.type === 'fulcrum'
-                ? 'fulcrum.startos'
-                : 'electrs.startos',
-            PORT: 50001,
-            TLS_ENABLED: false,
+            INDEXER: indexer?.type === 'fulcrum' ? 'fulcrum' : 'electrs',
           }
         }
 

@@ -66,8 +66,8 @@ const mempoolSection = z.object({
 
 const coreRpcSection = z.object({
   // Resolved to bitcoind's LXC-bridge address at runtime (see init/watchHosts);
-  // the legacy `bitcoind.startos:8332` catches are just defaults now.
-  HOST: z.string().catch('bitcoind.startos'),
+  // this loopback placeholder is only the default before that resolves.
+  HOST: z.string().catch('127.0.0.1'),
   PORT: z.number().catch(8332),
   COOKIE_PATH: z
     .literal(`${btcMountpoint}/.cookie`)
@@ -137,8 +137,8 @@ const lndSection = z.object({
   TLS_CERT_PATH: z.literal(lndCertPath).catch(lndCertPath),
   MACAROON_PATH: z.literal(lndMacaroonPath).catch(lndMacaroonPath),
   // Resolved to LND's LXC-bridge REST address at runtime (see init/watchHosts);
-  // the legacy `https://lnd.startos:8080` catch is just a default now.
-  REST_API_URL: z.string().catch('https://lnd.startos:8080'),
+  // this loopback placeholder is only the default before that resolves.
+  REST_API_URL: z.string().catch('https://127.0.0.1:8080'),
   // configurable
   TIMEOUT: z.number().catch(10000),
 })
@@ -151,8 +151,11 @@ const clightningSection = z.object({
 })
 
 const socks5ProxySection = z.object({
-  // enforced
-  HOST: z.literal('startos').catch('startos'),
+  // SOCKS5 proxy for onion egress to external data servers. Dormant by default
+  // (ENABLED false) and not wired to a bridge address — tor's SOCKS is not
+  // bound on the LXC bridge and tor isn't a declared dependency — so HOST stays
+  // a loopback placeholder pending a follow-up that exposes tor SOCKS.
+  HOST: z.literal('127.0.0.1').catch('127.0.0.1'),
   PORT: z.literal(9050).catch(9050),
   // configurable
   ENABLED: z.boolean().catch(false),

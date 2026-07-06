@@ -1,9 +1,6 @@
 import { T, utils } from '@start9labs/start-sdk'
-import {
-  rpcHostId as btcRpcHostId,
-  rpcInterfaceId as btcRpcInterfaceId,
-} from 'bitcoin-core-startos/startos/utils'
-import { controlHostId, lndconnectRestId } from 'lnd-startos/startos/interfaces'
+import { rpcHostId, rpcPort } from 'bitcoin-core-startos/startos/utils'
+import { controlHostId, restPort } from 'lnd-startos/startos/interfaces'
 import { sdk } from './sdk'
 
 export const randomPassword = {
@@ -16,6 +13,9 @@ export function getDbPassword(): string {
 }
 
 export const uiPort = 8080
+// Host id of the Web UI binding (see interfaces.ts). Exported so dependents
+// (am-i-exposed / canary) can resolve Mempool's UI over the bridge.
+export const mainHostId = 'main'
 export const apiPort = 8999
 export const dbPort = 3306
 export const btcMountpoint = '/mnt/bitcoind'
@@ -26,58 +26,84 @@ export const lndCertPath = `${lndMountpoint}/tls.cert`
 export const lndMacaroonPath = `${lndMountpoint}/data/chain/bitcoin/mainnet/readonly.macaroon`
 
 /**
- * The IPv4 LXC-bridge hostname/port for an interface on an already-resolved
- * host. Pure — call it INSIDE a `sdk.host` map fn so `.const()` narrows its
- * reactivity to just this address. `.startos` DNS / container IPs are
- * deprecated; containers reach each other over this bridge. `ssl` narrows to
- * the http vs https variant when a binding exposes both.
+ * Bridge address (`<osIp>:<assigned external port>`) of a dependency's binding,
+ * as a minimal reactive value. Chain `.const()` in init/main: the mapped string
+ * only changes when the address itself does (deep-equal), so the calling
+ * context re-runs exactly on a dependency's install / uninstall / port-change
+ * and never on a routine dependency update. Chain `.once()` in an action
+ * context. `fallbackPort` keeps the value non-null while the dependency is
+ * absent — sanctioned only for an allocator-guaranteed port such as tor's SOCKS
+ * 9050 (Mempool has none, so its callers get `null` and substitute a loopback
+ * placeholder). Reads `net.assignedPort`, never an addressInfo hostname, so a
+ * disabled binding (e.g. LND locked) doesn't flap the value. Drop-in for the
+ * planned SDK `sdk.host.getBridgeAddress`.
  */
-export const bridgeAddr = (
-  host: utils.FilledHost | null,
-  interfaceId: string,
-  ssl?: boolean,
-) => {
-  const iface =
-    host &&
-    Object.values(host.bindings)
-      .flatMap((b) => Object.values(b.interfaces))
-      .find((i) => i.id === interfaceId)
-  return iface
-    ? iface.addressInfo
-        .filter({
-          kind: 'bridge',
-          predicate: (h) =>
-            h.metadata.kind === 'ipv4' && (ssl === undefined || h.ssl === ssl),
-        })
-        .hostnames[0]
-    : undefined
+export function bridgeAddress(
+  effects: T.Effects,
+  opts: {
+    packageId: string
+    hostId: string
+    internalPort: number
+    fallbackPort: number
+  },
+): { const(): Promise<string>; once(): Promise<string> }
+export function bridgeAddress(
+  effects: T.Effects,
+  opts: { packageId: string; hostId: string; internalPort: number },
+): { const(): Promise<string | null>; once(): Promise<string | null> }
+export function bridgeAddress(
+  effects: T.Effects,
+  opts: {
+    packageId: string
+    hostId: string
+    internalPort: number
+    fallbackPort?: number
+  },
+) {
+  const watchable = async () => {
+    const osIp = await sdk.getOsIp(effects)
+    return sdk.host.get(
+      effects,
+      { packageId: opts.packageId, hostId: opts.hostId },
+      (host) => {
+        const port =
+          host?.bindings[opts.internalPort]?.net.assignedPort ??
+          opts.fallbackPort
+        return port != null ? `${osIp}:${port}` : null
+      },
+    )
+  }
+  return {
+    const: async () => (await watchable()).const(),
+    once: async () => (await watchable()).once(),
+  }
 }
 
 /**
- * bitcoind's RPC `host`/`port` over the bridge, replacing `bitcoind.startos:8332`
- * in mempool-config.json. `undefined` until bitcoind's interface is available.
+ * bitcoind's RPC bridge address (`<osIp>:8332`) for mempool-config's `CORE_RPC`,
+ * replacing `bitcoind.startos:8332`. Falls back to a loopback placeholder while
+ * bitcoind is absent so a stale bridge address never lingers; the `.const()`
+ * heals when bitcoind reappears.
  */
-export const bitcoindRpcBridge = (effects: T.Effects) =>
-  sdk.host
-    .get(effects, { hostId: btcRpcHostId, packageId: 'bitcoind' }, (host) => {
-      const h = bridgeAddr(host, btcRpcInterfaceId, false)
-      return h && h.port != null ? { host: h.hostname, port: h.port } : undefined
-    })
-    .const()
+export const bitcoindRpcBridge = async (effects: T.Effects) =>
+  (await bridgeAddress(effects, {
+    packageId: 'bitcoind',
+    hostId: rpcHostId,
+    internalPort: rpcPort,
+  }).const()) ?? `127.0.0.1:${rpcPort}`
 
 /**
- * LND's REST base URL over the bridge (replaces `https://lnd.startos:8080`).
- * LND terminates its own TLS, so this reads the ssl bridge variant; Mempool
- * pins it against the mounted `tls.cert`. `undefined` until LND's interface is
- * available.
+ * LND's REST bridge address (`<osIp>:8080`), the base for `LND.REST_API_URL`.
+ * LND terminates its own TLS against the mounted `tls.cert`, so the caller
+ * prefixes `https://`. Resolves `null` until LND's REST binding publishes at
+ * wallet-unlock; falls back to a loopback placeholder meanwhile.
  */
-export const lndRestBridge = (effects: T.Effects) =>
-  sdk.host
-    .get(effects, { hostId: controlHostId, packageId: 'lnd' }, (host) => {
-      const h = bridgeAddr(host, lndconnectRestId, true)
-      return h && `https://${h.hostname}:${h.port}`
-    })
-    .const()
+export const lndRestBridge = async (effects: T.Effects) =>
+  (await bridgeAddress(effects, {
+    packageId: 'lnd',
+    hostId: controlHostId,
+    internalPort: restPort,
+  }).const()) ?? `127.0.0.1:${restPort}`
 
 // Performance profile presets. POLL_RATE_MS is the main-loop period;
 // MEMPOOL_BLOCKS_AMOUNT is the depth of the Rust GBT projection. Both

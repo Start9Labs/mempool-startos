@@ -1,52 +1,47 @@
 import { T } from '@start9labs/start-sdk'
 import { configJson } from './file-models/mempool-config.json'
-import { sdk } from './sdk'
-import { bridgeAddr } from './utils'
+import { bridgeAddress } from './utils'
 
 export type Indexer = 'electrs' | 'fulcrum'
 
-// electrs and fulcrum are optional dependencies that Mempool does not depend on
-// at the npm level, so their host/interface ids are string literals rather than
-// imported constants. Both expose the Electrum interface `main`; electrs groups
-// it under host `electrum`, fulcrum under host `main`.
+// electrs and fulcrum are optional dependencies Mempool does not depend on at
+// the npm level, so their host ids are string literals rather than imported
+// constants. Both bind the plaintext Electrum port 50001; electrs groups it
+// under host `electrum`, fulcrum under host `main`.
 const INDEXER_HOSTS: Record<Indexer, { packageId: string; hostId: string }> = {
   electrs: { packageId: 'electrs', hostId: 'electrum' },
   fulcrum: { packageId: 'fulcrum', hostId: 'main' },
 }
-const indexerInterfaceId = 'main'
+const electrumPort = 50001
 
 /**
- * The user's selected Electrum indexer. Reads the dedicated ELECTRUM.INDEXER
- * field, falling back once to the legacy `<indexer>.startos` value that older
- * installs stored in ELECTRUM.HOST before the selector got its own field
- * (watchHosts persists INDEXER, so the fallback is a one-time bootstrap). The
- * legacy read is `.once()` so callers that also write ELECTRUM.HOST don't
- * subscribe to it.
+ * The user's selected Electrum indexer, read from the dedicated ELECTRUM.INDEXER
+ * discriminator. Installs from before that field existed are bootstrapped from
+ * the legacy `<indexer>.startos` value by the 3.3.1:15 migration, so no runtime
+ * fallback is needed here.
  */
 export async function selectedIndexer(
   effects: T.Effects,
 ): Promise<Indexer | undefined> {
-  const indexer = await configJson
-    .read((c) => c.ELECTRUM.INDEXER)
-    .const(effects)
-  if (indexer) return indexer
-  const legacy = await configJson.read((c) => c.ELECTRUM.HOST).once()
-  if (legacy === 'fulcrum.startos') return 'fulcrum'
-  if (legacy === 'electrs.startos') return 'electrs'
-  return undefined
+  return (
+    (await configJson.read((c) => c.ELECTRUM.INDEXER).const(effects)) ??
+    undefined
+  )
 }
 
 /**
- * The selected indexer's plain (non-TLS) Electrum `host`/`port` over the bridge,
- * replacing `<indexer>.startos:50001`. `undefined` until the indexer's
- * interface is available.
+ * The selected indexer's plaintext (non-TLS) Electrum bridge address
+ * (`<osIp>:50001`), replacing `<indexer>.startos:50001`. Falls back to a
+ * loopback placeholder while the indexer is absent so a stale bridge address
+ * never lingers; the `.const()` heals when it reappears.
  */
-export const electrumBridge = (effects: T.Effects, indexer: Indexer) => {
+export const electrumBridge = async (effects: T.Effects, indexer: Indexer) => {
   const { packageId, hostId } = INDEXER_HOSTS[indexer]
-  return sdk.host
-    .get(effects, { hostId, packageId }, (host) => {
-      const h = bridgeAddr(host, indexerInterfaceId, false)
-      return h && h.port != null ? { host: h.hostname, port: h.port } : undefined
-    })
-    .const()
+  return (
+    (await bridgeAddress(effects, {
+      packageId,
+      hostId,
+      internalPort: electrumPort,
+    }).const()) ?? `127.0.0.1:${electrumPort}`
+  )
 }

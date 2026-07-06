@@ -3,52 +3,43 @@ import { electrumBridge, selectedIndexer } from '../indexer'
 import { sdk } from '../sdk'
 import { bitcoindRpcBridge, lndRestBridge } from '../utils'
 
+// A bridge address is always `<ipv4>:<port>`; split it into the HOST/PORT pair
+// the CORE_RPC / ELECTRUM sections of mempool-config expect.
+const hostPort = (addr: string) => {
+  const i = addr.lastIndexOf(':')
+  return { HOST: addr.slice(0, i), PORT: Number(addr.slice(i + 1)) }
+}
+
 /**
- * Resolves the addresses of Mempool's dependencies over the LXC bridge and pins
- * them into mempool-config.json before the backend starts. `.startos` DNS no
- * longer resolves in StartOS 2.0, so bitcoind's RPC, the selected Electrum
- * indexer, and (when LND is the Lightning backend) LND's REST endpoint are
- * looked up on the bridge each init and written into the config the backend
- * reads. The `sdk.host` reads are reactive, so this re-runs — and main restarts
- * the backend — whenever a resolved address changes. It never reads the fields
- * it writes (the indexer selector is read via ELECTRUM.INDEXER, not the HOST it
- * fills), so its own writes don't retrigger it.
+ * Resolves Mempool's dependency addresses over the LXC bridge and pins them into
+ * mempool-config.json before the backend starts (`.startos` DNS is gone in
+ * StartOS 2.0). Each address is a reactive `.const()` read whose mapped value
+ * changes only when the address itself does, so this re-runs — and main
+ * restarts the backend — exactly on a dependency's install / uninstall /
+ * port-change (and on an indexer/backend selection change), never on a routine
+ * dependency update. An absent dependency resolves to a loopback placeholder
+ * (rather than latching a recycled address) and heals automatically when the
+ * dependency returns.
  */
 export const watchHosts = sdk.setupOnInit(async (effects, _) => {
-  const bitcoind = await bitcoindRpcBridge(effects)
-
   const indexer = await selectedIndexer(effects)
-  const electrum = indexer
-    ? await electrumBridge(effects, indexer)
-    : undefined
-
   const lightning = await configJson.read((c) => c.LIGHTNING).const(effects)
-  const lndRest =
-    lightning?.ENABLED && lightning.BACKEND === 'lnd'
-      ? await lndRestBridge(effects)
-      : undefined
-
-  // Persist INDEXER whenever one is selected (bootstrapping legacy installs),
-  // and fill HOST/PORT once its address resolves.
-  const electrumPatch = indexer
-    ? electrum
-      ? {
-          INDEXER: indexer,
-          HOST: electrum.host,
-          PORT: electrum.port,
-          TLS_ENABLED: false,
-        }
-      : { INDEXER: indexer }
-    : undefined
+  const lndEnabled = lightning?.ENABLED && lightning.BACKEND === 'lnd'
 
   await configJson.merge(
     effects,
     {
-      ...(bitcoind && {
-        CORE_RPC: { HOST: bitcoind.host, PORT: bitcoind.port },
+      CORE_RPC: hostPort(await bitcoindRpcBridge(effects)),
+      ...(indexer && {
+        ELECTRUM: {
+          INDEXER: indexer,
+          ...hostPort(await electrumBridge(effects, indexer)),
+          TLS_ENABLED: false,
+        },
       }),
-      ...(electrumPatch && { ELECTRUM: electrumPatch }),
-      ...(lndRest && { LND: { REST_API_URL: lndRest } }),
+      ...(lndEnabled && {
+        LND: { REST_API_URL: `https://${await lndRestBridge(effects)}` },
+      }),
     },
     { allowWriteAfterConst: true },
   )

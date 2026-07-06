@@ -84,7 +84,7 @@ On first install, StartOS auto-generates a 22-character MariaDB password and wri
 
 Mempool is configured via `mempool-config.json`, managed by StartOS.
 
-Dependency network addresses are **resolved over the LXC bridge** at runtime and pinned into the config before the backend starts (see `startos/init/watchHosts.ts`); `.startos` DNS is no longer used in StartOS 2.0. This affects `CORE_RPC.HOST`/`PORT` (bitcoind), `ELECTRUM.HOST`/`PORT` (the selected indexer), and `LND.REST_API_URL` — their stored values are dynamic bridge addresses, and the config's `.catch` defaults (`bitcoind.startos:8332` etc.) are only fallbacks.
+Dependency network addresses are **resolved over the LXC bridge** at runtime and pinned into the config before the backend starts (see `startos/init/watchHosts.ts`); `.startos` DNS is no longer used in StartOS 2.0. This affects `CORE_RPC.HOST`/`PORT` (bitcoind), `ELECTRUM.HOST`/`PORT` (the selected indexer), and `LND.REST_API_URL` — their stored values are dynamic bridge addresses read reactively from each binding's assigned port, so `watchHosts` re-resolves (and main restarts the backend) only when an address actually changes, never on a routine dependency update. While a dependency is absent the field holds a `127.0.0.1` loopback placeholder (also the config's `.catch` default) and heals automatically when the dependency returns.
 
 ### Auto-Configured by StartOS
 
