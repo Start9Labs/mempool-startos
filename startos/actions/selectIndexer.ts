@@ -1,7 +1,7 @@
 import { storeJson } from '../file-models/store.json'
-import { selectedIndexer } from '../indexer'
 import { i18n } from '../i18n'
 import { sdk } from '../sdk'
+import { selectedIndexer } from '../utils'
 const { InputSpec, Value } = sdk
 
 const indexerInputSpec = InputSpec.of({

@@ -1,7 +1,11 @@
 import { configJson } from '../file-models/mempool-config.json'
-import { electrumBridge, selectedIndexer } from '../indexer'
 import { sdk } from '../sdk'
-import { bitcoindRpcBridge, lndRestBridge } from '../utils'
+import {
+  bitcoindRpcBridge,
+  electrumBridge,
+  lndRestBridge,
+  selectedIndexer,
+} from '../utils'
 
 // A bridge address is always `<ipv4>:<port>`; split it into the HOST/PORT pair
 // the CORE_RPC / ELECTRUM sections of mempool-config expect.

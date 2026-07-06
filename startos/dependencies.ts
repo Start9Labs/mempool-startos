@@ -1,9 +1,9 @@
 import { T } from '@start9labs/start-sdk'
 import { autoconfig } from 'bitcoin-core-startos/startos/actions/config/autoconfig'
 import { configJson } from './file-models/mempool-config.json'
-import { selectedIndexer } from './indexer'
 import { i18n } from './i18n'
 import { sdk } from './sdk'
+import { selectedIndexer } from './utils'
 
 export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
   await sdk.action.createTask(effects, 'bitcoind', autoconfig, 'critical', {
