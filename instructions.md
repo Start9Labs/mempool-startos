@@ -42,6 +42,10 @@ Open the **Web UI** interface to reach Mempool. The home page shows the live mem
 - **First run.** When first running Mempool, previous block fee estimates show as zero values until the service catches up. Lookups may be slow or time out while the service is still warming up, or if there are too many other things running on your system.
 - **After an update.** Your mempool needs to reindex following an update, which can take up to an hour depending on your hardware.
 
+## Backups
+
+StartOS backs up your Mempool **configuration** — your indexer, Lightning, and indexing selections. Everything Mempool displays is derived from your own Bitcoin node, so the database itself is not copied into the backup; after a restore, Mempool rebuilds it by re-indexing from your node. Recent blocks and fees appear quickly, and full historical charts — mining, hashrate, and any block-summary indexing you enabled — backfill over the next few hours, adding some load on your Bitcoin node while they catch up.
+
 ## Limitations
 
 - **Mainnet only.** Testnet, testnet4, signet, regtest, and Liquid are not available.

@@ -58,6 +58,7 @@
 | `cache`  | `/backend/cache` | Mempool cache data    |
 | `db`     | `/var/lib/mysql` | MariaDB database      |
 | `config` | —                | Mempool configuration |
+| `startos`| —                | StartOS store (`store.json`) |
 
 StartOS-specific files:
 
@@ -211,19 +212,20 @@ Recovers a backend stuck failing to start with a "JavaScript heap out of memory"
 
 ## Backups and Restore
 
-Backups capture only the `config` volume — the generated database password plus every Indexer / Lightning / indexing selection. The MariaDB database and the backend disk cache are deliberately excluded: both are derived entirely from Bitcoin Core, so they are rebuilt after a restore rather than copied.
+Backups capture the `config` and `startos` volumes — the generated database password and every Indexer / Lightning / indexing selection. The MariaDB database and the backend disk cache are deliberately excluded: both are derived entirely from Bitcoin, so they are rebuilt after a restore rather than copied.
 
-**Volume backed up:**
+**Volumes backed up:**
 
-- `config` — configuration (DB password + user selections)
+- `config` — Mempool configuration (DB password + user selections)
+- `startos` — StartOS state (e.g. the selected indexer in `store.json`)
 
 **NOT included in backup:**
 
-- `db` — MariaDB data; rebuilt by re-indexing from Bitcoin Core on restore
+- `db` — MariaDB data; rebuilt by re-indexing from Bitcoin on restore
 - `cache` — backend disk cache; rebuilt from live data on the next start
 - `main` — unused
 
-**Restore behavior:** The database starts empty and Mempool re-indexes it from Bitcoin Core. Recent data appears quickly; full historical indexes — mining, hashrate, and any enabled block-summary/audit indexing — backfill over the following hours. The re-index runs against Bitcoin Core's RPC, so expect elevated load until it completes.
+**Restore behavior:** The database starts empty and Mempool re-indexes it from Bitcoin. Recent data appears quickly; full historical indexes — mining, hashrate, and any enabled block-summary/audit indexing — backfill over the following hours. The re-index runs against the Bitcoin node's RPC, so expect elevated load until it completes.
 
 The database is not dumped into the backup: a `mysqldump`-based backup exceeds the SDK/StartOS backup timeouts on large indexed installs (a 30 s InnoDB-readiness wait and a ~180 s dump/copy ceiling, neither tunable from the package), and the data is reconstructible from the blockchain regardless.
 
