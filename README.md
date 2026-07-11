@@ -210,19 +210,21 @@ Recovers a backend stuck failing to start with a "JavaScript heap out of memory"
 
 ## Backups and Restore
 
-**Database:** Uses `mysqldump`/`mysql` for MariaDB instead of raw volume rsync. The dump is written directly to the backup target.
+Backups capture only the `config` volume — the generated database password plus every Indexer / Lightning / indexing selection. The MariaDB database and the backend disk cache are deliberately excluded: both are derived entirely from Bitcoin Core, so they are rebuilt after a restore rather than copied.
 
-**Volumes backed up:**
+**Volume backed up:**
 
-- `db` — MariaDB data (via mysqldump)
-- `cache` — Mempool cache
-- `config` — Configuration
+- `config` — configuration (DB password + user selections)
 
 **NOT included in backup:**
 
-- `main` volume
+- `db` — MariaDB data; rebuilt by re-indexing from Bitcoin Core on restore
+- `cache` — backend disk cache; rebuilt from live data on the next start
+- `main` — unused
 
-**Restore behavior:** All historical data is restored. The database is rebuilt from the dump via `mysql` import. May need time to re-sync recent blocks.
+**Restore behavior:** The database starts empty and Mempool re-indexes it from Bitcoin Core. Recent data appears quickly; full historical indexes — mining, hashrate, and any enabled block-summary/audit indexing — backfill over the following hours. The re-index runs against Bitcoin Core's RPC, so expect elevated load until it completes.
+
+The database is not dumped into the backup: a `mysqldump`-based backup exceeds the SDK/StartOS backup timeouts on large indexed installs (a 30 s InnoDB-readiness wait and a ~180 s dump/copy ceiling, neither tunable from the package), and the data is reconstructible from the blockchain regardless.
 
 ## Health Checks
 
@@ -338,5 +340,5 @@ dependency_health_gates:
   - electrs: [electrs, sync] # when selected indexer
   - lnd: [lnd, sync-progress] # when Lightning=lnd
   - c-lightning: [lightningd, check-synced] # when Lightning=cln
-backup_strategy: mysqldump (db) + volume rsync (cache, config)
+backup_strategy: volume rsync (config only); db + cache rebuilt on restore
 ```

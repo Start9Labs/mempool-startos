@@ -37,6 +37,10 @@ Open the **Web UI** interface to reach Mempool. The home page shows the live mem
   - **Indexing toggles** — **Block Summaries Indexing**, **Goggles Indexing**, **Block Audit** (requires Block Summaries), and **CPFP Indexing**. Each trades disk and CPU for richer block visualizations. Enabling any toggle triggers a historical backfill on the next start that can take several hours. The action rejects any submission with an indexing toggle on when the device has less than 16 GB of system RAM.
 - **Clear Backend Cache** — delete the backend's on-disk mempool/RBF cache. Use it if the backend is stuck failing to start with a "JavaScript heap out of memory" error while loading its cache. Stop Mempool first; the cache is rebuilt automatically on the next start (a short mempool resync — blocks, database, and settings are untouched). Mempool also does this on its own: if a start crashes before the API becomes healthy, the next start drops the cache and rebuilds from live data, so a boot loop self-heals without you touching anything.
 
+### Backups
+
+StartOS backs up your Mempool **configuration** — your indexer, Lightning, and indexing selections. Everything Mempool displays is derived from your own Bitcoin node, so the database itself is not copied into the backup; after a restore, Mempool rebuilds it by re-indexing from Bitcoin Core. Recent blocks and fees appear quickly, and full historical charts — mining, hashrate, and any block-summary indexing you enabled — backfill over the next few hours, adding some load on Bitcoin Core while they catch up.
+
 ## Limitations
 
 - **Mainnet only.** Testnet, testnet4, signet, regtest, and Liquid are not available.

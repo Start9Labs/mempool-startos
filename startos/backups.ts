@@ -1,21 +1,8 @@
-import { configJson } from './file-models/mempool-config.json'
 import { sdk } from './sdk'
 
+// Back up config only — the db and cache are derived from Bitcoin Core and
+// rebuilt by re-indexing on restore, so dumping the db (which failed on large
+// indexed installs) is unnecessary.
 export const { createBackup, restoreInit } = sdk.setupBackups(async () =>
-  sdk.Backups.withMysqlDump({
-    imageId: 'mariadb',
-    dbVolume: 'db',
-    datadir: '/var/lib/mysql',
-    database: 'mempool',
-    user: 'mempool',
-    password: async () => {
-      const password = await configJson.read((s) => s.DATABASE.PASSWORD).once()
-      if (!password) throw new Error('No database password found in config')
-      return password
-    },
-    engine: 'mariadb',
-    readyCommand: ['healthcheck.sh', '--connect', '--innodb_initialized'],
-  })
-    .addVolume('cache')
-    .addVolume('config'),
+  sdk.Backups.ofVolumes('config'),
 )
