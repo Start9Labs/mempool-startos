@@ -123,7 +123,7 @@ const electrumPort = 50001
 /**
  * The user's selected Electrum indexer, StartOS state held in store.json (not in
  * the upstream mempool-config.json). Installs predating store.json are seeded
- * from the legacy `<indexer>.startos` value in ELECTRUM.HOST by the 3.3.1:15
+ * from the legacy `<indexer>.startos` value in ELECTRUM.HOST by the 3.3.1:17
  * migration, so no runtime fallback is needed here.
  */
 export async function selectedIndexer(

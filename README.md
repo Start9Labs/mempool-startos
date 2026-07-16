@@ -54,7 +54,7 @@
 
 | Volume   | Mount Point      | Purpose               |
 | -------- | ---------------- | --------------------- |
-| `main`   | —                | StartOS state         |
+| `main`   | —                | Unused (reserved)     |
 | `cache`  | `/backend/cache` | Mempool cache data    |
 | `db`     | `/var/lib/mysql` | MariaDB database      |
 | `config` | —                | Mempool configuration |
@@ -104,13 +104,13 @@ Dependency network addresses are **resolved over the LXC bridge** at runtime and
 | `REDIS.ENABLED`                   | `false`                              | Redis disabled                                            |
 | `REPLICATION.ENABLED`             | `false`                              | Replication disabled                                      |
 | `STRATUM.ENABLED`                 | `false`                              | Stratum disabled                                          |
-| `SOCKS5PROXY.HOST` / `.PORT`      | `startos` / `9050`                   | Tor SOCKS proxy (only used if `SOCKS5PROXY.ENABLED=true`) |
+| `SOCKS5PROXY.HOST` / `.PORT`      | `127.0.0.1` / `9050`                 | SOCKS5 proxy for external onion data servers (disabled by default; `HOST` is a loopback placeholder until Tor SOCKS is bridged) |
 
 ### Written by Actions
 
 | Setting                                    | Action                   | Notes                                                         |
 | ------------------------------------------ | ------------------------ | ------------------------------------------------------------- |
-| `ELECTRUM.INDEXER`                         | Select Indexer           | `fulcrum` or `electrs` — the stable choice; `ELECTRUM.HOST`/`.PORT` (TLS off) are then resolved to that indexer's bridge address at runtime |
+| `store.json` `indexer`                     | Select Indexer           | `fulcrum` or `electrs` — StartOS state on the `startos` volume, not a `mempool-config.json` key; `ELECTRUM.HOST`/`.PORT` (TLS off) are then resolved to that indexer's bridge address at runtime |
 | `LIGHTNING.ENABLED` / `.BACKEND`           | Enable Lightning         | Backend is `lnd` or `cln`                                     |
 | `LND.TLS_CERT_PATH` / `.MACAROON_PATH`     | Enable Lightning         | Paths under the LND mount                                     |
 | `CLIGHTNING.SOCKET`                        | Enable Lightning         | `lightning-rpc` socket under the CLN mount                    |
@@ -150,7 +150,7 @@ The backend API runs on port 8999 internally but is not exposed as a separate in
 - **Inputs:** Select one of: Fulcrum (recommended), Electrs
 - **Outputs:** None
 
-Selecting an indexer enables address search and transaction history features. Records the choice in `ELECTRUM.INDEXER`; the indexer's `ELECTRUM.HOST`/`.PORT` are then resolved over the LXC bridge at runtime.
+Selecting an indexer enables address search and transaction history features. Records the choice as StartOS state in `store.json` (on the `startos` volume, not in `mempool-config.json`); the indexer's `ELECTRUM.HOST`/`.PORT` are then resolved over the LXC bridge at runtime.
 
 ### Enable Lightning
 
@@ -243,11 +243,11 @@ Sync status is no longer checked internally. Mempool gates on its dependencies' 
 
 | Dependency     | Required | Version Range     | Health Gate                  | Mounted Volume (Dep Volume → Mount Point) | Purpose                                      |
 | -------------- | -------- | ----------------- | ---------------------------- | ----------------------------------------- | -------------------------------------------- |
-| Bitcoin        | Yes      | `>=28.3:7`        | `bitcoind`, `sync-progress`  | `main` → `/mnt/bitcoind`                  | Blockchain data via RPC                      |
-| Fulcrum        | Optional | `>=2.1.0:7`       | `primary`, `sync-progress`   | None                                      | Address lookups (recommended indexer)        |
-| Electrs        | Optional | `>=0.11.1:1`      | `electrs`, `sync`            | None                                      | Address lookups (alternate indexer)          |
-| LND            | Optional | `>=0.20.1-beta:1` | `lnd`, `sync-progress`       | `main` → `/mnt/lnd` (read-only)           | Lightning Network data (REST API + macaroon) |
-| Core Lightning | Optional | `>=25.12.1:4`     | `lightningd`, `check-synced` | `main/bitcoin` → `/mnt/cln` (read-only)   | Lightning Network data (Unix socket)         |
+| Bitcoin        | Yes      | `>=28.4:13`       | `bitcoind`, `sync-progress`  | `main` → `/mnt/bitcoind`                  | Blockchain data via RPC                      |
+| Fulcrum        | Optional | `>=2.1.1:6`       | `primary`, `sync-progress`   | None                                      | Address lookups (recommended indexer)        |
+| Electrs        | Optional | `>=0.11.1:9`      | `electrs`, `sync`            | None                                      | Address lookups (alternate indexer)          |
+| LND            | Optional | `>=0.21.1-beta:0` | `lnd`, `sync-progress`       | `main` → `/mnt/lnd` (read-only)           | Lightning Network data (REST API + macaroon) |
+| Core Lightning | Optional | `>=26.6.1:2`      | `lightningd`, `check-synced` | `main/bitcoin` → `/mnt/cln` (read-only)   | Lightning Network data (Unix socket)         |
 
 Only one indexer (Electrs or Fulcrum) can be active at a time. Only one Lightning node (LND or CLN) can be active at a time. Optional dependencies are only registered when selected by the corresponding action.
 
@@ -294,30 +294,31 @@ images:
   mariadb: mariadb
 architectures: [x86_64, aarch64]
 volumes:
-  main: (StartOS state)
+  main: (unused)
   cache: /backend/cache
   db: /var/lib/mysql
   config: (mempool-config.json)
+  startos: (StartOS state — store.json, selected indexer)
 ports:
   ui: 8080
   api: 8999 (internal)
 dependencies:
   bitcoind:
     required: true
-    version_range: '>=28.3:7'
+    version_range: '>=28.4:13'
     required_config: { txindex: true, prune: 0 }
   fulcrum:
     required: false
-    version_range: '>=2.1.0:7'
+    version_range: '>=2.1.1:6'
   electrs:
     required: false
-    version_range: '>=0.11.1:1'
+    version_range: '>=0.11.1:9'
   lnd:
     required: false
-    version_range: '>=0.20.1-beta:1'
+    version_range: '>=0.21.1-beta:0'
   c-lightning:
     required: false
-    version_range: '>=25.12.1:4'
+    version_range: '>=26.6.1:2'
 startos_managed_env_vars:
   mariadb:
     - MARIADB_RANDOM_ROOT_PASSWORD
@@ -343,5 +344,5 @@ dependency_health_gates:
   - electrs: [electrs, sync] # when selected indexer
   - lnd: [lnd, sync-progress] # when Lightning=lnd
   - c-lightning: [lightningd, check-synced] # when Lightning=cln
-backup_strategy: volume rsync (config only); db + cache rebuilt on restore
+backup_strategy: volume backup (config + startos); db + cache rebuilt on restore
 ```
