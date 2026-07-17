@@ -71,18 +71,6 @@ const inputSpec = InputSpec.of({
   }),
 })
 
-// The subset of upstream log priorities the action offers. The file model
-// accepts the full upstream set (a hand-edited config stays valid); anything
-// outside this subset is displayed as 'info' in the action form.
-const ACTION_LOG_LEVELS = ['debug', 'info', 'warn', 'err'] as const
-type ActionLogLevel = (typeof ACTION_LOG_LEVELS)[number]
-
-function matchLogLevel(value: string): ActionLogLevel {
-  return (ACTION_LOG_LEVELS as readonly string[]).includes(value)
-    ? (value as ActionLogLevel)
-    : 'info'
-}
-
 function matchPerformanceProfile(
   pollRateMs: number,
   blocksAmount: number,
@@ -131,7 +119,7 @@ export const indexingAndPerformance = sdk.Action.withInput(
       GOGGLES_INDEXING: MEMPOOL.GOGGLES_INDEXING,
       AUDIT: MEMPOOL.AUDIT,
       CPFP_INDEXING: MEMPOOL.CPFP_INDEXING,
-      STDOUT_LOG_MIN_PRIORITY: matchLogLevel(MEMPOOL.STDOUT_LOG_MIN_PRIORITY),
+      STDOUT_LOG_MIN_PRIORITY: MEMPOOL.STDOUT_LOG_MIN_PRIORITY,
     }
   },
 
@@ -156,7 +144,7 @@ export const indexingAndPerformance = sdk.Action.withInput(
         GOGGLES_INDEXING: input.GOGGLES_INDEXING,
         AUDIT: input.AUDIT,
         CPFP_INDEXING: input.CPFP_INDEXING,
-        STDOUT_LOG_MIN_PRIORITY: matchLogLevel(input.STDOUT_LOG_MIN_PRIORITY),
+        STDOUT_LOG_MIN_PRIORITY: input.STDOUT_LOG_MIN_PRIORITY,
       },
       STATISTICS: { ENABLED: input.STATISTICS_ENABLED },
     })
