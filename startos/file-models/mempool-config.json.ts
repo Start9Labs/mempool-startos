@@ -37,8 +37,13 @@ const mempoolSection = z.object({
   EXTERNAL_MAX_RETRY: z.number().catch(1),
   EXTERNAL_RETRY_INTERVAL: z.number().catch(0),
   USER_AGENT: z.string().catch('mempool'),
+  // Upstream syslog-style priorities (backend/src/logger.ts). The wrapper
+  // defaults to 'info' (upstream's in-source default is 'debug') and the
+  // Indexing and Performance action exposes the debug/info/warn/err subset —
+  // notably 'debug', which is the only level at which the block-summaries /
+  // goggles / CPFP backfill logs per-block progress (issue #63).
   STDOUT_LOG_MIN_PRIORITY: z
-    .enum(['trade', 'debug', 'info', 'warn', 'error'])
+    .enum(['emerg', 'alert', 'crit', 'err', 'warn', 'notice', 'info', 'debug'])
     .catch('info'),
   AUTOMATIC_POOLS_UPDATE: z.boolean().catch(false),
   POOLS_JSON_URL: z

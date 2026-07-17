@@ -56,7 +56,32 @@ const inputSpec = InputSpec.of({
     ),
     default: false,
   }),
+  STDOUT_LOG_MIN_PRIORITY: Value.select({
+    name: i18n('Log Level'),
+    description: i18n(
+      'Minimum priority written to the service log. Info (the default) shows normal operation but hides per-block indexing backfill progress, which upstream logs at debug priority. Set to Debug to watch backfill progress live; switch back to Info afterward to reduce log noise.',
+    ),
+    default: 'info',
+    values: {
+      debug: i18n('Debug (verbose — shows indexing backfill progress)'),
+      info: i18n('Info (default)'),
+      warn: i18n('Warning'),
+      err: i18n('Error'),
+    },
+  }),
 })
+
+// The subset of upstream log priorities the action offers. The file model
+// accepts the full upstream set (a hand-edited config stays valid); anything
+// outside this subset is displayed as 'info' in the action form.
+const ACTION_LOG_LEVELS = ['debug', 'info', 'warn', 'err'] as const
+type ActionLogLevel = (typeof ACTION_LOG_LEVELS)[number]
+
+function matchLogLevel(value: string): ActionLogLevel {
+  return (ACTION_LOG_LEVELS as readonly string[]).includes(value)
+    ? (value as ActionLogLevel)
+    : 'info'
+}
 
 function matchPerformanceProfile(
   pollRateMs: number,
@@ -82,7 +107,7 @@ export const indexingAndPerformance = sdk.Action.withInput(
   {
     name: i18n('Indexing and Performance'),
     description: i18n(
-      'Tune backend behavior: poll/projection profile, mempool statistics, and optional indexing features. Changes apply on the next service restart. Enabling any indexing toggle triggers a historical backfill on the next start, which can take several hours and consume significant disk space; indexing requires at least 16 GB of system RAM and is rejected on lower-memory devices.',
+      'Tune backend behavior: poll/projection profile, mempool statistics, log level, and optional indexing features. Changes apply on the next service restart. Enabling any indexing toggle triggers a historical backfill on the next start, which can take several hours and consume significant disk space; at the default Info log level the service log appears idle while the backfill runs (progress is logged at Debug only), and restarting the service interrupts the backfill and delays completion. Indexing requires at least 16 GB of system RAM and is rejected on lower-memory devices.',
     ),
     warning: null,
     allowedStatuses: 'any',
@@ -106,6 +131,7 @@ export const indexingAndPerformance = sdk.Action.withInput(
       GOGGLES_INDEXING: MEMPOOL.GOGGLES_INDEXING,
       AUDIT: MEMPOOL.AUDIT,
       CPFP_INDEXING: MEMPOOL.CPFP_INDEXING,
+      STDOUT_LOG_MIN_PRIORITY: matchLogLevel(MEMPOOL.STDOUT_LOG_MIN_PRIORITY),
     }
   },
 
@@ -130,6 +156,7 @@ export const indexingAndPerformance = sdk.Action.withInput(
         GOGGLES_INDEXING: input.GOGGLES_INDEXING,
         AUDIT: input.AUDIT,
         CPFP_INDEXING: input.CPFP_INDEXING,
+        STDOUT_LOG_MIN_PRIORITY: matchLogLevel(input.STDOUT_LOG_MIN_PRIORITY),
       },
       STATISTICS: { ENABLED: input.STATISTICS_ENABLED },
     })
