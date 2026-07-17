@@ -73,7 +73,7 @@ StartOS-specific files:
 3. On install, StartOS creates a **critical task** to select an Electrum indexer for address lookups
 4. Mempool will not start until Bitcoin (and the selected indexer, and the Lightning backend if configured) report healthy via their StartOS health checks — see [Health Checks](#health-checks)
 5. Optionally run "Enable Lightning" for Lightning network data
-6. Optionally run "Indexing and Performance" to change the performance profile, toggle statistics, or opt in to block-summary, goggles, audit, and/or CPFP indexing
+6. Optionally run "Indexing and Performance" to change the performance profile, toggle statistics, adjust the service-log level, or opt in to block-summary, goggles, audit, and/or CPFP indexing
 
 On first install, StartOS auto-generates a 22-character MariaDB password and writes it to `mempool-config.json`. The database is localhost-only.
 
@@ -121,6 +121,7 @@ Dependency network addresses are **resolved over the LXC bridge** at runtime and
 | `MEMPOOL.GOGGLES_INDEXING`                 | Indexing and Performance | Default off                                                   |
 | `MEMPOOL.AUDIT`                            | Indexing and Performance | Default off; requires `BLOCKS_SUMMARIES_INDEXING`             |
 | `MEMPOOL.CPFP_INDEXING`                    | Indexing and Performance | Default off                                                   |
+| `MEMPOOL.STDOUT_LOG_MIN_PRIORITY`          | Indexing and Performance | Default `info`; set to `debug` to watch indexing backfill progress |
 
 ### Bitcoin Requirements
 
@@ -168,7 +169,7 @@ On hosts with less than ~16 GB of total RAM (threshold: 15 GiB) the action carri
 ### Indexing and Performance
 
 - **Name:** Indexing and Performance
-- **Purpose:** Tune backend CPU/responsiveness, toggle the statistics service, and opt in to optional indexing features
+- **Purpose:** Tune backend CPU/responsiveness, toggle the statistics service, set the service-log level, and opt in to optional indexing features
 - **Visibility:** Enabled
 - **Availability:** Any status
 - **Inputs:**
@@ -178,9 +179,10 @@ On hosts with less than ~16 GB of total RAM (threshold: 15 GiB) the action carri
   - **Goggles Indexing** — toggle (default off)
   - **Block Audit** — toggle (default off; requires Block Summaries Indexing)
   - **CPFP Indexing** — toggle (default off)
+  - **Log Level** — one of `debug` / `info` / `warn` / `err` (default `info`)
 - **Outputs:** None
 
-Sets `MEMPOOL.POLL_RATE_MS`, `MEMPOOL.MEMPOOL_BLOCKS_AMOUNT`, `STATISTICS.ENABLED`, `MEMPOOL.BLOCKS_SUMMARIES_INDEXING`, `MEMPOOL.GOGGLES_INDEXING`, `MEMPOOL.AUDIT`, and `MEMPOOL.CPFP_INDEXING` on the configuration. Changes apply on the next service restart.
+Sets `MEMPOOL.POLL_RATE_MS`, `MEMPOOL.MEMPOOL_BLOCKS_AMOUNT`, `STATISTICS.ENABLED`, `MEMPOOL.BLOCKS_SUMMARIES_INDEXING`, `MEMPOOL.GOGGLES_INDEXING`, `MEMPOOL.AUDIT`, `MEMPOOL.CPFP_INDEXING`, and `MEMPOOL.STDOUT_LOG_MIN_PRIORITY` on the configuration. Changes apply on the next service restart.
 
 **Performance profile.** The Mempool backend recomputes a Rust-based block-template projection on every poll; the cost scales with poll frequency and projection depth, and on healthy nodes this loop is the dominant background CPU consumer. The profile picks both together:
 
@@ -192,8 +194,11 @@ Sets `MEMPOOL.POLL_RATE_MS`, `MEMPOOL.MEMPOOL_BLOCKS_AMOUNT`, `STATISTICS.ENABLE
 
 **Statistics.** When on (default, matching upstream), the backend samples mempool throughput at 1 Hz and writes periodic statistics rows to MariaDB to power the dashboard charts. Turning it off stops the sampler and the writes; saves background CPU and disk I/O at the cost of the tx/s + vbytes/s charts.
 
+**Log level.** Sets `MEMPOOL.STDOUT_LOG_MIN_PRIORITY`, the minimum priority the backend writes to stdout (upstream syslog-style priorities; the action exposes the useful `debug` / `info` / `warn` / `err` subset, default `info`). Upstream's in-source default is `debug`; the wrapper keeps `info` for a quiet steady-state log. Switch to `debug` to watch per-block indexing backfill progress (rate, percent complete, elapsed time), then back to `info` afterward — at `debug` the backend is chatty.
+
 **Indexing.** All four indexing toggles are off by default, matching upstream. Enabling any of them triggers a historical backfill on the next service restart, which can take several hours and consume significant disk space.
 
+- **Backfill visibility (issue #63):** Upstream logs per-block backfill progress at `debug` priority only, so at the default `info` log level the service log appears completely idle while a backfill runs — the only `info`+ output is the occasional paired `503` retry error when Bitcoin Core's RPC work queue saturates, which is expected, self-recovering, and non-fatal. To make this legible, the wrapper logs a notice on every start with an indexing feature enabled (a backfill may be in progress; 503 retries are non-fatal; restarting the service interrupts the backfill and delays completion), plus a pointer to the Log Level setting when the level is above `debug`. Do not restart the service because the log looks quiet — watch for the upstream `NOTICE: ... indexing completed` lines instead, or raise the log level.
 - **RAM requirement:** The action rejects any submission with at least one indexing toggle on when the host has less than ~16 GB of total RAM (threshold: 15 GiB). Backend indexing competes with Bitcoin's dbcache, the selected Electrum indexer, and any Lightning node, so enabling it on a low-memory device is likely to OOM one of the services in the stack.
 - **Heap behavior:** The backend's V8 `--max-old-space-size` ceiling scales with host RAM. It subtracts a 6 GB reserve for the co-resident stack (Bitcoin, the selected indexer, any Lightning node, StartOS) and shares the remainder: with indexing off, 1/3 clamped 2–8 GB (a 16 GB host gets ~3.3 GB, a 32 GB host the 8 GB max); with any indexing toggle on, 1/2 clamped 4–8 GB. This is a ceiling, not a reservation — the backend's steady-state heap sits well under it, so a higher ceiling does not raise normal RAM use, it only lets a transient startup peak (reloading the on-disk mempool/RBF cache) finish instead of crashing with "JavaScript heap out of memory". A cache too large to reload even under the ceiling is handled by the boot guard (see [Clear Backend Cache](#clear-backend-cache)), not by enlarging the heap.
 
