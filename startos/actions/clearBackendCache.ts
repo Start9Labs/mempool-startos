@@ -7,7 +7,7 @@ export const clearBackendCache = sdk.Action.withoutInput(
   async () => ({
     name: i18n('Clear Backend Cache'),
     description: i18n(
-      'Delete the on-disk cache used by the Mempool backend (mempool and RBF data). Use this if the backend fails to start with a JavaScript heap out-of-memory error while loading its cache. The cache is rebuilt from Bitcoin Core and the selected indexer on the next start; you lose only a short mempool resync and recent RBF history, while blocks, database, and settings are untouched. Stop Mempool before running this action.',
+      'Delete the on-disk cache used by the Mempool backend (mempool and RBF data). Use this if the backend fails to start with a JavaScript heap out-of-memory error while loading its cache. The cache is rebuilt from Bitcoin and the selected indexer on the next start; you lose only a short mempool resync and recent RBF history, while blocks, database, and settings are untouched. Stop Mempool before running this action.',
     ),
     warning: i18n(
       'This deletes the backend cache. Mempool rebuilds it automatically on the next start.',

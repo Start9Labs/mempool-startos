@@ -56,9 +56,25 @@ const inputSpec = InputSpec.of({
     ),
     default: false,
   }),
+  STDOUT_LOG_MIN_PRIORITY: Value.select({
+    name: i18n('Log Level'),
+    description: i18n(
+      'Minimum priority written to the service log. Info (the default) shows normal operation but hides per-block indexing backfill progress, which upstream logs at debug priority. Set to Debug to watch backfill progress live; switch back to Info afterward to reduce log noise.',
+    ),
+    default: 'info',
+    values: {
+      debug: i18n('Debug (verbose — shows indexing backfill progress)'),
+      info: i18n('Info (default)'),
+      warn: i18n('Warning'),
+      err: i18n('Error'),
+    },
+  }),
 })
 
-function matchPerformanceProfile(pollRateMs: number, blocksAmount: number): PerformanceProfile {
+function matchPerformanceProfile(
+  pollRateMs: number,
+  blocksAmount: number,
+): PerformanceProfile {
   for (const [name, p] of Object.entries(PROFILES) as [
     PerformanceProfile,
     (typeof PROFILES)[PerformanceProfile],
@@ -79,7 +95,7 @@ export const indexingAndPerformance = sdk.Action.withInput(
   {
     name: i18n('Indexing and Performance'),
     description: i18n(
-      'Tune backend behavior: poll/projection profile, mempool statistics, and optional indexing features. Changes apply on the next service restart. Enabling any indexing toggle triggers a historical backfill on the next start, which can take several hours and consume significant disk space; indexing requires at least 16 GB of system RAM and is rejected on lower-memory devices.',
+      'Tune backend behavior: poll/projection profile, mempool statistics, log level, and optional indexing features. Changes apply on the next service restart. Enabling any indexing toggle triggers a historical backfill on the next start, which can take several hours and consume significant disk space; at the default Info log level the service log appears idle while the backfill runs (progress is logged at Debug only), and restarting the service interrupts the backfill and delays completion. Indexing requires at least 16 GB of system RAM and is rejected on lower-memory devices.',
     ),
     warning: null,
     allowedStatuses: 'any',
@@ -94,12 +110,16 @@ export const indexingAndPerformance = sdk.Action.withInput(
     if (!config) throw new Error('Config file not found')
     const { MEMPOOL, STATISTICS } = config
     return {
-      profile: matchPerformanceProfile(MEMPOOL.POLL_RATE_MS, MEMPOOL.MEMPOOL_BLOCKS_AMOUNT),
+      profile: matchPerformanceProfile(
+        MEMPOOL.POLL_RATE_MS,
+        MEMPOOL.MEMPOOL_BLOCKS_AMOUNT,
+      ),
       STATISTICS_ENABLED: STATISTICS.ENABLED,
       BLOCKS_SUMMARIES_INDEXING: MEMPOOL.BLOCKS_SUMMARIES_INDEXING,
       GOGGLES_INDEXING: MEMPOOL.GOGGLES_INDEXING,
       AUDIT: MEMPOOL.AUDIT,
       CPFP_INDEXING: MEMPOOL.CPFP_INDEXING,
+      STDOUT_LOG_MIN_PRIORITY: MEMPOOL.STDOUT_LOG_MIN_PRIORITY,
     }
   },
 
@@ -112,7 +132,7 @@ export const indexingAndPerformance = sdk.Action.withInput(
     if (wantsIndexing && totalmem() < MIN_INDEXING_MEM_BYTES) {
       throw new Error(
         i18n(
-          'Indexing features require at least 16 GB of system RAM. This device has less than 16 GB available and cannot safely run backend indexing alongside Bitcoin Core and the selected Electrum backend.',
+          'Indexing features require at least 16 GB of system RAM. This device has less than 16 GB available and cannot safely run backend indexing alongside Bitcoin and the selected Electrum backend.',
         ),
       )
     }
@@ -124,6 +144,7 @@ export const indexingAndPerformance = sdk.Action.withInput(
         GOGGLES_INDEXING: input.GOGGLES_INDEXING,
         AUDIT: input.AUDIT,
         CPFP_INDEXING: input.CPFP_INDEXING,
+        STDOUT_LOG_MIN_PRIORITY: input.STDOUT_LOG_MIN_PRIORITY,
       },
       STATISTICS: { ENABLED: input.STATISTICS_ENABLED },
     })

@@ -6,7 +6,7 @@
     "check": "tsc --noEmit"
   },
   "dependencies": {
-    "@start9labs/start-sdk": "1.5.3",
+    "@start9labs/start-sdk": "2.0.6",
     "bitcoin-core-startos": "github:Start9Labs/bitcoin-core-startos#next/28.x",
     "cln-startos": "github:Start9Labs/cln-startos#next",
     "lnd-startos": "github:Start9Labs/lnd-startos#next"
@@ -15,7 +15,7 @@
     "@types/node": "^22.1.0",
     "@vercel/ncc": "^0.38.1",
     "prettier": "^3.2.5",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.3"
   },
   "prettier": {
     "trailingComma": "all",

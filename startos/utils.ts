@@ -1,4 +1,8 @@
-import { utils } from '@start9labs/start-sdk'
+import { T, utils } from '@start9labs/start-sdk'
+import { rpcHostId, rpcPort } from 'bitcoin-core-startos/startos/utils'
+import { controlHostId, restPort } from 'lnd-startos/startos/interfaces'
+import { storeJson } from './file-models/store.json'
+import { sdk } from './sdk'
 
 export const randomPassword = {
   charset: 'a-z,A-Z,1-9',
@@ -10,6 +14,9 @@ export function getDbPassword(): string {
 }
 
 export const uiPort = 8080
+// Host id of the Web UI binding (see interfaces.ts). Exported so dependents
+// (am-i-exposed / canary) can resolve Mempool's UI over the bridge.
+export const mainHostId = 'main'
 export const apiPort = 8999
 export const dbPort = 3306
 export const btcMountpoint = '/mnt/bitcoind'
@@ -18,6 +25,127 @@ export const clnMountpoint = '/mnt/cln'
 
 export const lndCertPath = `${lndMountpoint}/tls.cert`
 export const lndMacaroonPath = `${lndMountpoint}/data/chain/bitcoin/mainnet/readonly.macaroon`
+
+/**
+ * Bridge address (`<osIp>:<assigned external port>`) of a dependency's binding,
+ * as a minimal reactive value. Chain `.const()` in init/main: the mapped string
+ * only changes when the address itself does (deep-equal), so the calling
+ * context re-runs exactly on a dependency's install / uninstall / port-change
+ * and never on a routine dependency update. Chain `.once()` in an action
+ * context. `fallbackPort` keeps the value non-null while the dependency is
+ * absent — sanctioned only for an allocator-guaranteed port such as tor's SOCKS
+ * 9050 (Mempool has none, so its callers get `null` while the dependency is
+ * absent and omit the config field rather than write a fake address). Reads
+ * `net.assignedPort`, never an addressInfo hostname, so a disabled binding
+ * (e.g. LND locked) doesn't flap the value. Drop-in for the planned SDK
+ * `sdk.host.getBridgeAddress`.
+ */
+export function bridgeAddress(
+  effects: T.Effects,
+  opts: {
+    packageId: string
+    hostId: string
+    internalPort: number
+    fallbackPort: number
+  },
+): { const(): Promise<string>; once(): Promise<string> }
+export function bridgeAddress(
+  effects: T.Effects,
+  opts: { packageId: string; hostId: string; internalPort: number },
+): { const(): Promise<string | null>; once(): Promise<string | null> }
+export function bridgeAddress(
+  effects: T.Effects,
+  opts: {
+    packageId: string
+    hostId: string
+    internalPort: number
+    fallbackPort?: number
+  },
+) {
+  const watchable = async () => {
+    const osIp = await sdk.getOsIp(effects)
+    return sdk.host.get(
+      effects,
+      { packageId: opts.packageId, hostId: opts.hostId },
+      (host) => {
+        const port =
+          host?.bindings[opts.internalPort]?.net.assignedPort ??
+          opts.fallbackPort
+        if (port == null) return null
+        return `${osIp}:${port}`
+      },
+    )
+  }
+  return {
+    const: async () => (await watchable()).const(),
+    once: async () => (await watchable()).once(),
+  }
+}
+
+/**
+ * bitcoind's RPC bridge address (`<osIp>:8332`) for mempool-config's `CORE_RPC`,
+ * replacing `bitcoind.startos:8332`. `null` while bitcoind is absent — the
+ * caller then omits `CORE_RPC` rather than writing a fake address; the
+ * `.const()` heals with the real address when bitcoind reappears.
+ */
+export const bitcoindRpcBridge = (effects: T.Effects) =>
+  bridgeAddress(effects, {
+    packageId: 'bitcoind',
+    hostId: rpcHostId,
+    internalPort: rpcPort,
+  }).const()
+
+/**
+ * LND's REST bridge address (`<osIp>:8080`), the base for `LND.REST_API_URL`.
+ * LND terminates its own TLS against the mounted `tls.cert`, so the caller
+ * prefixes `https://`. `null` until LND's REST binding publishes at
+ * wallet-unlock — the caller then omits `LND` rather than writing a fake URL.
+ */
+export const lndRestBridge = (effects: T.Effects) =>
+  bridgeAddress(effects, {
+    packageId: 'lnd',
+    hostId: controlHostId,
+    internalPort: restPort,
+  }).const()
+
+export type Indexer = 'electrs' | 'fulcrum'
+
+// electrs and fulcrum are optional dependencies Mempool does not depend on at
+// the npm level, so their host ids are string literals rather than imported
+// constants. Both bind the plaintext Electrum port 50001; electrs groups it
+// under host `electrum`, fulcrum under host `main`.
+const INDEXER_HOSTS: Record<Indexer, { packageId: string; hostId: string }> = {
+  electrs: { packageId: 'electrs', hostId: 'electrum' },
+  fulcrum: { packageId: 'fulcrum', hostId: 'main' },
+}
+const electrumPort = 50001
+
+/**
+ * The user's selected Electrum indexer, StartOS state held in store.json (not in
+ * the upstream mempool-config.json). Installs predating store.json are seeded
+ * from the legacy `<indexer>.startos` value in ELECTRUM.HOST by the 3.3.1:17
+ * migration, so no runtime fallback is needed here.
+ */
+export async function selectedIndexer(
+  effects: T.Effects,
+): Promise<Indexer | undefined> {
+  return (await storeJson.read((s) => s.indexer).const(effects)) ?? undefined
+}
+
+/**
+ * The selected indexer's plaintext (non-TLS) Electrum bridge address
+ * (`<osIp>:50001`), replacing `<indexer>.startos:50001`. `null` while the
+ * indexer is absent — the caller then omits `ELECTRUM.HOST`/`PORT` rather than
+ * writing a fake address; the `.const()` heals when it reappears.
+ */
+export const electrumBridge = (effects: T.Effects, indexer: Indexer) => {
+  const { packageId, hostId } = INDEXER_HOSTS[indexer]
+  return bridgeAddress(effects, {
+    packageId,
+    hostId,
+    internalPort: electrumPort,
+  }).const()
+}
 
 // Performance profile presets. POLL_RATE_MS is the main-loop period;
 // MEMPOOL_BLOCKS_AMOUNT is the depth of the Rust GBT projection. Both

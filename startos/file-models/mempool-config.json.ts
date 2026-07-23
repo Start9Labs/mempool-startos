@@ -26,9 +26,9 @@ const mempoolSection = z.object({
   RECOMMENDED_FEE_PERCENTILE: z.number().catch(50),
   BLOCK_WEIGHT_UNITS: z.number().catch(4000000),
   INITIAL_BLOCKS_AMOUNT: z.number().catch(8),
-  MEMPOOL_BLOCKS_AMOUNT: z.number().catch(
-    PROFILES[DEFAULT_PROFILE].MEMPOOL_BLOCKS_AMOUNT,
-  ),
+  MEMPOOL_BLOCKS_AMOUNT: z
+    .number()
+    .catch(PROFILES[DEFAULT_PROFILE].MEMPOOL_BLOCKS_AMOUNT),
   INDEXING_BLOCKS_AMOUNT: z.number().catch(52560),
   BLOCKS_SUMMARIES_INDEXING: z.boolean().catch(false),
   GOGGLES_INDEXING: z.boolean().catch(false),
@@ -37,8 +37,13 @@ const mempoolSection = z.object({
   EXTERNAL_MAX_RETRY: z.number().catch(1),
   EXTERNAL_RETRY_INTERVAL: z.number().catch(0),
   USER_AGENT: z.string().catch('mempool'),
+  // Upstream log priorities (backend/src/logger.ts); the wrapper supports the
+  // debug/info/warn/err subset the Indexing and Performance action exposes and
+  // pins 'info' by default (upstream's in-source default is 'debug'). 'debug' is
+  // the only level at which the block-summaries / goggles / CPFP backfill logs
+  // per-block progress (issue #63).
   STDOUT_LOG_MIN_PRIORITY: z
-    .enum(['trade', 'debug', 'info', 'warn', 'error'])
+    .enum(['debug', 'info', 'warn', 'err'])
     .catch('info'),
   AUTOMATIC_POOLS_UPDATE: z.boolean().catch(false),
   POOLS_JSON_URL: z
@@ -65,9 +70,10 @@ const mempoolSection = z.object({
 })
 
 const coreRpcSection = z.object({
-  // enforced
-  HOST: z.literal('bitcoind.startos').catch('bitcoind.startos'),
-  PORT: z.literal(8332).catch(8332),
+  // Resolved to bitcoind's LXC-bridge address at runtime (see init/watchHosts);
+  // absent until bitcoind resolves — no fake placeholder is written.
+  HOST: z.string().optional().catch(undefined),
+  PORT: z.number().catch(8332),
   COOKIE_PATH: z
     .literal(`${btcMountpoint}/.cookie`)
     .catch(`${btcMountpoint}/.cookie`),
@@ -80,11 +86,11 @@ const coreRpcSection = z.object({
 })
 
 const electrumSection = z.object({
-  // configurable
-  HOST: z
-    .enum(['electrs.startos', 'fulcrum.startos'])
-    .optional()
-    .catch(undefined),
+  // The selected indexer's LXC-bridge address, resolved at runtime (see
+  // init/watchHosts); absent until the indexer resolves — no fake placeholder
+  // is written. Which indexer is selected is StartOS state kept in store.json,
+  // not here (HOST is the same bridge IP whichever indexer is chosen).
+  HOST: z.string().optional().catch(undefined),
   PORT: z.number().optional().catch(50001),
   TLS_ENABLED: z.boolean().optional().catch(false),
 })
@@ -134,9 +140,9 @@ const lndSection = z.object({
   // enforced
   TLS_CERT_PATH: z.literal(lndCertPath).catch(lndCertPath),
   MACAROON_PATH: z.literal(lndMacaroonPath).catch(lndMacaroonPath),
-  REST_API_URL: z
-    .literal('https://lnd.startos:8080')
-    .catch('https://lnd.startos:8080'),
+  // Resolved to LND's LXC-bridge REST address at runtime (see init/watchHosts);
+  // absent until LND resolves — no fake placeholder is written.
+  REST_API_URL: z.string().optional().catch(undefined),
   // configurable
   TIMEOUT: z.number().catch(10000),
 })
@@ -149,8 +155,11 @@ const clightningSection = z.object({
 })
 
 const socks5ProxySection = z.object({
-  // enforced
-  HOST: z.literal('startos').catch('startos'),
+  // SOCKS5 proxy for onion egress to external data servers. Dormant by default
+  // (ENABLED false) and not wired to a bridge address — tor's SOCKS is not
+  // bound on the LXC bridge and tor isn't a declared dependency — so HOST stays
+  // a loopback placeholder pending a follow-up that exposes tor SOCKS.
+  HOST: z.literal('127.0.0.1').catch('127.0.0.1'),
   PORT: z.literal(9050).catch(9050),
   // configurable
   ENABLED: z.boolean().catch(false),

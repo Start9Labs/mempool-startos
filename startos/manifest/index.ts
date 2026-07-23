@@ -1,7 +1,5 @@
 import { setupManifest } from '@start9labs/start-sdk'
 import {
-  alertInstall,
-  alertUpdate,
   bitcoindDescription,
   clnDescription,
   electrsDescription,
@@ -20,7 +18,7 @@ export const manifest = setupManifest({
   marketingUrl: 'https://mempool.space',
   donationUrl: 'https://mempool.space/sponsor',
   description: { short, long },
-  volumes: ['main', 'cache', 'db', 'config'],
+  volumes: ['main', 'cache', 'db', 'config', 'startos'],
   images: {
     frontend: {
       source: {
@@ -36,14 +34,10 @@ export const manifest = setupManifest({
     },
     mariadb: {
       source: {
-        dockerTag: 'mariadb:10.4.32',
+        dockerTag: 'mariadb:10.4.34',
       },
       arch: ['x86_64', 'aarch64'],
     },
-  },
-  alerts: {
-    install: alertInstall,
-    update: alertUpdate,
   },
   dependencies: {
     bitcoind: {

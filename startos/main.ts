@@ -55,7 +55,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
   // host up to ~22 GB RAM (the /8 share never cleared the 2 GB floor), so a
   // 16 GB host whose cache needed >2 GB to reload crashed with "JavaScript heap
   // out of memory" on every start (start-os#3326). Reserve 6 GB for the
-  // co-resident stack (Bitcoin Core, the Electrum indexer, any Lightning node,
+  // co-resident stack (Bitcoin, the Electrum indexer, any Lightning node,
   // StartOS/OS) and share the remainder: 1/3 with indexing off (2 GB floor),
   // 1/2 with any indexing toggle on (4 GB floor, heavier working set). A cache
   // too large to reload even under this ceiling is handled by the boot guard on
@@ -71,6 +71,28 @@ export const main = sdk.setupMain(async ({ effects }) => {
   const backendMaxOldSpaceMB = anyIndexing
     ? Math.max(4096, Math.min(8192, Math.floor(effectiveMB / 2)))
     : Math.max(2048, Math.min(8192, Math.floor(effectiveMB / 3)))
+
+  // Issue #63: the block-summaries / goggles / CPFP backfill logs per-block
+  // progress at debug priority only, so at the default 'info' level the
+  // service log appears completely idle for the many hours a backfill runs —
+  // operators mistake it for a stalled sync and restart the service, which
+  // interrupts the backfill. Announce the state at every start so someone
+  // following the log knows a backfill may be in progress, that 503 retries
+  // are non-fatal, and how to surface per-block progress.
+  if (anyIndexing) {
+    console.info(
+      i18n(
+        'Indexing is enabled. If a historical backfill is still incomplete it will resume now and may run for many hours. Intermittent 503 retry errors from Bitcoin Core during the backfill are expected and non-fatal. Avoid restarting the service — restarts interrupt the backfill and delay completion.',
+      ),
+    )
+    if (config.MEMPOOL.STDOUT_LOG_MIN_PRIORITY !== 'debug') {
+      console.info(
+        i18n(
+          'Backfill progress is logged at debug priority and is hidden at the current log level, so the log may appear idle while indexing runs. To watch per-block progress, set Log Level to Debug in the Indexing and Performance action.',
+        ),
+      )
+    }
+  }
 
   let backendMounts = sdk.Mounts.of()
     .mountVolume({
@@ -125,21 +147,21 @@ export const main = sdk.setupMain(async ({ effects }) => {
   // Set containers
   // ========================
 
-  const backendSub = await sdk.SubContainer.of(
+  const backendSub = sdk.SubContainer.of(
     effects,
     { imageId: 'backend' },
     backendMounts,
     'backend-api',
   )
 
-  const frontendSub = await sdk.SubContainer.of(
+  const frontendSub = sdk.SubContainer.of(
     effects,
     { imageId: 'frontend' },
     null,
     'user-interface',
   )
 
-  const mariaSub = await sdk.SubContainer.of(
+  const mariaSub = sdk.SubContainer.of(
     effects,
     { imageId: 'mariadb' },
     sdk.Mounts.of().mountVolume({

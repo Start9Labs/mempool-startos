@@ -9,7 +9,7 @@ const { InputSpec, Value } = sdk
 const lowRamWarning =
   totalmem() < 15 * 1024 ** 3
     ? i18n(
-        'Lightning network data is memory-intensive. Running it alongside Bitcoin Core and an Electrum indexer on a system with less than 16 GB of RAM can trigger out-of-memory crashes that take down Mempool or one of its dependencies. Enable only if you have RAM headroom to spare.',
+        'Lightning network data is memory-intensive. Running it alongside Bitcoin and an Electrum indexer on a system with less than 16 GB of RAM can trigger out-of-memory crashes that take down Mempool or one of its dependencies. Enable only if you have RAM headroom to spare.',
       )
     : null
 
