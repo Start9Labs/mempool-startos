@@ -1,11 +1,8 @@
 export const short = {
   en_US: 'Be your own explorer® with The Mempool Open Source Project®',
-  es_ES:
-    'Se su propio explorador® con The Mempool Open Source Project®',
-  de_DE:
-    'Seien Sie Ihr eigener Explorer® mit The Mempool Open Source Project®',
-  pl_PL:
-    'Badz swoim wlasnym eksploratorem® z The Mempool Open Source Project®',
+  es_ES: 'Se su propio explorador® con The Mempool Open Source Project®',
+  de_DE: 'Seien Sie Ihr eigener Explorer® mit The Mempool Open Source Project®',
+  pl_PL: 'Badz swoim wlasnym eksploratorem® z The Mempool Open Source Project®',
   fr_FR:
     'Soyez votre propre explorateur® avec The Mempool Open Source Project®',
 }
@@ -36,7 +33,7 @@ export const electrsDescription = {
   es_ES: 'Proporciona un indice para busquedas de direcciones',
   de_DE: 'Bietet einen Index fur Adressabfragen',
   pl_PL: 'Zapewnia indeks do wyszukiwania adresow',
-  fr_FR: 'Fournit un index pour les recherches d\'adresses',
+  fr_FR: "Fournit un index pour les recherches d'adresses",
 }
 
 export const fulcrumDescription = {
@@ -44,7 +41,7 @@ export const fulcrumDescription = {
   es_ES: 'Proporciona un indice para busquedas de direcciones',
   de_DE: 'Bietet einen Index fur Adressabfragen',
   pl_PL: 'Zapewnia indeks do wyszukiwania adresow',
-  fr_FR: 'Fournit un index pour les recherches d\'adresses',
+  fr_FR: "Fournit un index pour les recherches d'adresses",
 }
 
 export const clnDescription = {
