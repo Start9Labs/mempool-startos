@@ -29,7 +29,7 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
       currentDeps.lnd = {
         id: 'lnd',
         kind: 'running',
-        versionRange: '>=0.21.1-beta:0',
+        versionRange: '>=0.21.1-beta:4',
         healthChecks: ['lnd', 'sync-progress'],
       }
     }
@@ -38,7 +38,7 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
       currentDeps['c-lightning'] = {
         id: 'c-lightning',
         kind: 'running',
-        versionRange: '>=26.6.1:2',
+        versionRange: '>=26.6.6:1',
         healthChecks: ['lightningd', 'check-synced'],
       }
     }
@@ -48,14 +48,14 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
     currentDeps.fulcrum = {
       id: 'fulcrum',
       kind: 'running',
-      versionRange: '>=2.1.1:6',
+      versionRange: '>=2.1.1:8',
       healthChecks: ['primary', 'sync-progress'],
     }
   } else if (indexer === 'electrs') {
     currentDeps.electrs = {
       id: 'electrs',
       kind: 'running',
-      versionRange: '>=0.11.1:9',
+      versionRange: '>=0.11.1:11',
       healthChecks: ['electrs', 'sync'],
     }
   }
@@ -64,7 +64,7 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
     ...currentDeps,
     bitcoind: {
       kind: 'running',
-      versionRange: '>=28.4:13',
+      versionRange: '>=28.4:14',
       healthChecks: ['bitcoind', 'sync-progress'],
     },
   }
