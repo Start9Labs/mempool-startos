@@ -27,18 +27,11 @@ export const lndCertPath = `${lndMountpoint}/tls.cert`
 export const lndMacaroonPath = `${lndMountpoint}/data/chain/bitcoin/mainnet/readonly.macaroon`
 
 /**
- * Bridge address (`<osIp>:<assigned external port>`) of a dependency's binding,
- * as a minimal reactive value. Chain `.const()` in init/main: the mapped string
- * only changes when the address itself does (deep-equal), so the calling
- * context re-runs exactly on a dependency's install / uninstall / port-change
- * and never on a routine dependency update. Chain `.once()` in an action
- * context. `fallbackPort` keeps the value non-null while the dependency is
- * absent — sanctioned only for an allocator-guaranteed port such as tor's SOCKS
- * 9050 (Mempool has none, so its callers get `null` while the dependency is
- * absent and omit the config field rather than write a fake address). Reads
- * `net.assignedPort`, never an addressInfo hostname, so a disabled binding
- * (e.g. LND locked) doesn't flap the value. Drop-in for the planned SDK
- * `sdk.host.getBridgeAddress`.
+ * Bridge address (`10.0.3.1:<port>`) of a dependency's binding. Chain
+ * `.const()` in main/init, `.once()` in an action. `fallbackPort` keeps the
+ * value non-null while the dependency is absent. Pass `ssl` only for a binding
+ * that publishes both a plaintext and a TLS address — `protocol: 'http'`/`'ws'`,
+ * or `secure: null` with `addSsl`.
  */
 export function bridgeAddress(
   effects: T.Effects,
@@ -46,12 +39,18 @@ export function bridgeAddress(
     packageId: string
     hostId: string
     internalPort: number
+    ssl?: boolean
     fallbackPort: number
   },
 ): { const(): Promise<string>; once(): Promise<string> }
 export function bridgeAddress(
   effects: T.Effects,
-  opts: { packageId: string; hostId: string; internalPort: number },
+  opts: {
+    packageId: string
+    hostId: string
+    internalPort: number
+    ssl?: boolean
+  },
 ): { const(): Promise<string | null>; once(): Promise<string | null> }
 export function bridgeAddress(
   effects: T.Effects,
@@ -59,6 +58,7 @@ export function bridgeAddress(
     packageId: string
     hostId: string
     internalPort: number
+    ssl?: boolean
     fallbackPort?: number
   },
 ) {
@@ -68,11 +68,17 @@ export function bridgeAddress(
       effects,
       { packageId: opts.packageId, hostId: opts.hostId },
       (host) => {
-        const port =
-          host?.bindings[opts.internalPort]?.net.assignedPort ??
-          opts.fallbackPort
-        if (port == null) return null
-        return `${osIp}:${port}`
+        const h = (
+          host?.bindings[opts.internalPort]?.addresses.available ?? []
+        ).find(
+          (a) =>
+            a.metadata.kind === 'ipv4' &&
+            a.metadata.gateway === 'lxcbr0' &&
+            a.port !== null &&
+            (opts.ssl === undefined || a.ssl === opts.ssl),
+        )
+        if (h) return `${h.hostname}:${h.port}`
+        return opts.fallbackPort == null ? null : `${osIp}:${opts.fallbackPort}`
       },
     )
   }
@@ -93,6 +99,7 @@ export const bitcoindRpcBridge = (effects: T.Effects) =>
     packageId: 'bitcoind',
     hostId: rpcHostId,
     internalPort: rpcPort,
+    ssl: false,
   }).const()
 
 /**
@@ -144,6 +151,7 @@ export const electrumBridge = (effects: T.Effects, indexer: Indexer) => {
     packageId,
     hostId,
     internalPort: electrumPort,
+    ssl: false,
   }).const()
 }
 
