@@ -44,21 +44,21 @@
 
 ### Entrypoints
 
-| Container | Entrypoint                                                  | Notes                                                                                                                                                                                                                                      |
-| --------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Frontend  | Upstream `docker-entrypoint.sh` (via `sdk.useEntrypoint()`) | `LIGHTNING=true` injected when a Lightning node is configured                                                                                                                                                                              |
+| Container | Entrypoint                                                          | Notes                                                                                                                                                                                                                                                                                                                                                                                               |
+| --------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Frontend  | Upstream `docker-entrypoint.sh` (via `sdk.useEntrypoint()`)         | `LIGHTNING=true` injected when a Lightning node is configured                                                                                                                                                                                                                                                                                                                                       |
 | Backend   | Custom: `/bin/sh` boot guard, then `node /backend/package/index.js` | Runs as `root`. The boot guard drops the on-disk cache when the previous start never became healthy — breaking a heap-OOM boot loop — then execs node. `NODE_OPTIONS=--max-old-space-size=<dynamic>` — sized to (host RAM − 6 GB reserve for Bitcoin/indexer/LN/OS): 1/3 of the remainder, clamped 2048–8192 MB (a 16 GB host gets ~3.3 GB); with any indexing toggle on, 1/2, clamped 4096–8192 MB |
-| MariaDB   | Upstream `docker-entrypoint.sh` (via `sdk.useEntrypoint()`) | `--bind-address=127.0.0.1` enforces loopback-only listener                                                                                                                                                                                 |
+| MariaDB   | Upstream `docker-entrypoint.sh` (via `sdk.useEntrypoint()`)         | `--bind-address=127.0.0.1` enforces loopback-only listener                                                                                                                                                                                                                                                                                                                                          |
 
 ## Volume and Data Layout
 
-| Volume   | Mount Point      | Purpose               |
-| -------- | ---------------- | --------------------- |
-| `main`   | —                | Unused (reserved)     |
-| `cache`  | `/backend/cache` | Mempool cache data    |
-| `db`     | `/var/lib/mysql` | MariaDB database      |
-| `config` | —                | Mempool configuration |
-| `startos`| —                | StartOS store (`store.json`) |
+| Volume    | Mount Point      | Purpose                      |
+| --------- | ---------------- | ---------------------------- |
+| `main`    | —                | Unused (reserved)            |
+| `cache`   | `/backend/cache` | Mempool cache data           |
+| `db`      | `/var/lib/mysql` | MariaDB database             |
+| `config`  | —                | Mempool configuration        |
+| `startos` | —                | StartOS store (`store.json`) |
 
 StartOS-specific files:
 
@@ -89,39 +89,39 @@ Dependency network addresses are **resolved over the LXC bridge** at runtime and
 
 ### Auto-Configured by StartOS
 
-| Setting                           | Value                                | Purpose                                                   |
-| --------------------------------- | ------------------------------------ | --------------------------------------------------------- |
-| `CORE_RPC.HOST` / `.PORT`         | bitcoind's LXC-bridge address        | Bitcoin RPC connection, resolved at runtime               |
-| `CORE_RPC.COOKIE`                 | `true`                               | Cookie authentication                                     |
-| `CORE_RPC.COOKIE_PATH`            | `/mnt/bitcoind/.cookie`              | Cookie file path                                          |
-| `DATABASE.HOST` / `.PORT`         | `127.0.0.1` / `3306`                 | Localhost-only MariaDB sidecar                            |
-| `DATABASE.DATABASE` / `.USERNAME` | `mempool` / `mempool`                |                                                           |
-| `DATABASE.PASSWORD`               | Auto-generated on install (22 chars) | Written to `mempool-config.json`                          |
-| `MEMPOOL.NETWORK`                 | `mainnet`                            | Bitcoin network                                           |
-| `MEMPOOL.BACKEND`                 | `electrum`                           | Backend type                                              |
-| `SYSLOG.ENABLED`                  | `false`                              | Syslog disabled                                           |
-| `MAXMIND.ENABLED`                 | `false`                              | GeoIP disabled                                            |
-| `REDIS.ENABLED`                   | `false`                              | Redis disabled                                            |
-| `REPLICATION.ENABLED`             | `false`                              | Replication disabled                                      |
-| `STRATUM.ENABLED`                 | `false`                              | Stratum disabled                                          |
+| Setting                           | Value                                | Purpose                                                                                                                         |
+| --------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `CORE_RPC.HOST` / `.PORT`         | bitcoind's LXC-bridge address        | Bitcoin RPC connection, resolved at runtime                                                                                     |
+| `CORE_RPC.COOKIE`                 | `true`                               | Cookie authentication                                                                                                           |
+| `CORE_RPC.COOKIE_PATH`            | `/mnt/bitcoind/.cookie`              | Cookie file path                                                                                                                |
+| `DATABASE.HOST` / `.PORT`         | `127.0.0.1` / `3306`                 | Localhost-only MariaDB sidecar                                                                                                  |
+| `DATABASE.DATABASE` / `.USERNAME` | `mempool` / `mempool`                |                                                                                                                                 |
+| `DATABASE.PASSWORD`               | Auto-generated on install (22 chars) | Written to `mempool-config.json`                                                                                                |
+| `MEMPOOL.NETWORK`                 | `mainnet`                            | Bitcoin network                                                                                                                 |
+| `MEMPOOL.BACKEND`                 | `electrum`                           | Backend type                                                                                                                    |
+| `SYSLOG.ENABLED`                  | `false`                              | Syslog disabled                                                                                                                 |
+| `MAXMIND.ENABLED`                 | `false`                              | GeoIP disabled                                                                                                                  |
+| `REDIS.ENABLED`                   | `false`                              | Redis disabled                                                                                                                  |
+| `REPLICATION.ENABLED`             | `false`                              | Replication disabled                                                                                                            |
+| `STRATUM.ENABLED`                 | `false`                              | Stratum disabled                                                                                                                |
 | `SOCKS5PROXY.HOST` / `.PORT`      | `127.0.0.1` / `9050`                 | SOCKS5 proxy for external onion data servers (disabled by default; `HOST` is a loopback placeholder until Tor SOCKS is bridged) |
 
 ### Written by Actions
 
-| Setting                                    | Action                   | Notes                                                         |
-| ------------------------------------------ | ------------------------ | ------------------------------------------------------------- |
-| `store.json` `indexer`                     | Select Indexer           | `fulcrum` or `electrs` — StartOS state on the `startos` volume, not a `mempool-config.json` key; `ELECTRUM.HOST`/`.PORT` (TLS off) are then resolved to that indexer's bridge address at runtime |
-| `LIGHTNING.ENABLED` / `.BACKEND`           | Enable Lightning         | Backend is `lnd` or `cln`                                     |
-| `LND.TLS_CERT_PATH` / `.MACAROON_PATH`     | Enable Lightning         | Paths under the LND mount                                     |
-| `CLIGHTNING.SOCKET`                        | Enable Lightning         | `lightning-rpc` socket under the CLN mount                    |
-| `MEMPOOL.POLL_RATE_MS`                     | Indexing and Performance | `8000` (Low-CPU) / `4000` (Balanced) / `2000` (Responsive)    |
-| `MEMPOOL.MEMPOOL_BLOCKS_AMOUNT`            | Indexing and Performance | `4` (Low-CPU) / `6` (Balanced) / `8` (Responsive)             |
-| `STATISTICS.ENABLED`                       | Indexing and Performance | Default on                                                    |
-| `MEMPOOL.BLOCKS_SUMMARIES_INDEXING`        | Indexing and Performance | Default off                                                   |
-| `MEMPOOL.GOGGLES_INDEXING`                 | Indexing and Performance | Default off                                                   |
-| `MEMPOOL.AUDIT`                            | Indexing and Performance | Default off; requires `BLOCKS_SUMMARIES_INDEXING`             |
-| `MEMPOOL.CPFP_INDEXING`                    | Indexing and Performance | Default off                                                   |
-| `MEMPOOL.STDOUT_LOG_MIN_PRIORITY`          | Indexing and Performance | Default `info`; set to `debug` to watch indexing backfill progress |
+| Setting                                | Action                   | Notes                                                                                                                                                                                            |
+| -------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `store.json` `indexer`                 | Select Indexer           | `fulcrum` or `electrs` — StartOS state on the `startos` volume, not a `mempool-config.json` key; `ELECTRUM.HOST`/`.PORT` (TLS off) are then resolved to that indexer's bridge address at runtime |
+| `LIGHTNING.ENABLED` / `.BACKEND`       | Enable Lightning         | Backend is `lnd` or `cln`                                                                                                                                                                        |
+| `LND.TLS_CERT_PATH` / `.MACAROON_PATH` | Enable Lightning         | Paths under the LND mount                                                                                                                                                                        |
+| `CLIGHTNING.SOCKET`                    | Enable Lightning         | `lightning-rpc` socket under the CLN mount                                                                                                                                                       |
+| `MEMPOOL.POLL_RATE_MS`                 | Indexing and Performance | `8000` (Low-CPU) / `4000` (Balanced) / `2000` (Responsive)                                                                                                                                       |
+| `MEMPOOL.MEMPOOL_BLOCKS_AMOUNT`        | Indexing and Performance | `4` (Low-CPU) / `6` (Balanced) / `8` (Responsive)                                                                                                                                                |
+| `STATISTICS.ENABLED`                   | Indexing and Performance | Default on                                                                                                                                                                                       |
+| `MEMPOOL.BLOCKS_SUMMARIES_INDEXING`    | Indexing and Performance | Default off                                                                                                                                                                                      |
+| `MEMPOOL.GOGGLES_INDEXING`             | Indexing and Performance | Default off                                                                                                                                                                                      |
+| `MEMPOOL.AUDIT`                        | Indexing and Performance | Default off; requires `BLOCKS_SUMMARIES_INDEXING`                                                                                                                                                |
+| `MEMPOOL.CPFP_INDEXING`                | Indexing and Performance | Default off                                                                                                                                                                                      |
+| `MEMPOOL.STDOUT_LOG_MIN_PRIORITY`      | Indexing and Performance | Default `info`; set to `debug` to watch indexing backfill progress                                                                                                                               |
 
 ### Bitcoin Requirements
 
