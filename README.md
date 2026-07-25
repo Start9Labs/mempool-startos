@@ -246,13 +246,13 @@ Sync status is no longer checked internally. Mempool gates on its dependencies' 
 
 ## Dependencies
 
-| Dependency     | Required | Version Range     | Health Gate                  | Mounted Volume (Dep Volume → Mount Point) | Purpose                                      |
-| -------------- | -------- | ----------------- | ---------------------------- | ----------------------------------------- | -------------------------------------------- |
-| Bitcoin        | Yes      | `>=28.4:13`       | `bitcoind`, `sync-progress`  | `main` → `/mnt/bitcoind`                  | Blockchain data via RPC                      |
-| Fulcrum        | Optional | `>=2.1.1:6`       | `primary`, `sync-progress`   | None                                      | Address lookups (recommended indexer)        |
-| Electrs        | Optional | `>=0.11.1:9`      | `electrs`, `sync`            | None                                      | Address lookups (alternate indexer)          |
-| LND            | Optional | `>=0.21.1-beta:0` | `lnd`, `sync-progress`       | `main` → `/mnt/lnd` (read-only)           | Lightning Network data (REST API + macaroon) |
-| Core Lightning | Optional | `>=26.6.1:2`      | `lightningd`, `check-synced` | `main/bitcoin` → `/mnt/cln` (read-only)   | Lightning Network data (Unix socket)         |
+| Dependency     | Required | Health Gate                  | Mounted Volume (Dep Volume → Mount Point) | Purpose                                      |
+| -------------- | -------- | ---------------------------- | ----------------------------------------- | -------------------------------------------- |
+| Bitcoin        | Yes      | `bitcoind`, `sync-progress`  | `main` → `/mnt/bitcoind`                  | Blockchain data via RPC                      |
+| Fulcrum        | Optional | `primary`, `sync-progress`   | None                                      | Address lookups (recommended indexer)        |
+| Electrs        | Optional | `electrs`, `sync`            | None                                      | Address lookups (alternate indexer)          |
+| LND            | Optional | `lnd`, `sync-progress`       | `main` → `/mnt/lnd` (read-only)           | Lightning Network data (REST API + macaroon) |
+| Core Lightning | Optional | `lightningd`, `check-synced` | `main/bitcoin` → `/mnt/cln` (read-only)   | Lightning Network data (Unix socket)         |
 
 Only one indexer (Electrs or Fulcrum) can be active at a time. Only one Lightning node (LND or CLN) can be active at a time. Optional dependencies are only registered when selected by the corresponding action.
 
@@ -310,20 +310,15 @@ ports:
 dependencies:
   bitcoind:
     required: true
-    version_range: '>=28.4:13'
     required_config: { txindex: true, prune: 0 }
   fulcrum:
     required: false
-    version_range: '>=2.1.1:6'
   electrs:
     required: false
-    version_range: '>=0.11.1:9'
   lnd:
     required: false
-    version_range: '>=0.21.1-beta:0'
   c-lightning:
     required: false
-    version_range: '>=26.6.1:2'
 startos_managed_env_vars:
   mariadb:
     - MARIADB_RANDOM_ROOT_PASSWORD

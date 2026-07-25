@@ -17,7 +17,7 @@ const hostPort = (addr: string) => {
 /**
  * Resolves Mempool's dependency addresses over the LXC bridge and pins them into
  * mempool-config.json before the backend starts (`.startos` DNS is gone in
- * StartOS 2.0). Each address is a reactive `.const()` read whose mapped value
+ * StartOS 2.0). Each address is a reactive `.const()` read that
  * changes only when the address itself does, so this re-runs — and main
  * restarts the backend — exactly on a dependency's install / uninstall /
  * port-change (and on an indexer/backend selection change), never on a routine
