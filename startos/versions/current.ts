@@ -1,7 +1,7 @@
 import { VersionInfo } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '3.3.1:19',
+  version: '3.3.1:20',
   releaseNotes: {
     en_US: `Keeps the Bitcoin and LND connection working when Bitcoin and LND changes how it serves TLS.
 
