@@ -27,73 +27,20 @@ export const lndCertPath = `${lndMountpoint}/tls.cert`
 export const lndMacaroonPath = `${lndMountpoint}/data/chain/bitcoin/mainnet/readonly.macaroon`
 
 /**
- * Bridge address (`<osIp>:<assigned external port>`) of a dependency's binding,
- * as a minimal reactive value. Chain `.const()` in init/main: the mapped string
- * only changes when the address itself does (deep-equal), so the calling
- * context re-runs exactly on a dependency's install / uninstall / port-change
- * and never on a routine dependency update. Chain `.once()` in an action
- * context. `fallbackPort` keeps the value non-null while the dependency is
- * absent — sanctioned only for an allocator-guaranteed port such as tor's SOCKS
- * 9050 (Mempool has none, so its callers get `null` while the dependency is
- * absent and omit the config field rather than write a fake address). Reads
- * `net.assignedPort`, never an addressInfo hostname, so a disabled binding
- * (e.g. LND locked) doesn't flap the value. Drop-in for the planned SDK
- * `sdk.host.getBridgeAddress`.
- */
-export function bridgeAddress(
-  effects: T.Effects,
-  opts: {
-    packageId: string
-    hostId: string
-    internalPort: number
-    fallbackPort: number
-  },
-): { const(): Promise<string>; once(): Promise<string> }
-export function bridgeAddress(
-  effects: T.Effects,
-  opts: { packageId: string; hostId: string; internalPort: number },
-): { const(): Promise<string | null>; once(): Promise<string | null> }
-export function bridgeAddress(
-  effects: T.Effects,
-  opts: {
-    packageId: string
-    hostId: string
-    internalPort: number
-    fallbackPort?: number
-  },
-) {
-  const watchable = async () => {
-    const osIp = await sdk.getOsIp(effects)
-    return sdk.host.get(
-      effects,
-      { packageId: opts.packageId, hostId: opts.hostId },
-      (host) => {
-        const port =
-          host?.bindings[opts.internalPort]?.net.assignedPort ??
-          opts.fallbackPort
-        if (port == null) return null
-        return `${osIp}:${port}`
-      },
-    )
-  }
-  return {
-    const: async () => (await watchable()).const(),
-    once: async () => (await watchable()).once(),
-  }
-}
-
-/**
  * bitcoind's RPC bridge address (`<osIp>:8332`) for mempool-config's `CORE_RPC`,
  * replacing `bitcoind.startos:8332`. `null` while bitcoind is absent — the
  * caller then omits `CORE_RPC` rather than writing a fake address; the
  * `.const()` heals with the real address when bitcoind reappears.
  */
 export const bitcoindRpcBridge = (effects: T.Effects) =>
-  bridgeAddress(effects, {
-    packageId: 'bitcoind',
-    hostId: rpcHostId,
-    internalPort: rpcPort,
-  }).const()
+  sdk.host
+    .getBridgeAddress(effects, {
+      packageId: 'bitcoind',
+      hostId: rpcHostId,
+      internalPort: rpcPort,
+      ssl: false,
+    })
+    .const()
 
 /**
  * LND's REST bridge address (`<osIp>:8080`), the base for `LND.REST_API_URL`.
@@ -102,11 +49,13 @@ export const bitcoindRpcBridge = (effects: T.Effects) =>
  * wallet-unlock — the caller then omits `LND` rather than writing a fake URL.
  */
 export const lndRestBridge = (effects: T.Effects) =>
-  bridgeAddress(effects, {
-    packageId: 'lnd',
-    hostId: controlHostId,
-    internalPort: restPort,
-  }).const()
+  sdk.host
+    .getBridgeAddress(effects, {
+      packageId: 'lnd',
+      hostId: controlHostId,
+      internalPort: restPort,
+    })
+    .const()
 
 export type Indexer = 'electrs' | 'fulcrum'
 
@@ -140,11 +89,14 @@ export async function selectedIndexer(
  */
 export const electrumBridge = (effects: T.Effects, indexer: Indexer) => {
   const { packageId, hostId } = INDEXER_HOSTS[indexer]
-  return bridgeAddress(effects, {
-    packageId,
-    hostId,
-    internalPort: electrumPort,
-  }).const()
+  return sdk.host
+    .getBridgeAddress(effects, {
+      packageId,
+      hostId,
+      internalPort: electrumPort,
+      ssl: false,
+    })
+    .const()
 }
 
 // Performance profile presets. POLL_RATE_MS is the main-loop period;
