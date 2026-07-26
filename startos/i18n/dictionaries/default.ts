@@ -61,7 +61,7 @@ const dict = {
   'Info (default)': 62,
   Warning: 63,
   Error: 64,
-  'Indexing is enabled. If a historical backfill is still incomplete it will resume now and may run for many hours. Intermittent 503 retry errors from Bitcoin Core during the backfill are expected and non-fatal. Avoid restarting the service — restarts interrupt the backfill and delay completion.': 65,
+  'Indexing is enabled. If a historical backfill is still incomplete it will resume now and may run for many hours. Intermittent 503 retry errors from Bitcoin during the backfill are expected and non-fatal. Avoid restarting the service — restarts interrupt the backfill and delay completion.': 65,
   'Backfill progress is logged at debug priority and is hidden at the current log level, so the log may appear idle while indexing runs. To watch per-block progress, set Log Level to Debug in the Indexing and Performance action.': 66,
 } as const
 

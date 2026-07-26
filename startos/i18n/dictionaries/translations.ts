@@ -62,7 +62,7 @@ export default {
     62: 'Info (predeterminado)',
     63: 'Advertencia',
     64: 'Error',
-    65: 'La indexacion esta habilitada. Si un llenado historico sigue incompleto, se reanudara ahora y puede ejecutarse durante muchas horas. Los errores 503 intermitentes de reintento de Bitcoin Core durante el llenado son esperados y no fatales. Evite reiniciar el servicio — los reinicios interrumpen el llenado y retrasan su finalizacion.',
+    65: 'La indexacion esta habilitada. Si un llenado historico sigue incompleto, se reanudara ahora y puede ejecutarse durante muchas horas. Los errores 503 intermitentes de reintento de Bitcoin durante el llenado son esperados y no fatales. Evite reiniciar el servicio — los reinicios interrumpen el llenado y retrasan su finalizacion.',
     66: 'El progreso del llenado se registra con prioridad debug y esta oculto en el nivel de registro actual, por lo que el registro puede parecer inactivo mientras se ejecuta la indexacion. Para observar el progreso por bloque, establezca Nivel de registro en Debug en la accion Indexacion y rendimiento.',
   },
   de_DE: {
@@ -126,7 +126,7 @@ export default {
     62: 'Info (Standard)',
     63: 'Warnung',
     64: 'Fehler',
-    65: 'Die Indexierung ist aktiviert. Wenn ein historischer Abgleich noch unvollstaendig ist, wird er jetzt fortgesetzt und kann viele Stunden laufen. Zeitweilige 503-Wiederholungsfehler von Bitcoin Core waehrend des Abgleichs sind zu erwarten und nicht fatal. Vermeiden Sie einen Neustart des Dienstes — Neustarts unterbrechen den Abgleich und verzoegern dessen Abschluss.',
+    65: 'Die Indexierung ist aktiviert. Wenn ein historischer Abgleich noch unvollstaendig ist, wird er jetzt fortgesetzt und kann viele Stunden laufen. Zeitweilige 503-Wiederholungsfehler von Bitcoin waehrend des Abgleichs sind zu erwarten und nicht fatal. Vermeiden Sie einen Neustart des Dienstes — Neustarts unterbrechen den Abgleich und verzoegern dessen Abschluss.',
     66: 'Der Abgleichfortschritt wird mit Debug-Prioritaet protokolliert und ist auf der aktuellen Protokollstufe verborgen, daher kann das Protokoll waehrend der Indexierung untaetig erscheinen. Um den blockweisen Fortschritt zu verfolgen, setzen Sie die Protokollstufe in der Aktion Indexierung und Leistung auf Debug.',
   },
   pl_PL: {
@@ -190,7 +190,7 @@ export default {
     62: 'Info (domyslny)',
     63: 'Ostrzezenie',
     64: 'Blad',
-    65: 'Indeksowanie jest wlaczone. Jesli historyczne uzupelnienie jest nadal niekompletne, zostanie teraz wznowione i moze dzialac przez wiele godzin. Sporadyczne bledy 503 z ponownymi probami od Bitcoin Core podczas uzupelniania sa oczekiwane i niekrytyczne. Unikaj ponownego uruchamiania uslugi — restarty przerywaja uzupelnienie i opozniaja jego zakonczenie.',
+    65: 'Indeksowanie jest wlaczone. Jesli historyczne uzupelnienie jest nadal niekompletne, zostanie teraz wznowione i moze dzialac przez wiele godzin. Sporadyczne bledy 503 z ponownymi probami od Bitcoin podczas uzupelniania sa oczekiwane i niekrytyczne. Unikaj ponownego uruchamiania uslugi — restarty przerywaja uzupelnienie i opozniaja jego zakonczenie.',
     66: 'Postep uzupelniania jest logowany z priorytetem debug i jest ukryty na biezacym poziomie logowania, wiec dziennik moze wygladac na bezczynny podczas indeksowania. Aby obserwowac postep dla poszczegolnych blokow, ustaw Poziom logowania na Debug w akcji Indeksowanie i wydajnosc.',
   },
   fr_FR: {
@@ -254,7 +254,7 @@ export default {
     62: 'Info (par defaut)',
     63: 'Avertissement',
     64: 'Erreur',
-    65: "L'indexation est activee. Si un remplissage historique est encore incomplet, il reprendra maintenant et peut durer de nombreuses heures. Les erreurs 503 intermittentes de nouvelle tentative de Bitcoin Core pendant le remplissage sont attendues et non fatales. Evitez de redemarrer le service — les redemarrages interrompent le remplissage et retardent son achevement.",
+    65: "L'indexation est activee. Si un remplissage historique est encore incomplet, il reprendra maintenant et peut durer de nombreuses heures. Les erreurs 503 intermittentes de nouvelle tentative de Bitcoin pendant le remplissage sont attendues et non fatales. Evitez de redemarrer le service — les redemarrages interrompent le remplissage et retardent son achevement.",
     66: "La progression du remplissage est journalisee en priorite debug et masquee au niveau de journalisation actuel, le journal peut donc sembler inactif pendant l'indexation. Pour suivre la progression bloc par bloc, reglez le Niveau de journalisation sur Debug dans l'action Indexation et performances.",
   },
 } satisfies Record<string, LangDict>

@@ -82,7 +82,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
   if (anyIndexing) {
     console.info(
       i18n(
-        'Indexing is enabled. If a historical backfill is still incomplete it will resume now and may run for many hours. Intermittent 503 retry errors from Bitcoin Core during the backfill are expected and non-fatal. Avoid restarting the service — restarts interrupt the backfill and delay completion.',
+        'Indexing is enabled. If a historical backfill is still incomplete it will resume now and may run for many hours. Intermittent 503 retry errors from Bitcoin during the backfill are expected and non-fatal. Avoid restarting the service — restarts interrupt the backfill and delay completion.',
       ),
     )
     if (config.MEMPOOL.STDOUT_LOG_MIN_PRIORITY !== 'debug') {
