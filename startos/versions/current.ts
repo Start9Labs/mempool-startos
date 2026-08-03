@@ -1,23 +1,23 @@
 import { VersionInfo } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '3.3.1:20',
+  version: '3.3.1:21',
   releaseNotes: {
-    en_US: `Keeps the Bitcoin and LND connection working when Bitcoin and LND changes how it serves TLS.
+    en_US: `Requires an up-to-date Bitcoin.
 
-Mempool resolved Bitcoin and LND's address from a field that is only populated for one of the two ways a service can publish a port. It now reads the address itself, which is correct either way — so the connection survives Bitcoin and LND's next update instead of going unreachable.`,
-    es_ES: `Mantiene la conexión con Bitcoin and LND cuando Bitcoin and LND cambia su forma de servir TLS.
+Mempool needs pruning disabled and the transaction index enabled on Bitcoin, and asks for that through settings older Bitcoin releases do not have. The version Mempool required did not rule those out, so on an out-of-date Bitcoin the Auto-Configure task opened a form that could not be submitted, and came back no matter what you did. Mempool now requires the current revision of whichever Bitcoin version line you are on, so an out-of-date Bitcoin is reported as needing an update instead.`,
+    es_ES: `Exige un Bitcoin actualizado.
 
-Mempool resolvía la dirección de Bitcoin and LND a partir de un campo que solo se rellena en una de las dos formas en que un servicio puede publicar un puerto. Ahora lee la dirección en sí, que es correcta en ambos casos, así que la conexión sobrevive a la próxima actualización de Bitcoin and LND en lugar de quedar inaccesible.`,
-    de_DE: `Hält die Bitcoin and LND-Verbindung aufrecht, wenn Bitcoin and LND die Art der TLS-Bereitstellung ändert.
+Mempool necesita que la poda esté desactivada y el índice de transacciones activado en Bitcoin, y lo solicita mediante ajustes que las versiones antiguas de Bitcoin no tienen. La versión que Mempool exigía no las descartaba, así que en un Bitcoin desactualizado la tarea Auto-Configurar abría un formulario que no se podía enviar y volvía a aparecer hiciera lo que hiciera. Ahora Mempool exige la revisión actual de la línea de versiones de Bitcoin que uses, de modo que un Bitcoin desactualizado se señala como pendiente de actualizar.`,
+    de_DE: `Setzt ein aktuelles Bitcoin voraus.
 
-Mempool ermittelte die Adresse von Bitcoin and LND aus einem Feld, das nur bei einer der beiden Arten gefüllt ist, auf die ein Dienst einen Port veröffentlichen kann. Jetzt wird die Adresse selbst gelesen, die in beiden Fällen stimmt — die Verbindung übersteht damit das nächste Bitcoin and LND-Update, statt unerreichbar zu werden.`,
-    pl_PL: `Utrzymuje połączenie z Bitcoin and LND, gdy Bitcoin and LND zmienia sposób udostępniania TLS.
+Mempool benötigt Bitcoin ohne Pruning und mit aktiviertem Transaktionsindex und fordert das über Einstellungen an, die ältere Bitcoin-Ausgaben nicht haben. Die von Mempool geforderte Version schloss diese nicht aus, sodass auf einem veralteten Bitcoin die Aufgabe „Auto-Konfiguration“ ein Formular öffnete, das sich nicht absenden ließ, und immer wieder zurückkam. Mempool verlangt jetzt die aktuelle Revision der von dir genutzten Bitcoin-Versionsreihe, sodass ein veraltetes Bitcoin stattdessen als aktualisierungsbedürftig gemeldet wird.`,
+    pl_PL: `Wymaga aktualnego Bitcoina.
 
-Mempool ustalał adres Bitcoin and LND na podstawie pola wypełnianego tylko przy jednym z dwóch sposobów publikowania portu przez usługę. Teraz odczytuje sam adres, poprawny w obu przypadkach — dzięki temu połączenie przetrwa kolejną aktualizację Bitcoin and LND, zamiast stać się nieosiągalne.`,
-    fr_FR: `Maintient la connexion à Bitcoin and LND lorsque Bitcoin and LND change sa façon de servir TLS.
+Mempool wymaga wyłączonego przycinania i włączonego indeksu transakcji w Bitcoinie i prosi o to poprzez ustawienia, których starsze wydania Bitcoina nie mają. Wersja wymagana przez Mempool ich nie wykluczała, więc na nieaktualnym Bitcoinie zadanie Auto-Konfiguracja otwierało formularz, którego nie dało się wysłać, i wracało niezależnie od podjętych działań. Mempool wymaga teraz bieżącej rewizji tej linii wydań Bitcoina, z której korzystasz, więc nieaktualny Bitcoin jest zgłaszany jako wymagający aktualizacji.`,
+    fr_FR: `Exige un Bitcoin à jour.
 
-Mempool déterminait l'adresse de Bitcoin and LND à partir d'un champ renseigné dans un seul des deux modes de publication d'un port par un service. Il lit désormais l'adresse elle-même, correcte dans les deux cas — la connexion survit donc à la prochaine mise à jour de Bitcoin and LND au lieu de devenir injoignable.`,
+Mempool a besoin que l'élagage soit désactivé et l'index des transactions activé sur Bitcoin, et le demande via des réglages que les anciennes versions de Bitcoin n'ont pas. La version exigée par Mempool ne les excluait pas : sur un Bitcoin obsolète, la tâche Auto-Configuration ouvrait un formulaire impossible à envoyer et revenait quoi que vous fassiez. Mempool exige désormais la révision actuelle de la ligne de versions de Bitcoin que vous utilisez, de sorte qu'un Bitcoin obsolète est signalé comme devant être mis à jour.`,
   },
   migrations: {},
 })
