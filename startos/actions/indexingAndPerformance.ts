@@ -1,12 +1,19 @@
-import { totalmem } from 'os'
 import { configJson } from '../file-models/mempool-config.json'
 import { i18n } from '../i18n'
 import { sdk } from '../sdk'
-import { PROFILES, DEFAULT_PROFILE, PerformanceProfile } from '../utils'
+import {
+  PROFILES,
+  DEFAULT_PROFILE,
+  PerformanceProfile,
+  isLowRam,
+} from '../utils'
 const { InputSpec, Value } = sdk
 
-// 15 GiB floor to cover 16 GB devices that report slightly less than 16 * 2^30.
-const MIN_INDEXING_MEM_BYTES = 15 * 1024 * 1024 * 1024
+const lowRamWarning = isLowRam()
+  ? i18n(
+      'Indexing is memory-intensive and is recommended only on devices with 16 GB of RAM or more. The historical backfill runs alongside Bitcoin, your Electrum indexer, and any Lightning node, and on a smaller device it can push the system into out-of-memory crashes. The other settings on this form carry no such risk.',
+    )
+  : null
 
 const inputSpec = InputSpec.of({
   profile: Value.select({
@@ -95,9 +102,9 @@ export const indexingAndPerformance = sdk.Action.withInput(
   {
     name: i18n('Indexing and Performance'),
     description: i18n(
-      'Tune backend behavior: poll/projection profile, mempool statistics, log level, and optional indexing features. Changes apply on the next service restart. Enabling any indexing toggle triggers a historical backfill on the next start, which can take several hours and consume significant disk space; at the default Info log level the service log appears idle while the backfill runs (progress is logged at Debug only), and restarting the service interrupts the backfill and delays completion. Indexing requires at least 16 GB of system RAM and is rejected on lower-memory devices.',
+      'Tune backend behavior: poll/projection profile, mempool statistics, log level, and optional indexing features. Changes apply on the next service restart. Enabling any indexing toggle triggers a historical backfill on the next start, which can take several hours and consume significant disk space; at the default Info log level the service log appears idle while the backfill runs (progress is logged at Debug only), and restarting the service interrupts the backfill and delays completion. Indexing is memory-intensive and is recommended only on devices with 16 GB of RAM or more.',
     ),
-    warning: null,
+    warning: lowRamWarning,
     allowedStatuses: 'any',
     group: null,
     visibility: 'enabled',
@@ -124,18 +131,6 @@ export const indexingAndPerformance = sdk.Action.withInput(
   },
 
   async ({ effects, input }) => {
-    const wantsIndexing =
-      input.BLOCKS_SUMMARIES_INDEXING ||
-      input.GOGGLES_INDEXING ||
-      input.AUDIT ||
-      input.CPFP_INDEXING
-    if (wantsIndexing && totalmem() < MIN_INDEXING_MEM_BYTES) {
-      throw new Error(
-        i18n(
-          'Indexing features require at least 16 GB of system RAM. This device has less than 16 GB available and cannot safely run backend indexing alongside Bitcoin and the selected Electrum backend.',
-        ),
-      )
-    }
     const preset = PROFILES[input.profile as PerformanceProfile]
     return configJson.merge(effects, {
       MEMPOOL: {

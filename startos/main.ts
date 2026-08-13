@@ -47,7 +47,8 @@ export const main = sdk.setupMain(async ({ effects }) => {
   const config = await configJson.read().const(effects)
   if (!config) throw new Error('Config file not found')
 
-  // V8 old-space heap ceiling for the mempool backend, scaled to host RAM.
+  // V8 old-space heap ceiling for the mempool backend, scaled to the RAM
+  // StartOS grants service containers (host MemTotal less its own 1 GiB reserve).
   // This is a ceiling, not a reservation: the backend's steady-state heap sits
   // well under it, so raising it does not grow normal RAM use — it only lets a
   // transient startup peak (reloading the on-disk mempool/RBF cache) finish
@@ -55,8 +56,9 @@ export const main = sdk.setupMain(async ({ effects }) => {
   // host up to ~22 GB RAM (the /8 share never cleared the 2 GB floor), so a
   // 16 GB host whose cache needed >2 GB to reload crashed with "JavaScript heap
   // out of memory" on every start (start-os#3326). Reserve 6 GB for the
-  // co-resident stack (Bitcoin, the Electrum indexer, any Lightning node,
-  // StartOS/OS) and share the remainder: 1/3 with indexing off (2 GB floor),
+  // co-resident stack (Bitcoin, the Electrum indexer, any Lightning node —
+  // StartOS already withheld its own share before totalmem() reported this)
+  // and share the remainder: 1/3 with indexing off (2 GB floor),
   // 1/2 with any indexing toggle on (4 GB floor, heavier working set). A cache
   // too large to reload even under this ceiling is handled by the boot guard on
   // the api daemon, which drops it and rebuilds from live data.

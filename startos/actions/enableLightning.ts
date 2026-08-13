@@ -1,17 +1,14 @@
-import { totalmem } from 'os'
 import { configJson } from '../file-models/mempool-config.json'
 import { sdk } from '../sdk'
-import { clnMountpoint, lndCertPath, lndMacaroonPath } from '../utils'
+import { clnMountpoint, isLowRam, lndCertPath, lndMacaroonPath } from '../utils'
 import { i18n } from '../i18n'
 const { InputSpec, Value } = sdk
 
-// 15 GiB floor to cover 16 GB devices that report slightly less than 16 * 2^30.
-const lowRamWarning =
-  totalmem() < 15 * 1024 ** 3
-    ? i18n(
-        'Lightning network data is memory-intensive. Running it alongside Bitcoin and an Electrum indexer on a system with less than 16 GB of RAM can trigger out-of-memory crashes that take down Mempool or one of its dependencies. Enable only if you have RAM headroom to spare.',
-      )
-    : null
+const lowRamWarning = isLowRam()
+  ? i18n(
+      'Lightning network data is memory-intensive and is recommended only on devices with 16 GB of RAM or more. Running it alongside Bitcoin and an Electrum indexer on a smaller device can trigger out-of-memory crashes that take down Mempool or one of its dependencies.',
+    )
+  : null
 
 export const lightningInputSpec = InputSpec.of({
   lightning: Value.select({

@@ -1,23 +1,23 @@
 import { VersionInfo } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '3.3.1:21',
+  version: '3.3.1:22',
   releaseNotes: {
-    en_US: `Requires an up-to-date Bitcoin.
+    en_US: `Lets 16 GB devices turn on indexing.
 
-Mempool needs pruning disabled and the transaction index enabled on Bitcoin, and asks for that through settings older Bitcoin releases do not have. The version Mempool required did not rule those out, so on an out-of-date Bitcoin the Auto-Configure task opened a form that could not be submitted, and came back no matter what you did. Mempool now requires the current revision of whichever Bitcoin version line you are on, so an out-of-date Bitcoin is reported as needing an update instead.`,
-    es_ES: `Exige un Bitcoin actualizado.
+Mempool checked your RAM against a 16 GB floor, but what it measures is the share StartOS grants to services — the system total minus the 1 GiB StartOS keeps for itself — so no 16 GB device could ever clear the bar. Indexing now warns instead of refusing, and the choice is yours. The Lightning form uses the same measurement, so its memory warning is reserved for devices that really are short on RAM.`,
+    es_ES: `Permite activar la indexación en dispositivos de 16 GB.
 
-Mempool necesita que la poda esté desactivada y el índice de transacciones activado en Bitcoin, y lo solicita mediante ajustes que las versiones antiguas de Bitcoin no tienen. La versión que Mempool exigía no las descartaba, así que en un Bitcoin desactualizado la tarea Auto-Configurar abría un formulario que no se podía enviar y volvía a aparecer hiciera lo que hiciera. Ahora Mempool exige la revisión actual de la línea de versiones de Bitcoin que uses, de modo que un Bitcoin desactualizado se señala como pendiente de actualizar.`,
-    de_DE: `Setzt ein aktuelles Bitcoin voraus.
+Mempool comparaba tu RAM con un umbral de 16 GB, pero lo que mide es la parte que StartOS concede a los servicios —el total del sistema menos el 1 GiB que StartOS se reserva—, así que ningún dispositivo de 16 GB podía superarlo. Ahora la indexación avisa en lugar de rechazar y te deja decidir. El formulario de Lightning usa la misma medición, así que su aviso de memoria queda reservado a los dispositivos que realmente van justos de RAM.`,
+    de_DE: `Ermöglicht das Aktivieren der Indexierung auf 16-GB-Geräten.
 
-Mempool benötigt Bitcoin ohne Pruning und mit aktiviertem Transaktionsindex und fordert das über Einstellungen an, die ältere Bitcoin-Ausgaben nicht haben. Die von Mempool geforderte Version schloss diese nicht aus, sodass auf einem veralteten Bitcoin die Aufgabe „Auto-Konfiguration“ ein Formular öffnete, das sich nicht absenden ließ, und immer wieder zurückkam. Mempool verlangt jetzt die aktuelle Revision der von dir genutzten Bitcoin-Versionsreihe, sodass ein veraltetes Bitcoin stattdessen als aktualisierungsbedürftig gemeldet wird.`,
-    pl_PL: `Wymaga aktualnego Bitcoina.
+Mempool prüfte deinen Arbeitsspeicher gegen eine 16-GB-Schwelle, misst aber den Anteil, den StartOS den Diensten zuteilt – die Systemgesamtmenge abzüglich des 1 GiB, das StartOS für sich behält –, sodass kein 16-GB-Gerät die Hürde je nehmen konnte. Die Indexierung warnt jetzt, statt abzuweisen, und überlässt dir die Entscheidung. Das Lightning-Formular verwendet dieselbe Messung, sodass sein Speicherhinweis Geräten vorbehalten bleibt, die wirklich knapp bei Arbeitsspeicher sind.`,
+    pl_PL: `Umożliwia włączenie indeksowania na urządzeniach z 16 GB.
 
-Mempool wymaga wyłączonego przycinania i włączonego indeksu transakcji w Bitcoinie i prosi o to poprzez ustawienia, których starsze wydania Bitcoina nie mają. Wersja wymagana przez Mempool ich nie wykluczała, więc na nieaktualnym Bitcoinie zadanie Auto-Konfiguracja otwierało formularz, którego nie dało się wysłać, i wracało niezależnie od podjętych działań. Mempool wymaga teraz bieżącej rewizji tej linii wydań Bitcoina, z której korzystasz, więc nieaktualny Bitcoin jest zgłaszany jako wymagający aktualizacji.`,
-    fr_FR: `Exige un Bitcoin à jour.
+Mempool porównywał twoją pamięć RAM z progiem 16 GB, ale mierzy część, którą StartOS przydziela usługom — całość systemu pomniejszoną o 1 GiB, który StartOS zatrzymuje dla siebie — więc żadne urządzenie z 16 GB nie mogło przekroczyć tego progu. Indeksowanie teraz ostrzega, zamiast odrzucać, i pozostawia decyzję tobie. Formularz Lightning korzysta z tego samego pomiaru, więc jego ostrzeżenie o pamięci jest zarezerwowane dla urządzeń, którym naprawdę brakuje RAM.`,
+    fr_FR: `Permet d'activer l'indexation sur les appareils de 16 Go.
 
-Mempool a besoin que l'élagage soit désactivé et l'index des transactions activé sur Bitcoin, et le demande via des réglages que les anciennes versions de Bitcoin n'ont pas. La version exigée par Mempool ne les excluait pas : sur un Bitcoin obsolète, la tâche Auto-Configuration ouvrait un formulaire impossible à envoyer et revenait quoi que vous fassiez. Mempool exige désormais la révision actuelle de la ligne de versions de Bitcoin que vous utilisez, de sorte qu'un Bitcoin obsolète est signalé comme devant être mis à jour.`,
+Mempool comparait votre RAM à un seuil de 16 Go, alors qu'il mesure la part que StartOS accorde aux services — le total du système moins le 1 Gio que StartOS garde pour lui —, si bien qu'aucun appareil de 16 Go ne pouvait franchir ce seuil. L'indexation avertit désormais au lieu de refuser et vous laisse décider. Le formulaire Lightning utilise la même mesure, de sorte que son avertissement mémoire est réservé aux appareils qui manquent réellement de RAM.`,
   },
   migrations: {},
 })

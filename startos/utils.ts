@@ -1,4 +1,5 @@
 import { T, utils } from '@start9labs/start-sdk'
+import { totalmem } from 'os'
 import { rpcHostId, rpcPort } from 'bitcoin-core-startos/startos/utils'
 import { controlHostId, restPort } from 'lnd-startos/startos/interfaces'
 import { storeJson } from './file-models/store.json'
@@ -115,3 +116,9 @@ export const PROFILES: Record<
 }
 
 export const DEFAULT_PROFILE: PerformanceProfile = 'low-cpu'
+
+// totalmem() is the service-container share, not host RAM: StartOS caps it 1 GiB
+// below MemTotal, so a 16 GB device reports ~14.6 GiB — less with an iGPU carve-out.
+export const LOW_RAM_BYTES = 12 * 1024 ** 3
+
+export const isLowRam = () => totalmem() < LOW_RAM_BYTES
