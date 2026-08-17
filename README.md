@@ -4,13 +4,15 @@
 
 # Mempool on StartOS
 
-> **Upstream docs:** <https://mempool.space/docs/>
->
 > Everything not listed in this document should behave the same as upstream
-> Mempool. If a feature, setting, or behavior is not mentioned
-> here, the upstream documentation is accurate and fully applicable.
+> Mempool. If a feature, setting, or behavior is not mentioned here, the
+> upstream documentation is accurate and fully applicable — see the
+> Documentation section of `instructions.md` for links.
 
-[Mempool](https://github.com/mempool/mempool) is a fully featured mempool visualizer, blockchain explorer, and API service. It focuses on the emerging transaction fee market to help the transition into a multi-layer Bitcoin ecosystem.
+[Mempool](https://github.com/mempool/mempool) is a mempool visualizer, block explorer, and fee-market API. On StartOS it runs entirely against your own Bitcoin node and your own Electrum indexer, with every external data source that upstream reaches for either disabled or optional.
+
+- **Upstream repo:** <https://github.com/mempool/mempool>
+- **Wrapper repo:** <https://github.com/Start9Labs/mempool-startos>
 
 ---
 
@@ -18,276 +20,200 @@
 
 - [Image and Container Runtime](#image-and-container-runtime)
 - [Volume and Data Layout](#volume-and-data-layout)
-- [Installation and First-Run Flow](#installation-and-first-run-flow)
-- [Configuration Management](#configuration-management)
-- [Network Access and Interfaces](#network-access-and-interfaces)
-- [Actions (StartOS UI)](#actions-startos-ui)
-- [Backups and Restore](#backups-and-restore)
-- [Health Checks](#health-checks)
+- [File Models](#file-models)
 - [Dependencies](#dependencies)
+- [Network Access and Interfaces](#network-access-and-interfaces)
+- [Installation and First-Run Flow](#installation-and-first-run-flow)
+- [Actions](#actions)
+- [Tasks](#tasks)
+- [Health Checks](#health-checks)
+- [Backups and Restore](#backups-and-restore)
 - [Limitations and Differences](#limitations-and-differences)
-- [What Is Unchanged from Upstream](#what-is-unchanged-from-upstream)
-- [Contributing](#contributing)
 - [Quick Reference for AI Consumers](#quick-reference-for-ai-consumers)
 
 ---
 
 ## Image and Container Runtime
 
-| Property      | Value                                           |
-| ------------- | ----------------------------------------------- |
-| Frontend      | `mempool/frontend` (upstream, unmodified)       |
-| Backend       | `mempool/backend` (upstream, unmodified)        |
-| MariaDB       | `mariadb` (upstream, unmodified)                |
-| Architectures | x86_64, aarch64                                 |
-| Runtime       | Three containers (Frontend + Backend + MariaDB) |
+Three upstream images, unmodified, run as three daemons in a fixed order.
 
-### Entrypoints
+| Property      | Value                                            |
+| ------------- | ------------------------------------------------ |
+| Images        | `mempool/frontend`, `mempool/backend`, `mariadb` |
+| Architectures | x86_64, aarch64                                  |
 
-| Container | Entrypoint                                                          | Notes                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| --------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Frontend  | Upstream `docker-entrypoint.sh` (via `sdk.useEntrypoint()`)         | `LIGHTNING=true` injected when a Lightning node is configured                                                                                                                                                                                                                                                                                                                                                                   |
-| Backend   | Custom: `/bin/sh` boot guard, then `node /backend/package/index.js` | Runs as `root`. The boot guard drops the on-disk cache when the previous start never became healthy — breaking a heap-OOM boot loop — then execs node. `NODE_OPTIONS=--max-old-space-size=<dynamic>` — sized to (`os.totalmem()` − 6 GB reserve for Bitcoin/indexer/LN): 1/3 of the remainder, clamped 2048–8192 MB (a 16 GB device reports ~14.6 GiB and gets ~2.9 GB); with any indexing toggle on, 1/2, clamped 4096–8192 MB |
-| MariaDB   | Upstream `docker-entrypoint.sh` (via `sdk.useEntrypoint()`)         | `--bind-address=127.0.0.1` enforces loopback-only listener                                                                                                                                                                                                                                                                                                                                                                      |
+| Subcontainer          | Daemon    | Starts after | Purpose                                      |
+| --------------------- | --------- | ------------ | -------------------------------------------- |
+| `mariadb-sub`         | `mariadb` | —            | The bundled database, bound to loopback      |
+| `backend-api`         | `api`     | `mariadb`    | The indexer and API — the one to `attach` to |
+| `user-interface`      | `webui`   | `api`        | The web frontend, which proxies the API      |
+| `clear-backend-cache` | —         | —            | Temporary; the Clear Backend Cache action    |
+
+**The backend does not run the image's entrypoint directly.** It runs a short shell guard first, then execs node. The guard writes a sentinel file into the cache directory on every start and the API health check removes it on the first healthy report; if the sentinel is still there at the next start, the previous start never became healthy, so the guard wipes the on-disk cache before starting. That breaks the boot loop where an oversized cache exhausts the heap while loading, over and over.
+
+The heap ceiling itself is computed at every start rather than fixed. It takes the RAM StartOS grants the container, subtracts 6 GB for the co-resident stack (Bitcoin, the indexer, any Lightning node), and takes a third of the remainder — half, with any indexing toggle on, since the working set is larger. It is a ceiling and not a reservation: raising it does not increase steady-state memory, it only lets a transient startup peak finish.
 
 ## Volume and Data Layout
 
-| Volume    | Mount Point      | Purpose                      |
-| --------- | ---------------- | ---------------------------- |
-| `main`    | —                | Unused (reserved)            |
-| `cache`   | `/backend/cache` | Mempool cache data           |
-| `db`      | `/var/lib/mysql` | MariaDB database             |
-| `config`  | —                | Mempool configuration        |
-| `startos` | —                | StartOS store (`store.json`) |
+Five volumes are declared and four carry data.
 
-StartOS-specific files:
+| Volume    | Mount Point                                    | Purpose                                      |
+| --------- | ---------------------------------------------- | -------------------------------------------- |
+| `config`  | `/backend/mempool-config.json`, read-only file | The upstream configuration file              |
+| `cache`   | `/backend/cache`                               | The backend's mempool and RBF disk cache     |
+| `db`      | `/var/lib/mysql` in `mariadb-sub`              | The MariaDB data directory                   |
+| `startos` | — (host side)                                  | `store.json`; never mounted into a container |
+| `main`    | — (unused)                                     | Retained only for the 3.3.1:3 migration path |
 
-| File                  | Volume   | Purpose                                            |
-| --------------------- | -------- | -------------------------------------------------- |
-| `mempool-config.json` | `config` | Mempool backend configuration (managed by StartOS) |
+`config` is mounted **as a single read-only file**, not as a directory, so the backend can read its configuration but cannot rewrite it — every change goes through the package.
 
-## Installation and First-Run Flow
+## File Models
 
-1. Ensure Bitcoin is installed. Mempool creates a critical task on Bitcoin requiring `txindex=true` and pruning to be disabled; the task re-appears any time those conditions stop being met
-2. Install Mempool from the StartOS marketplace
-3. On install, StartOS creates a **critical task** to select an Electrum indexer for address lookups
-4. Mempool will not start until Bitcoin (and the selected indexer, and the Lightning backend if configured) report healthy via their StartOS health checks — see [Health Checks](#health-checks)
-5. Optionally run "Enable Lightning" for Lightning network data
-6. Optionally run "Indexing and Performance" to change the performance profile, toggle statistics, adjust the service-log level, or opt in to block-summary, goggles, audit, and/or CPFP indexing
+Two models: upstream's configuration file, and a small store for state that has no place in it.
 
-On first install, StartOS auto-generates a 22-character MariaDB password and writes it to `mempool-config.json`. The database is localhost-only.
+| File                  | Volume    | Format | Modelled                | Written by                             |
+| --------------------- | --------- | ------ | ----------------------- | -------------------------------------- |
+| `mempool-config.json` | `config`  | JSON   | Yes — `FileHelper.json` | Install, every init, and three actions |
+| `store.json`          | `startos` | JSON   | Yes — `FileHelper.json` | The Select Indexer action              |
 
-**Install alert:** Previous block fee estimates will show as zero until the service catches up. Lookups may be slow while warming up.
+`store.json` holds only which Electrum indexer you selected. It is StartOS state — the discriminator that decides which optional dependency exists — and deliberately not part of upstream's file.
 
-**Update alert:** Mempool reindexes after updates, which can take up to an hour.
+Within `mempool-config.json`:
 
-## Configuration Management
+**Enforced** — rewritten to a fixed value whenever the package writes the file: the whole `DATABASE` section bar the password (the bundled MariaDB on loopback), `MEMPOOL.BACKEND`, `CORE_RPC.COOKIE_PATH`, LND's certificate and macaroon paths, Core Lightning's socket path, and the `SYSLOG`, `MAXMIND`, `REDIS`, `REPLICATION`, and `STRATUM` sections, all held off.
 
-Mempool is configured via `mempool-config.json`, managed by StartOS.
+**Derived** — written from live addresses by init on every start: `CORE_RPC.HOST`/`PORT`, `ELECTRUM.HOST`/`PORT`, and `LND.REST_API_URL`. Each is a reactive read of the dependency's address over the LXC bridge, so init re-runs and the backend restarts precisely when an address changes — an install, an uninstall, a port change — and not on a routine dependency update. **An absent dependency resolves to nothing and its key is omitted entirely** rather than written as a placeholder that would fail to connect; the write heals when the dependency returns.
 
-Dependency network addresses are **resolved over the LXC bridge** at runtime and pinned into the config before the backend starts (see `startos/init/watchHosts.ts`); `.startos` DNS is no longer used in StartOS 2.0. This affects `CORE_RPC.HOST`/`PORT` (bitcoind), `ELECTRUM.HOST`/`PORT` (the selected indexer), and `LND.REST_API_URL` — their stored values are dynamic bridge addresses read reactively from each binding's assigned port, so `watchHosts` re-resolves (and main restarts the backend) only when an address actually changes, never on a routine dependency update. While a dependency is absent its config section is simply left unwritten (the backend cannot dial it and the health checks show it) and heals automatically when the dependency returns.
+**Seeded once** — `DATABASE.PASSWORD`, generated at install for the bundled database.
 
-### Auto-Configured by StartOS
+**Yours** — everything else, including the whole `EXTERNAL_DATA_SERVER` section and the fiat-price settings. Those are seeded with upstream's own values and never re-asserted, so a hand edit survives.
 
-| Setting                           | Value                                | Purpose                                                                                                                         |
-| --------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| `CORE_RPC.HOST` / `.PORT`         | bitcoind's LXC-bridge address        | Bitcoin RPC connection, resolved at runtime                                                                                     |
-| `CORE_RPC.COOKIE`                 | `true`                               | Cookie authentication                                                                                                           |
-| `CORE_RPC.COOKIE_PATH`            | `/mnt/bitcoind/.cookie`              | Cookie file path                                                                                                                |
-| `DATABASE.HOST` / `.PORT`         | `127.0.0.1` / `3306`                 | Localhost-only MariaDB sidecar                                                                                                  |
-| `DATABASE.DATABASE` / `.USERNAME` | `mempool` / `mempool`                |                                                                                                                                 |
-| `DATABASE.PASSWORD`               | Auto-generated on install (22 chars) | Written to `mempool-config.json`                                                                                                |
-| `MEMPOOL.NETWORK`                 | `mainnet`                            | Bitcoin network                                                                                                                 |
-| `MEMPOOL.BACKEND`                 | `electrum`                           | Backend type                                                                                                                    |
-| `SYSLOG.ENABLED`                  | `false`                              | Syslog disabled                                                                                                                 |
-| `MAXMIND.ENABLED`                 | `false`                              | GeoIP disabled                                                                                                                  |
-| `REDIS.ENABLED`                   | `false`                              | Redis disabled                                                                                                                  |
-| `REPLICATION.ENABLED`             | `false`                              | Replication disabled                                                                                                            |
-| `STRATUM.ENABLED`                 | `false`                              | Stratum disabled                                                                                                                |
-| `SOCKS5PROXY.HOST` / `.PORT`      | `127.0.0.1` / `9050`                 | SOCKS5 proxy for external onion data servers (disabled by default; `HOST` is a loopback placeholder until Tor SOCKS is bridged) |
+Two defaults depart from upstream's:
 
-### Written by Actions
+| Key                                              | Here               | Upstream in-source | Why                                                                                     |
+| ------------------------------------------------ | ------------------ | ------------------ | --------------------------------------------------------------------------------------- |
+| `MEMPOOL.POLL_RATE_MS` / `MEMPOOL_BLOCKS_AMOUNT` | 8000 ms / 4 blocks | 2000 ms / 8 blocks | Home hardware is the common case; the Responsive profile restores upstream's values     |
+| `MEMPOOL.STDOUT_LOG_MIN_PRIORITY`                | `info`             | `debug`            | Debug is very noisy in normal operation — but see [Actions](#actions) before a backfill |
 
-| Setting                                | Action                   | Notes                                                                                                                                                                                            |
-| -------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `store.json` `indexer`                 | Select Indexer           | `fulcrum` or `electrs` — StartOS state on the `startos` volume, not a `mempool-config.json` key; `ELECTRUM.HOST`/`.PORT` (TLS off) are then resolved to that indexer's bridge address at runtime |
-| `LIGHTNING.ENABLED` / `.BACKEND`       | Enable Lightning         | Backend is `lnd` or `cln`                                                                                                                                                                        |
-| `LND.TLS_CERT_PATH` / `.MACAROON_PATH` | Enable Lightning         | Paths under the LND mount                                                                                                                                                                        |
-| `CLIGHTNING.SOCKET`                    | Enable Lightning         | `lightning-rpc` socket under the CLN mount                                                                                                                                                       |
-| `MEMPOOL.POLL_RATE_MS`                 | Indexing and Performance | `8000` (Low-CPU) / `4000` (Balanced) / `2000` (Responsive)                                                                                                                                       |
-| `MEMPOOL.MEMPOOL_BLOCKS_AMOUNT`        | Indexing and Performance | `4` (Low-CPU) / `6` (Balanced) / `8` (Responsive)                                                                                                                                                |
-| `STATISTICS.ENABLED`                   | Indexing and Performance | Default on                                                                                                                                                                                       |
-| `MEMPOOL.BLOCKS_SUMMARIES_INDEXING`    | Indexing and Performance | Default off                                                                                                                                                                                      |
-| `MEMPOOL.GOGGLES_INDEXING`             | Indexing and Performance | Default off                                                                                                                                                                                      |
-| `MEMPOOL.AUDIT`                        | Indexing and Performance | Default off; requires `BLOCKS_SUMMARIES_INDEXING`                                                                                                                                                |
-| `MEMPOOL.CPFP_INDEXING`                | Indexing and Performance | Default off                                                                                                                                                                                      |
-| `MEMPOOL.STDOUT_LOG_MIN_PRIORITY`      | Indexing and Performance | Default `info`; set to `debug` to watch indexing backfill progress                                                                                                                               |
-
-### Bitcoin Requirements
-
-Mempool creates a **critical task** on the Bitcoin dependency that requires:
-
-- `txindex=true` — Transaction indexing must be enabled
-- `prune` must be unset — pruning must be disabled
-
-The task re-appears whenever those conditions stop being met.
-
-## Network Access and Interfaces
-
-| Interface | Port | Protocol | Purpose               |
-| --------- | ---- | -------- | --------------------- |
-| Web UI    | 8080 | HTTP     | Mempool web interface |
-
-The backend API runs on port 8999 internally but is not exposed as a separate interface.
-
-## Actions (StartOS UI)
-
-### Select Indexer
-
-- **Name:** Select Indexer
-- **Purpose:** Enable address lookups via an Electrum server instance
-- **Visibility:** Enabled
-- **Availability:** Any status
-- **Inputs:** Select one of: Fulcrum (recommended), Electrs
-- **Outputs:** None
-
-Selecting an indexer enables address search and transaction history features. Records the choice as StartOS state in `store.json` (on the `startos` volume, not in `mempool-config.json`); the indexer's `ELECTRUM.HOST`/`.PORT` are then resolved over the LXC bridge at runtime.
-
-### Enable Lightning
-
-- **Name:** Enable Lightning
-- **Purpose:** Select the Lightning node used to serve network data to the Lightning tab
-- **Visibility:** Enabled
-- **Availability:** Any status
-- **Inputs:** Select one of: LND, Core Lightning, None
-- **Outputs:** None
-
-When enabled, configures the `LIGHTNING` and `LND`/`CLIGHTNING` sections of the configuration and mounts the selected Lightning node's volume.
-
-When `os.totalmem()` reads below `LOW_RAM_BYTES` (12 GiB, `utils.ts`) the action shows a **warning** banner above the form: the Lightning network-graph sync is memory-intensive, and running it alongside Bitcoin and an Electrum indexer on a low-memory device can push the system into out-of-memory crashes. It is a warning, not a gate — the user can still submit.
-
-### Indexing and Performance
-
-- **Name:** Indexing and Performance
-- **Purpose:** Tune backend CPU/responsiveness, toggle the statistics service, set the service-log level, and opt in to optional indexing features
-- **Visibility:** Enabled
-- **Availability:** Any status
-- **Inputs:**
-  - **Performance Profile** — one of `low-cpu` / `balanced` / `responsive`
-  - **Enable Statistics** — toggle (default on)
-  - **Block Summaries Indexing** — toggle (default off)
-  - **Goggles Indexing** — toggle (default off)
-  - **Block Audit** — toggle (default off; requires Block Summaries Indexing)
-  - **CPFP Indexing** — toggle (default off)
-  - **Log Level** — one of `debug` / `info` / `warn` / `err` (default `info`)
-- **Outputs:** None
-
-Sets `MEMPOOL.POLL_RATE_MS`, `MEMPOOL.MEMPOOL_BLOCKS_AMOUNT`, `STATISTICS.ENABLED`, `MEMPOOL.BLOCKS_SUMMARIES_INDEXING`, `MEMPOOL.GOGGLES_INDEXING`, `MEMPOOL.AUDIT`, `MEMPOOL.CPFP_INDEXING`, and `MEMPOOL.STDOUT_LOG_MIN_PRIORITY` on the configuration. Changes apply on the next service restart.
-
-**Performance profile.** The Mempool backend recomputes a Rust-based block-template projection on every poll; the cost scales with poll frequency and projection depth, and on healthy nodes this loop is the dominant background CPU consumer. The profile picks both together:
-
-| Preset            | `POLL_RATE_MS` | `MEMPOOL_BLOCKS_AMOUNT` | Notes                                           |
-| ----------------- | -------------- | ----------------------- | ----------------------------------------------- |
-| Low-CPU (default) | 8000           | 4                       | Recommended for low-power devices               |
-| Balanced          | 4000           | 6                       |                                                 |
-| Responsive        | 2000           | 8                       | Matches upstream in-source default; highest CPU |
-
-**Statistics.** When on (default, matching upstream), the backend samples mempool throughput at 1 Hz and writes periodic statistics rows to MariaDB to power the dashboard charts. Turning it off stops the sampler and the writes; saves background CPU and disk I/O at the cost of the tx/s + vbytes/s charts.
-
-**Log level.** Sets `MEMPOOL.STDOUT_LOG_MIN_PRIORITY`, the minimum priority the backend writes to stdout (upstream syslog-style priorities; the action exposes the useful `debug` / `info` / `warn` / `err` subset, default `info`). Upstream's in-source default is `debug`; the wrapper keeps `info` for a quiet steady-state log. Switch to `debug` to watch per-block indexing backfill progress (rate, percent complete, elapsed time), then back to `info` afterward — at `debug` the backend is chatty.
-
-**Indexing.** All four indexing toggles are off by default, matching upstream. Enabling any of them triggers a historical backfill on the next service restart, which can take several hours and consume significant disk space.
-
-- **Backfill visibility (issue #63):** Upstream logs per-block backfill progress at `debug` priority only, so at the default `info` log level the service log appears completely idle while a backfill runs — the only `info`+ output is the occasional paired `503` retry error when Bitcoin Core's RPC work queue saturates, which is expected, self-recovering, and non-fatal. To make this legible, the wrapper logs a notice on every start with an indexing feature enabled (a backfill may be in progress; 503 retries are non-fatal; restarting the service interrupts the backfill and delays completion), plus a pointer to the Log Level setting when the level is above `debug`. Do not restart the service because the log looks quiet — watch for the upstream `NOTICE: ... indexing completed` lines instead, or raise the log level.
-- **RAM guidance:** Backend indexing competes with Bitcoin's dbcache, the selected Electrum indexer, and any Lightning node, so 16 GB of system RAM or more is recommended before turning a toggle on. When `os.totalmem()` reads below `LOW_RAM_BYTES` (12 GiB, `utils.ts`) the action shows a **warning** banner above the form. It is a warning, not a gate — the operator decides. The banner names the recommended machine size rather than the measured figure: the reading is the container share, so quoting it would show a number a user cannot reconcile with the capacity their machine is sold with.
-
-  The threshold is deliberately well below 16 GiB because **`os.totalmem()` here is not host RAM**. StartOS ≥ 0.4.0 caps every service container at `MemTotal − 1 GiB` (`limit_container_memory`, `services.slice` `MemoryMax`), lxcfs exposes that cap as the container's `/proc/meminfo`, and libuv reads `/proc/meminfo` — so a package sees the cap, not the host total. `MemTotal` is itself a few hundred MiB under installed capacity, and an integrated GPU can carve out up to 2 GiB more. A 16 GB device therefore reports ~14.6 GiB to this code — nearer ~12.6 GiB with a 2 GiB carve-out — so the threshold sits low enough to admit both, and a floor anywhere near 16 GiB is unpassable on the hardware it is meant to admit.
-
-- **Heap behavior:** The backend's V8 `--max-old-space-size` ceiling scales with `os.totalmem()` — which, as above, is the service-container share (host `MemTotal` less StartOS's 1 GiB reserve), not host RAM. It subtracts a further 6 GB reserve for the co-resident stack (Bitcoin, the selected indexer, any Lightning node) and shares the remainder: with indexing off, 1/3 clamped 2–8 GB (a 16 GB device reports ~14.6 GiB and so gets ~2.9 GB, a 32 GB device the 8 GB max); with any indexing toggle on, 1/2 clamped 4–8 GB. Once the reported figure drops below ~14 GiB the `Math.max(4096, …)` floor binds, so an indexing backend on a small device is granted a ceiling larger than its share of the formula, which is part of why the low-RAM warning exists. This is a ceiling, not a reservation — the backend's steady-state heap sits well under it, so a higher ceiling does not raise normal RAM use, it only lets a transient startup peak (reloading the on-disk mempool/RBF cache) finish instead of crashing with "JavaScript heap out of memory". A cache too large to reload even under the ceiling is handled by the boot guard (see [Clear Backend Cache](#clear-backend-cache)), not by enlarging the heap.
-
-### Clear Backend Cache
-
-- **Name:** Clear Backend Cache
-- **Purpose:** Delete the backend's on-disk mempool/RBF cache so it is rebuilt from live data on the next start
-- **Visibility:** Enabled
-- **Availability:** Only when stopped
-- **Inputs:** None
-- **Outputs:** Confirmation message
-
-Recovers a backend stuck failing to start with a "JavaScript heap out of memory" error while reloading an oversized cache. Deleting the cache costs only a short mempool resync and recent RBF history; blocks, the MariaDB database, and settings are untouched. `allowedStatuses: only-stopped` avoids racing the backend's own cache writes — stop Mempool, run the action, start it.
-
-**Automatic recovery.** The same clearing happens on its own, without this action. The `api` daemon's command is a `/bin/sh` boot guard that writes a `.starting` sentinel into the cache volume and then execs node; the `api` health check removes the sentinel on the first healthy report. If a start crashes before becoming healthy (the OOM boot-loop case), the sentinel survives, so the next start's guard finds it, clears the cache, and lets node rebuild from live data. A boot loop therefore self-heals within one restart cycle; this action is the manual override.
-
-## Backups and Restore
-
-Backups capture the `config` and `startos` volumes — the generated database password and every Indexer / Lightning / indexing selection. The MariaDB database and the backend disk cache are deliberately excluded: both are derived entirely from Bitcoin, so they are rebuilt after a restore rather than copied.
-
-**Volumes backed up:**
-
-- `config` — Mempool configuration (DB password + user selections)
-- `startos` — StartOS state (e.g. the selected indexer in `store.json`)
-
-**NOT included in backup:**
-
-- `db` — MariaDB data; rebuilt by re-indexing from Bitcoin on restore
-- `cache` — backend disk cache; rebuilt from live data on the next start
-- `main` — unused
-
-**Restore behavior:** The database starts empty and Mempool re-indexes it from Bitcoin. Recent data appears quickly; full historical indexes — mining, hashrate, and any enabled block-summary/audit indexing — backfill over the following hours. The re-index runs against the Bitcoin node's RPC, so expect elevated load until it completes.
-
-The database is not dumped into the backup: a `mysqldump`-based backup exceeds the SDK/StartOS backup timeouts on large indexed installs (a 30 s InnoDB-readiness wait and a ~180 s dump/copy ceiling, neither tunable from the package), and the data is reconstructible from the blockchain regardless.
-
-## Health Checks
-
-| Check             | Method                                          | Grace Period | Messages                                                                        |
-| ----------------- | ----------------------------------------------- | ------------ | ------------------------------------------------------------------------------- |
-| **MariaDB**       | `healthcheck.sh --connect --innodb_initialized` | 120 seconds  | (internal, not displayed)                                                       |
-| **API**           | Port 8999 listening                             | 45 seconds   | Success: "The API is ready" / Error: "The API is not ready"                     |
-| **Web Interface** | Port 8080 listening                             | Default      | Success: "The web interface is ready" / Error: "The web interface is not ready" |
-
-Sync status is no longer checked internally. Mempool gates on its dependencies' own health checks — bitcoind (`bitcoind`, `sync-progress`), the selected indexer (fulcrum `primary`/`sync-progress` or electrs `electrs`/`sync`), and the selected Lightning backend if enabled (lnd `lnd`/`sync-progress` or c-lightning `lightningd`/`check-synced`) — so it will not start until those backends are fully synced and reachable.
+`SOCKS5PROXY` is present, dormant, and points at loopback. Tor's SOCKS port is not published on the service bridge and Tor is not a dependency here, so enabling it would not currently reach anything.
 
 ## Dependencies
 
-| Dependency     | Required | Health Gate                  | Mounted Volume (Dep Volume → Mount Point) | Purpose                                      |
-| -------------- | -------- | ---------------------------- | ----------------------------------------- | -------------------------------------------- |
-| Bitcoin        | Yes      | `bitcoind`, `sync-progress`  | `main` → `/mnt/bitcoind`                  | Blockchain data via RPC                      |
-| Fulcrum        | Optional | `primary`, `sync-progress`   | None                                      | Address lookups (recommended indexer)        |
-| Electrs        | Optional | `electrs`, `sync`            | None                                      | Address lookups (alternate indexer)          |
-| LND            | Optional | `lnd`, `sync-progress`       | `main` → `/mnt/lnd` (read-only)           | Lightning Network data (REST API + macaroon) |
-| Core Lightning | Optional | `lightningd`, `check-synced` | `main/bitcoin` → `/mnt/cln` (read-only)   | Lightning Network data (Unix socket)         |
+Bitcoin is required; the rest are chosen, and each choice changes which dependency exists.
 
-Only one indexer (Electrs or Fulcrum) can be active at a time. Only one Lightning node (LND or CLN) can be active at a time. Optional dependencies are only registered when selected by the corresponding action.
+| Dependency               | Kind      | Required                             | Health checks                       |
+| ------------------------ | --------- | ------------------------------------ | ----------------------------------- |
+| `bitcoind`               | `running` | Always                               | `bitcoind`, `sync-progress`         |
+| `fulcrum` _or_ `electrs` | `running` | Whichever the indexer action selects | The indexer's ready and sync checks |
+| `lnd` _or_ `c-lightning` | `running` | Only with Lightning enabled          | The node's ready and sync checks    |
 
-Bitcoin's `.cookie` file at `/mnt/bitcoind/.cookie` is used for RPC authentication.
+**Bitcoin must be archival with transaction indexing.** Mempool raises a `critical` task against Bitcoin asking for `prune=0` and `txindex=true`, and that task re-raises whenever the settings stop matching — it is not a one-time prompt. Address lookups additionally need an Electrum indexer, which is what the indexer selection is for.
+
+Bitcoin's data directory is mounted read-only so the backend can read its RPC cookie; the chosen Lightning node's is mounted read-only for LND's macaroon and certificate, or Core Lightning's RPC socket. No credential is stored in this package.
+
+## Network Access and Interfaces
+
+One interface. The frontend serves it and reverse-proxies the API and websocket to the backend, so the backend's own port is not published.
+
+| Interface | Id      | Type | Port | Description                  |
+| --------- | ------- | ---- | ---- | ---------------------------- |
+| Web UI    | `webui` | ui   | 8080 | The web interface of Mempool |
+
+The port is bound on the `main` MultiHost and is not masked. Other packages resolve that host over the bridge — Am I Exposed does exactly this.
+
+## Installation and First-Run Flow
+
+Install generates the database password and raises two `critical` tasks: choose an indexer, and configure Bitcoin for archival mode with transaction indexing. Nothing else is required, and no credential is shown — Mempool has no accounts.
+
+The order that matters: Bitcoin must be synced, and the indexer must have finished its own initial index, before Mempool shows a complete picture. Until then the API is up but blocks and addresses are missing. Mempool itself has no separate sync of its own to wait for unless you enable indexing.
+
+## Actions
+
+Four actions, all user-facing.
+
+### Select Indexer
+
+Chooses which Electrum server backs address lookups — Fulcrum or Electrs.
+
+- **What it changes:** `indexer` in `store.json`, and through it the package's optional dependency. The address itself is resolved by init on the next start.
+- **Cost:** seconds, then a restart.
+- **Repeat safety:** idempotent; switching indexers loses nothing, since neither stores Mempool's data.
+
+### Enable Lightning
+
+Selects the Lightning node whose network data fills the Lightning tab, or turns the tab off.
+
+- **What it changes:** the `LIGHTNING` section, plus the paths for whichever node was picked; the frontend also gets `LIGHTNING=true`.
+- **Cost:** seconds, then a restart.
+- **Repeat safety:** idempotent, and nothing is deleted when it is switched off.
+- **This is the memory-hungry option.** Lightning graph data is large; on a device under 12 GiB the form warns before you commit.
+
+### Indexing and Performance
+
+The tuning form: a performance profile, mempool statistics, the log level, and four indexing toggles.
+
+- **What it changes:** the corresponding keys in the `MEMPOOL` and `STATISTICS` sections.
+- **Cost:** seconds for the write and the restart — but **enabling any indexing toggle starts a historical backfill that can run for many hours and consume significant disk space.**
+- **Repeat safety:** idempotent as a write; turning an indexing toggle back off does not undo a backfill already done.
+- **The backfill looks like nothing is happening.** Upstream logs per-block progress at debug priority only, so at the default log level the service log sits idle for hours while the backfill runs. The service announces this at every start with indexing on, and the form's Log Level control is what surfaces the progress. Restarting the service interrupts the backfill and delays completion. Intermittent 503 retries from Bitcoin during it are expected.
+- **Block Audit requires Block Summaries Indexing**, which the form's descriptions state but does not enforce.
+
+### Clear Backend Cache
+
+Deletes the backend's on-disk mempool and RBF cache.
+
+- **When to run it:** when the backend fails to start with a JavaScript heap out-of-memory error while loading its cache. The boot guard does this automatically after a failed start; this action is the manual route.
+- **What it changes:** nothing in configuration — only the `cache` volume's contents.
+- **Cost:** seconds, then a short mempool resync on the next start. Blocks, the database, and settings are untouched.
+- **Availability: only while the service is stopped.** Clearing the cache under a running backend would race its periodic cache writes.
+
+## Tasks
+
+Two tasks, both raised at install and both `critical`.
+
+| Task                     | On           | Raised when                                              | Cleared when             |
+| ------------------------ | ------------ | -------------------------------------------------------- | ------------------------ |
+| Select Indexer           | This package | At install                                               | The action runs          |
+| Bitcoin's Auto-Configure | `bitcoind`   | Bitcoin's settings are not `prune=0` with `txindex=true` | Bitcoin's settings match |
+
+Both are `critical` because Mempool is not functional without them: no indexer means no address lookups, and a pruned or unindexed node cannot answer the historical queries the explorer is built on.
+
+The Bitcoin task is the one to know about. It is registered with `once: false`, so it comes back if Bitcoin's configuration later stops matching — for example after restoring Bitcoin from a backup taken with pruning on.
+
+## Health Checks
+
+Three checks, one per daemon, and their ordering carries meaning.
+
+| Check     | Displayed       | Method                           | Grace |
+| --------- | --------------- | -------------------------------- | ----- |
+| `mariadb` | Hidden          | The image's own `healthcheck.sh` | 2 min |
+| `api`     | "API"           | Port 8999 is listening           | 45 s  |
+| `webui`   | "Web Interface" | Port 8080 is listening           | —     |
+
+The database check reports `loading` rather than failing while it initialises, so a first start looks like progress. It is not displayed, because a user has nothing to do about it.
+
+**`webui` is gated on `api`**, which makes it a truthful "Mempool is usable" signal rather than a report that a web server is running: the frontend proxies everything to the backend and is useless without it. StartOS holds the frontend while the API is unhealthy and brings it back when the API recovers, and dependent packages rely on that.
+
+An `api` failure after the grace period is most often the backend unable to reach Bitcoin, the indexer, or its own database — the service log names which. Failing repeatedly with a heap out-of-memory message while loading the cache is the case [Clear Backend Cache](#actions) exists for.
+
+## Backups and Restore
+
+Only configuration is backed up — `sdk.Backups.ofVolumes('config', 'startos')`.
+
+- **Included:** `mempool-config.json` with every setting, and `store.json` with the indexer selection.
+- **Excluded, deliberately:** the MariaDB volume and the backend cache. Both are derived from Bitcoin and the indexer, and both are rebuilt after a restore. The database in particular grows large enough on an indexed install that dumping it failed outright, and it holds nothing that cannot be re-derived.
+- **Restore:** settings come back intact and no task is raised, but **the historical database does not**. If indexing was enabled, the backfill starts over from the beginning on the first start, which takes as long as it took the first time.
 
 ## Limitations and Differences
 
-1. **Mainnet only** — Testnet, testnet4, signet, regtest, and Liquid not available
-2. **No Esplora backend** — Uses Electrum backend only
-3. **Single Lightning node** — Cannot use both LND and CLN simultaneously
-4. **No MAXMIND geolocation** — GeoIP features disabled
-5. **No Redis** — Redis caching not available
-6. **No Stratum** — Stratum mining protocol disabled
-7. **No Replication** — Database replication disabled
-8. **No Accelerator** — Paid transaction acceleration (`MEMPOOL_SERVICES.ACCELERATIONS`) disabled
-
-## What Is Unchanged from Upstream
-
-- Full mempool visualization
-- Block explorer functionality
-- Transaction lookup and broadcast
-- Fee estimation
-- Mining pool statistics
-- Lightning Network explorer (when enabled)
-- Address lookup (when indexer configured)
-- Real-time updates via WebSocket
-- REST API
-- All web UI features
-
-## Contributing
-
-Build and development workflow follow the StartOS packaging guide: <https://docs.start9.com/packaging>. Keep `README.md`, `instructions.md`, and `AGENTS.md` in sync with any change to user-visible behavior or package structure.
+1. **The database is not backed up.** A restore replays settings, not history; any enabled indexing backfills again from scratch.
+2. **Bitcoin must be archival with transaction indexing**, enforced by a re-raising `critical` task rather than merely recommended.
+3. **An Electrum indexer is required for address lookups**, and which one is a choice with no default until the install task is run.
+4. **Indexing is memory-hungry and slow**, and its progress is invisible at the default log level.
+5. **Telemetry and the maxmind, syslog, redis, replication, and stratum integrations are held off.**
+6. **Acceleration services are off by default**, and the external data servers upstream ships are reachable only over clearnet — the SOCKS5 proxy section is dormant here.
+7. **The backend runs as root**, which the boot guard needs in order to clear a cache written by the daemon.
+8. **No riscv64 build.** x86_64 and aarch64 only.
 
 ---
 
@@ -295,57 +221,49 @@ Build and development workflow follow the StartOS packaging guide: <https://docs
 
 ```yaml
 package_id: mempool
-upstream_version: see manifest dockerTags
-images:
-  frontend: mempool/frontend
-  backend: mempool/backend
-  mariadb: mariadb
-architectures: [x86_64, aarch64]
+image: mempool/backend # plus mempool/frontend and mariadb
+architectures:
+  - x86_64
+  - aarch64
+subcontainers:
+  - mariadb-sub # the bundled database
+  - backend-api # the API/indexer; the one to attach to
+  - user-interface # the frontend, proxies the API
+  - clear-backend-cache # temporary; the Clear Backend Cache action
 volumes:
-  main: (unused)
+  config: /backend/mempool-config.json (read-only file mount)
   cache: /backend/cache
-  db: /var/lib/mysql
-  config: (mempool-config.json)
-  startos: (StartOS state — store.json, selected indexer)
-ports:
-  ui: 8080
-  api: 8999 (internal)
-dependencies:
-  bitcoind:
-    required: true
-    required_config: { txindex: true, prune: 0 }
-  fulcrum:
-    required: false
-  electrs:
-    required: false
-  lnd:
-    required: false
-  c-lightning:
-    required: false
+  db: /var/lib/mysql (in mariadb-sub)
+  startos: host side (store.json)
+  main: unused; legacy
+file_models:
+  - mempool-config.json
+  - store.json
 startos_managed_env_vars:
-  mariadb:
-    - MARIADB_RANDOM_ROOT_PASSWORD
-    - MYSQL_DATABASE
-    - MYSQL_USER
-    - MYSQL_PASSWORD
-  backend:
-    - NODE_OPTIONS
-  frontend:
-    - LIGHTNING # only set when Enable Lightning action configures a node
+  - NODE_OPTIONS # backend heap ceiling, computed per start
+  - MARIADB_RANDOM_ROOT_PASSWORD
+  - MYSQL_DATABASE
+  - MYSQL_USER
+  - MYSQL_PASSWORD
+  - LIGHTNING # frontend, only when a Lightning node is selected
+dependencies:
+  - bitcoind # required, running
+  - fulcrum # or electrs; whichever the indexer action selects
+  - electrs
+  - lnd # or c-lightning; only with Lightning enabled
+  - c-lightning
+interfaces:
+  webui: { type: ui, port: 8080 }
 actions:
   - select-indexer
   - enable-lightning
   - indexing-and-performance
-  - clear-backend-cache
+  - clear-backend-cache # only-stopped
+tasks:
+  - { action: select-indexer, severity: critical }
+  - { action: autoconfig, severity: critical } # on bitcoind; re-raises
 health_checks:
-  - mariadb: healthcheck.sh (120s grace)
-  - api: port_listening 8999 (45s grace)
-  - webui: port_listening 8080
-dependency_health_gates:
-  - bitcoind: [bitcoind, sync-progress]
-  - fulcrum: [primary, sync-progress] # when selected indexer
-  - electrs: [electrs, sync] # when selected indexer
-  - lnd: [lnd, sync-progress] # when Lightning=lnd
-  - c-lightning: [lightningd, check-synced] # when Lightning=cln
-backup_strategy: volume backup (config + startos); db + cache rebuilt on restore
+  - mariadb # hidden
+  - api # displayed "API"
+  - webui # displayed "Web Interface"; gated on api
 ```
