@@ -41,7 +41,7 @@ Open the **Web UI** interface to reach Mempool. The home page shows the live mem
 
 ## If your server can't reach the internet
 
-Mempool needs almost nothing from the internet — Bitcoin, your indexer, and the database are all on your own network — so it starts and serves blocks even when your server is cut off. Two things do notice: fiat exchange rates go missing, and the web interface can fail to start, because it looks up one external address as it loads.
+Mempool needs almost nothing from the internet — Bitcoin, your indexer, and the database are all on your own network — so it starts and serves blocks even when your server is cut off, web interface included. One thing does notice: fiat exchange rates go missing.
 
 If that happens, the service log says so in a line at the top of a start. The cause is usually the server rather than Mempool, and the fix is to set explicit DNS servers under **System → DNS**. Don't go by whether the list there looks populated — a VPN or StartTunnel gateway supplies its own resolver, which reaches nothing whenever the tunnel is down or blocked, and your services can be left with that one entry and no fallback while the server itself still resolves fine. If your network blocks the addresses rather than the lookups, **Route External Requests Over Tor** is the other way around it.
 

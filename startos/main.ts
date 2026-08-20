@@ -102,10 +102,10 @@ export const main = sdk.setupMain(async ({ effects }) => {
   }
 
   // Mempool runs entirely on addresses — Bitcoin and the indexer over the bridge,
-  // MariaDB over loopback — so a container with no resolver still serves blocks.
-  // Fiat prices, the external data server, and the frontend's `mempool.space`
-  // nginx upstream (#69) do not, and those failures surface far from their cause,
-  // which is usually the server's rather than ours (start-technologies#3603).
+  // MariaDB over loopback — so a container with no resolver still serves blocks
+  // and still serves the UI. Fiat prices and the external data server do not, and
+  // those failures surface far from their cause, which is usually the server's
+  // rather than ours (start-technologies#3603).
   const resolves = await Promise.race([
     lookup('mempool.space').then(
       () => true,
@@ -116,7 +116,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
   if (!resolves) {
     console.warn(
       i18n(
-        'This server could not resolve an external hostname. Mempool itself will still run — Bitcoin, the Electrum indexer, and the database are reached by address — but fiat exchange rates will be unavailable and the web interface may fail to start. Set explicit DNS servers under System > DNS on your server, and check any VPN or StartTunnel gateway you have configured: a gateway supplies its own resolver, which stops working whenever the tunnel does.',
+        'This server could not resolve an external hostname. Mempool is otherwise unaffected — Bitcoin, the Electrum indexer, and the database are reached by address — but fiat exchange rates will be unavailable. Set explicit DNS servers under System > DNS on your server, and check any VPN or StartTunnel gateway you have configured: a gateway supplies its own resolver, which stops working whenever the tunnel does.',
       ),
     )
   }
@@ -317,11 +317,18 @@ export const main = sdk.setupMain(async ({ effects }) => {
       subcontainer: frontendSub,
       exec: {
         command: sdk.useEntrypoint(),
-        env: config.LIGHTNING.ENABLED
-          ? {
-              LIGHTNING: 'true',
-            }
-          : {},
+        env: {
+          // nginx resolves a literal hostname in `proxy_pass` when it loads its
+          // config, and the image ships no `resolver` directive, so its one
+          // external upstream — the mempool.space accelerator — made the entire
+          // UI refuse to start whenever a lookup failed (issue #69). The image's
+          // own PROXIED_SERVICES rewrites that line; pointing it at our backend
+          // needs no name resolution and answers a call to a disabled feature
+          // with a 404 rather than a hang.
+          PROXIED_SERVICES: 'true',
+          PROXIED_SERVICES_HOST: `http://127.0.0.1:${apiPort}`,
+          ...(config.LIGHTNING.ENABLED && { LIGHTNING: 'true' }),
+        },
       },
       ready: {
         display: i18n('Web Interface'),

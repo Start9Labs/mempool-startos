@@ -1,5 +1,6 @@
 import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
 import { configJson } from '../file-models/mempool-config.json'
+import { sdk } from '../sdk'
 import { EXTERNAL_RETRY } from '../utils'
 
 export const current = VersionInfo.of({
@@ -51,6 +52,15 @@ Le backend refuse de démarrer sans les définitions des pools de minage, et il 
       // The file model's defaults only reach missing or invalid keys, and an
       // older install already holds a valid EXTERNAL_MAX_RETRY of 1.
       await configJson.merge(effects, { MEMPOOL: EXTERNAL_RETRY })
+      // Replay keys left behind by bitcoind's two config-action renames. They
+      // still demand `prune: 0, txindex: true`, so they collide the moment
+      // Mempool asks bitcoind for anything else (issue #73). clearTask filters
+      // by id, so an install that never wrote them is unaffected.
+      await sdk.action.clearTask(
+        effects,
+        'bitcoind:config',
+        'bitcoind:other-config',
+      )
     },
     down: IMPOSSIBLE,
   },
