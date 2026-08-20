@@ -52,6 +52,15 @@ export const clnDescription = {
   fr_FR: 'Utilise pour fournir les donnees du reseau Lightning',
 }
 
+export const torDescription = {
+  en_US: 'Carries external requests when the Tor proxy is enabled',
+  es_ES:
+    'Transporta las solicitudes externas cuando el proxy Tor esta activado',
+  de_DE: 'Leitet externe Anfragen weiter, wenn der Tor-Proxy aktiviert ist',
+  pl_PL: 'Przekazuje zapytania zewnetrzne, gdy wlaczony jest serwer proxy Tor',
+  fr_FR: 'Achemine les requetes externes lorsque le proxy Tor est active',
+}
+
 export const lndDescription = {
   en_US: 'Used to provide Lightning Network data',
   es_ES: 'Se usa para proporcionar datos de la red Lightning',

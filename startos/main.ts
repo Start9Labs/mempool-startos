@@ -1,3 +1,4 @@
+import { lookup } from 'dns/promises'
 import { totalmem } from 'os'
 import { manifest as bitcoinManifest } from 'bitcoin-core-startos/startos/manifest'
 import { manifest as clnManifest } from 'cln-startos/startos/manifest'
@@ -10,24 +11,28 @@ import {
   btcMountpoint,
   clnMountpoint,
   lndMountpoint,
+  poolsPort,
   uiPort,
 } from './utils'
 
 // Absolute mountpoint of the backend disk-cache volume (see backendMounts).
 const BACKEND_CACHE_DIR = '/backend/cache'
 // Written when the backend starts, removed by the api health check on first
-// success. If it is still present at the next start, the previous start never
-// became healthy — most likely a heap-OOM while reloading an oversized on-disk
-// cache — so the guard drops the cache and lets this start rebuild from live
-// data instead of re-OOMing on the same file.
+// success. Still present at the next start means the previous start never became
+// healthy, so the cache is dropped in case reloading it is what kills the
+// backend. Any crash loop leaves the same sentinel, so the guard cannot know
+// why — the message must not name a cause it did not observe (issue #75).
 const BOOT_SENTINEL = `${BACKEND_CACHE_DIR}/.starting`
 const BOOT_GUARD_CMD: [string, ...string[]] = [
   '/bin/sh',
   '-c',
   [
     `if [ -e "${BOOT_SENTINEL}" ]; then`,
-    `echo "mempool: previous start did not reach readiness; clearing backend disk cache to break a possible out-of-memory boot loop" >&2;`,
+    `rm -f "${BOOT_SENTINEL}";`,
+    `if [ -n "$(ls -A "${BACKEND_CACHE_DIR}" 2>/dev/null)" ]; then`,
+    `echo "mempool: the previous start never became ready; clearing the backend disk cache before retrying" >&2;`,
     `rm -rf "${BACKEND_CACHE_DIR}"/* "${BACKEND_CACHE_DIR}"/.[!.]* 2>/dev/null || true;`,
+    `fi;`,
     `fi;`,
     `: > "${BOOT_SENTINEL}";`,
     `exec node /backend/package/index.js`,
@@ -94,6 +99,26 @@ export const main = sdk.setupMain(async ({ effects }) => {
         ),
       )
     }
+  }
+
+  // Mempool runs entirely on addresses — Bitcoin and the indexer over the bridge,
+  // MariaDB over loopback — so a container with no resolver still serves blocks.
+  // Fiat prices, the external data server, and the frontend's `mempool.space`
+  // nginx upstream (#69) do not, and those failures surface far from their cause,
+  // which is usually the server's rather than ours (start-technologies#3603).
+  const resolves = await Promise.race([
+    lookup('mempool.space').then(
+      () => true,
+      () => false,
+    ),
+    new Promise<boolean>((resolve) => setTimeout(resolve, 5_000, false)),
+  ])
+  if (!resolves) {
+    console.warn(
+      i18n(
+        'This server could not resolve an external hostname. Mempool itself will still run — Bitcoin, the Electrum indexer, and the database are reached by address — but fiat exchange rates will be unavailable and the web interface may fail to start. Check System > DNS on your server: if no DNS servers are listed there, set them, and check any VPN or StartTunnel gateway you have configured.',
+      ),
+    )
   }
 
   let backendMounts = sdk.Mounts.of()
@@ -163,6 +188,18 @@ export const main = sdk.setupMain(async ({ effects }) => {
     'user-interface',
   )
 
+  // Serves the bundled mining-pool snapshot on loopback, reusing the backend
+  // image for its node runtime. Upstream exits 1 rather than start when it has
+  // neither a stored pools-v2.json sha nor a reachable source for one, so on a
+  // database that has no sha yet — a fresh install, a restore, a schema migration
+  // that nulled it — an unreachable source is an unrecoverable boot loop (#76).
+  const poolsSub = sdk.SubContainer.of(
+    effects,
+    { imageId: 'backend' },
+    sdk.Mounts.of().mountAssets({ subpath: null, mountpoint: '/assets' }),
+    'pools-server',
+  )
+
   const mariaSub = sdk.SubContainer.of(
     effects,
     { imageId: 'mariadb' },
@@ -218,6 +255,25 @@ export const main = sdk.setupMain(async ({ effects }) => {
       },
       requires: [],
     })
+    .addDaemon('pools', {
+      subcontainer: poolsSub,
+      exec: {
+        command: ['node', '/assets/pools-server.cjs'],
+        env: { PORT: String(poolsPort) },
+      },
+      ready: {
+        display: null,
+        fn: async () => {
+          const { result } = await sdk.healthCheck.checkPortListening(
+            effects,
+            poolsPort,
+            { successMessage: '', errorMessage: '' },
+          )
+          return { result, message: null }
+        },
+      },
+      requires: [],
+    })
     .addDaemon('api', {
       subcontainer: backendSub,
       exec: {
@@ -255,7 +311,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
           return res
         },
       },
-      requires: ['mariadb'],
+      requires: ['mariadb', 'pools'],
     })
     .addDaemon('webui', {
       subcontainer: frontendSub,

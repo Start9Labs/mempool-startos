@@ -3,16 +3,10 @@ import { sdk } from '../sdk'
 import {
   bitcoindRpcBridge,
   electrumBridge,
+  hostPort,
   lndRestBridge,
   selectedIndexer,
 } from '../utils'
-
-// A bridge address is always `<ipv4>:<port>`; split it into the HOST/PORT pair
-// the CORE_RPC / ELECTRUM sections of mempool-config expect.
-const hostPort = (addr: string) => {
-  const i = addr.lastIndexOf(':')
-  return { HOST: addr.slice(0, i), PORT: Number(addr.slice(i + 1)) }
-}
 
 /**
  * Resolves Mempool's dependency addresses over the LXC bridge and pins them into

@@ -1,12 +1,16 @@
 import { FileHelper, z } from '@start9labs/start-sdk'
 import { sdk } from '../sdk'
 
-// StartOS-level state, kept out of the upstream mempool-config.json. Currently
-// just the user's chosen Electrum indexer — the discriminator for which optional
-// dependency backs address lookups. The resolved bridge address itself lives in
-// mempool-config.json's ELECTRUM.HOST, written by init/watchHosts.
+// StartOS-level state, kept out of the upstream mempool-config.json: the user's
+// chosen Electrum indexer (the discriminator for which optional dependency backs
+// address lookups) and whether external requests should go over Tor. Both are
+// intent; the addresses they resolve to live in mempool-config.json's
+// ELECTRUM.HOST and SOCKS5PROXY, written by init/watchHosts and
+// init/watchTorProxy. Keeping intent here is what lets the proxy be switched off
+// when tor is uninstalled without forgetting that the user asked for it.
 const shape = z.object({
   indexer: z.enum(['electrs', 'fulcrum']).optional().catch(undefined),
+  torProxy: z.boolean().catch(false),
 })
 
 export const storeJson = FileHelper.json(

@@ -2,6 +2,7 @@ import { T, utils } from '@start9labs/start-sdk'
 import { totalmem } from 'os'
 import { rpcHostId, rpcPort } from 'bitcoin-core-startos/startos/utils'
 import { controlHostId, restPort } from 'lnd-startos/startos/interfaces'
+import { socksHostId, socksPort } from 'tor-startos/startos/utils'
 import { storeJson } from './file-models/store.json'
 import { sdk } from './sdk'
 
@@ -20,12 +21,52 @@ export const uiPort = 8080
 export const mainHostId = 'main'
 export const apiPort = 8999
 export const dbPort = 3306
+export const poolsPort = 8998
 export const btcMountpoint = '/mnt/bitcoind'
 export const lndMountpoint = '/mnt/lnd'
 export const clnMountpoint = '/mnt/cln'
 
 export const lndCertPath = `${lndMountpoint}/tls.cert`
 export const lndMacaroonPath = `${lndMountpoint}/data/chain/bitcoin/mainnet/readonly.macaroon`
+
+/** A bridge address is always `<ipv4>:<port>`; split it into a HOST/PORT pair. */
+export const hostPort = (addr: string) => {
+  const i = addr.lastIndexOf(':')
+  return { HOST: addr.slice(0, i), PORT: Number(addr.slice(i + 1)) }
+}
+
+// Upstream's retry loop is `while (retry < EXTERNAL_MAX_RETRY)`, so the previous
+// value of 1 meant a single attempt with no backoff for the price feeds and the
+// pools fetch. It also capped the pools updater's Tor circuit rotation, which
+// puts each retry on a fresh circuit (`circuit<n>` as the SOCKS username) — at 1
+// there was never a second circuit to try. Single source of truth: referenced by
+// the file model defaults and by the 3.3.1:23 migration that rewrites the value
+// older installs already have.
+export const EXTERNAL_RETRY = {
+  EXTERNAL_MAX_RETRY: 3,
+  EXTERNAL_RETRY_INTERVAL: 5,
+}
+
+/**
+ * Where the backend fetches `pools-v2.json` and its sha. Upstream treats a
+ * missing sha as fatal — `index.ts` exits 1 rather than start without one — so
+ * a fresh database plus an unreachable source is an unrecoverable boot loop.
+ * `local` is the bundled snapshot served by the `pools` daemon, which needs no
+ * network at all. Tor cannot reach loopback, so enabling the SOCKS proxy
+ * switches these to `github`; init/watchTorProxy owns the choice.
+ */
+export const poolsUrls = {
+  local: {
+    POOLS_JSON_URL: `http://127.0.0.1:${poolsPort}/pools-v2.json`,
+    POOLS_JSON_TREE_URL: `http://127.0.0.1:${poolsPort}/tree`,
+  },
+  github: {
+    POOLS_JSON_URL:
+      'https://raw.githubusercontent.com/mempool/mining-pools/master/pools-v2.json',
+    POOLS_JSON_TREE_URL:
+      'https://api.github.com/repos/mempool/mining-pools/git/trees/master',
+  },
+}
 
 /**
  * bitcoind's RPC bridge address (`<osIp>:8332`) for mempool-config's `CORE_RPC`,
@@ -58,6 +99,22 @@ export const lndRestBridge = (effects: T.Effects) =>
     })
     .const()
 
+/**
+ * Tor's SOCKS bridge address (`<osIp>:9050`) for mempool-config's `SOCKS5PROXY`.
+ * No `fallbackPort`: this proxy anonymizes every external request the backend
+ * makes, so when tor is absent the helper resolves `null` and the caller writes
+ * no proxy rather than leaking the traffic to a dead port. The `.const()` heals
+ * when tor appears.
+ */
+export const torSocksBridge = (effects: T.Effects) =>
+  sdk.host
+    .getBridgeAddress(effects, {
+      packageId: 'tor',
+      hostId: socksHostId,
+      internalPort: socksPort,
+    })
+    .const()
+
 export type Indexer = 'electrs' | 'fulcrum'
 
 // electrs and fulcrum are optional dependencies Mempool does not depend on at
@@ -73,7 +130,7 @@ const electrumPort = 50001
 /**
  * The user's selected Electrum indexer, StartOS state held in store.json (not in
  * the upstream mempool-config.json). Installs predating store.json are seeded
- * from the legacy `<indexer>.startos` value in ELECTRUM.HOST by the 3.3.1:17
+ * from the legacy `<indexer>.startos` value in ELECTRUM.HOST by the 3.3.1:16
  * migration, so no runtime fallback is needed here.
  */
 export async function selectedIndexer(

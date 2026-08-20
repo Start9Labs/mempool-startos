@@ -1,6 +1,7 @@
 import { T } from '@start9labs/start-sdk'
 import { autoconfig } from 'bitcoin-core-startos/startos/actions/config/autoconfig'
 import { configJson } from './file-models/mempool-config.json'
+import { storeJson } from './file-models/store.json'
 import { i18n } from './i18n'
 import { sdk } from './sdk'
 import { selectedIndexer } from './utils'
@@ -17,12 +18,13 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
   })
 
   let currentDeps = {} as Record<
-    'bitcoind' | 'lnd' | 'c-lightning' | 'fulcrum' | 'electrs',
+    'bitcoind' | 'lnd' | 'c-lightning' | 'fulcrum' | 'electrs' | 'tor',
     T.DependencyRequirement
   >
 
   const lnData = await configJson.read((c) => c.LIGHTNING).const(effects)
   const indexer = await selectedIndexer(effects)
+  const torProxy = await storeJson.read((s) => s?.torProxy).const(effects)
 
   if (lnData && lnData.ENABLED) {
     if (lnData.BACKEND === 'lnd') {
@@ -41,6 +43,15 @@ export const setDependencies = sdk.setupDependencies(async ({ effects }) => {
         versionRange: '>=26.6.6:1',
         healthChecks: ['lightningd', 'check-synced'],
       }
+    }
+  }
+
+  if (torProxy) {
+    currentDeps.tor = {
+      id: 'tor',
+      kind: 'running',
+      versionRange: '>=0.4.9.11:4',
+      healthChecks: ['tor'],
     }
   }
 
