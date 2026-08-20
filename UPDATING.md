@@ -54,4 +54,12 @@ git hash-object assets/pools-v2.json
 gh api repos/mempool/mining-pools/git/trees/master --jq '.tree[] | select(.path=="pools-v2.json") | .sha'
 ```
 
+**Check one upstream detail at every version bump.** `backend/src/tasks/pools-updater.ts` installs its SOCKS agent as `httpsAgent` only:
+
+```ts
+axiosOptions.httpsAgent = new SocksProxyAgent(socksOptions)
+```
+
+Axios picks `httpAgent` for an `http:` URL, so the loopback fetch is exempt from the proxy and keeps working with Tor egress enabled. If a release adds `httpAgent` alongside it — `sync-assets.ts` already sets both — then a fresh install with the Tor action on would try to reach `127.0.0.1` through Tor, fail, and crash-loop on the missing sha. Serving the snapshot over TLS is the fix if that day comes.
+
 A refreshed snapshot only reaches installs whose database has no `pools_json_sha` yet — a fresh install or a restore. Upstream's `AUTOMATIC_POOLS_UPDATE` is off, so an install that already imported pool data logs that an update is available and keeps what it has.

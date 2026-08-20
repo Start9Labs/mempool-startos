@@ -47,25 +47,15 @@ export const EXTERNAL_RETRY = {
   EXTERNAL_RETRY_INTERVAL: 5,
 }
 
-/**
- * The two places the backend can fetch `pools-v2.json` and its sha from, as
- * `MEMPOOL.POOLS_JSON_URL` / `POOLS_JSON_TREE_URL`. Upstream treats a missing
- * sha as fatal — `index.ts` exits 1 rather than start without one — so a fresh
- * database plus an unreachable source is an unrecoverable boot loop. `local` is
- * the bundled snapshot served by the `pools` daemon, which needs no network at
- * all. Tor cannot reach loopback, so enabling the SOCKS proxy switches to
- * `github`; init/watchTorProxy owns the choice.
- */
-export const poolsSource = {
-  local: {
-    json: `http://127.0.0.1:${poolsPort}/pools-v2.json`,
-    tree: `http://127.0.0.1:${poolsPort}/tree`,
-  },
-  github: {
-    json: 'https://raw.githubusercontent.com/mempool/mining-pools/master/pools-v2.json',
-    tree: 'https://api.github.com/repos/mempool/mining-pools/git/trees/master',
-  },
-}
+// `MEMPOOL.POOLS_JSON_URL` / `POOLS_JSON_TREE_URL`, pointed at the bundled
+// snapshot the `pools` daemon serves. Upstream treats a missing sha as fatal —
+// `index.ts` exits 1 rather than start without one — so this is the difference
+// between a first start that needs no network and one that cannot recover
+// without it. Plain http on purpose: upstream's pools updater installs its SOCKS
+// agent as `httpsAgent` only, so an http URL is exempt from the proxy and the
+// snapshot stays reachable with Tor egress on (see UPDATING.md).
+export const poolsJsonUrl = `http://127.0.0.1:${poolsPort}/pools-v2.json`
+export const poolsTreeUrl = `http://127.0.0.1:${poolsPort}/tree`
 
 /**
  * bitcoind's RPC bridge address (`<osIp>:8332`) for mempool-config's `CORE_RPC`,

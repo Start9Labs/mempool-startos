@@ -10,7 +10,7 @@
 - Address lookup powered by a separate StartOS Electrum indexer (Fulcrum or Electrs).
 - An optional **Lightning** explorer that pulls network data from a local LND or Core Lightning node.
 - A bundled MariaDB sidecar; you do not configure a database.
-- Everything needed for a first start bundled in — Mempool does not have to reach the internet to come up.
+- Everything needed for a first start bundled in — Mempool never has to reach the internet to come up, and does not contact GitHub at all.
 
 ## Getting set up
 

@@ -6,7 +6,8 @@ import {
   EXTERNAL_RETRY,
   lndCertPath,
   lndMacaroonPath,
-  poolsSource,
+  poolsJsonUrl,
+  poolsTreeUrl,
   PROFILES,
   DEFAULT_PROFILE,
 } from '../utils'
@@ -50,10 +51,10 @@ const mempoolSection = z.object({
     .enum(['debug', 'info', 'warn', 'err'])
     .catch('info'),
   AUTOMATIC_POOLS_UPDATE: z.boolean().catch(false),
-  // Rewritten on every init by init/watchTorProxy, which owns the local/GitHub
-  // choice (see `poolsSource`).
-  POOLS_JSON_URL: z.string().catch(poolsSource.local.json),
-  POOLS_JSON_TREE_URL: z.string().catch(poolsSource.local.tree),
+  // enforced: the bundled snapshot is the only source, so a value left over from
+  // an older install is repaired by the next `merge` rather than migrated
+  POOLS_JSON_URL: z.literal(poolsJsonUrl).catch(poolsJsonUrl),
+  POOLS_JSON_TREE_URL: z.literal(poolsTreeUrl).catch(poolsTreeUrl),
   POOLS_UPDATE_DELAY: z.number().catch(604800),
   AUDIT: z.boolean().catch(false),
   RUST_GBT: z.boolean().catch(true),
