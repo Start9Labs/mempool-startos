@@ -33,6 +33,8 @@ In `startos/manifest/index.ts`, set both tags to the new Mempool release (same v
 - `images.frontend.source.dockerTag` → `mempool/frontend:v<new version>`
 - `images.backend.source.dockerTag` → `mempool/backend:v<new version>`
 
+Then [refresh the bundled mining pool snapshot](#refreshing-the-bundled-mining-pool-snapshot) — nothing derives it from the image tags, so it moves only when someone moves it.
+
 ### MariaDB
 
 In `startos/manifest/index.ts`, set:
