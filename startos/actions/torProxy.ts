@@ -21,9 +21,7 @@ export const torProxy = sdk.Action.withInput(
     description: i18n(
       "Route Mempool's outbound internet requests through Tor. Useful where an ISP or national firewall blocks the endpoints Mempool reads from, and where the server's own name resolution is unreliable — a SOCKS proxy resolves hostnames at the proxy rather than locally.",
     ),
-    warning: i18n(
-      'This requires the Tor service to be installed and running. While it is on, StartOS treats Tor as a running dependency and will not start Mempool without it.',
-    ),
+    warning: i18n('This requires the Tor service to be installed and running.'),
     allowedStatuses: 'any',
     group: null,
     visibility: 'enabled',

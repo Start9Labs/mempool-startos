@@ -171,7 +171,7 @@ Sends everything Mempool asks of the internet — fiat exchange rates, mining po
 - **What it changes:** `torProxy` in `store.json`, and through it `SOCKS5PROXY` in `mempool-config.json` and the package's optional Tor dependency. The `POOLS_JSON` URLs move back to GitHub at the same time, because a SOCKS proxy cannot reach the loopback address the bundled snapshot is served on.
 - **Cost:** seconds, then a restart. External requests get slower, and upstream raises its own timeout from 10 s to 30 s to suit.
 - **Repeat safety:** idempotent, and turning it off restores the local pools source.
-- **Tor must be installed and running.** While this is on, StartOS treats Tor as a `running` dependency and will not start Mempool without it. Uninstalling Tor does not silently fall back to clearnet — the proxy address is simply not written, and the setting is remembered so it heals when Tor comes back.
+- **Tor must be installed and running.** While this is on, Tor is a `running` dependency, so StartOS reports Mempool as unhealthy whenever Tor is missing or stopped — it does not hold the service back from starting. With no address to write, external requests go over clearnet until Tor returns; the dependency status is what makes that visible rather than silent. The setting itself is remembered, so the proxy heals on its own.
 - **When it helps:** where an ISP or national firewall blocks the endpoints Mempool reads from, and where the server's own name resolution is unreliable — a SOCKS proxy resolves hostnames at the proxy rather than locally.
 
 ### Clear Backend Cache

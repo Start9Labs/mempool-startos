@@ -67,7 +67,7 @@ const dict = {
   'Sends every request Mempool makes to the internet — fiat exchange rates, the mining pool definitions, and the external data server — through the Tor service running on this server. Bitcoin, your Electrum indexer, and the database are reached directly and are unaffected.': 68,
   'Route External Requests Over Tor': 69,
   "Route Mempool's outbound internet requests through Tor. Useful where an ISP or national firewall blocks the endpoints Mempool reads from, and where the server's own name resolution is unreliable — a SOCKS proxy resolves hostnames at the proxy rather than locally.": 70,
-  'This requires the Tor service to be installed and running. While it is on, StartOS treats Tor as a running dependency and will not start Mempool without it.': 71,
+  'This requires the Tor service to be installed and running.': 71,
   'This server could not resolve an external hostname. Mempool itself will still run — Bitcoin, the Electrum indexer, and the database are reached by address — but fiat exchange rates will be unavailable and the web interface may fail to start. Set explicit DNS servers under System > DNS on your server, and check any VPN or StartTunnel gateway you have configured: a gateway supplies its own resolver, which stops working whenever the tunnel does.': 72,
 } as const
 
