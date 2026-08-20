@@ -10,6 +10,7 @@
 - Address lookup powered by a separate StartOS Electrum indexer (Fulcrum or Electrs).
 - An optional **Lightning** explorer that pulls network data from a local LND or Core Lightning node.
 - A bundled MariaDB sidecar; you do not configure a database.
+- Everything needed for a first start bundled in — Mempool never has to reach the internet to come up, and does not contact GitHub at all.
 
 ## Getting set up
 
@@ -35,7 +36,14 @@ Open the **Web UI** interface to reach Mempool. The home page shows the live mem
   - **Performance Profile** — pick **Low-CPU** (default; polls bitcoind every 8s, projects 4 future blocks), **Balanced** (4s / 6 blocks), or **Responsive** (2s / 8 blocks; highest CPU). The Mempool backend rebuilds its block projection on every poll, so this is the main lever for CPU usage on low-power devices.
   - **Enable Statistics** — leave on (default) for the tx/s and vbytes/s dashboard charts; turn off to skip the 1 Hz sampler and periodic MariaDB writes.
   - **Indexing toggles** — **Block Summaries Indexing**, **Goggles Indexing**, **Block Audit** (requires Block Summaries), and **CPFP Indexing**. Each trades disk and CPU for richer block visualizations. Enabling any toggle triggers a historical backfill on the next start that can take several hours. Indexing is memory-hungry — 16 GB of RAM or more is recommended, and on a smaller box the form carries a warning saying so. It does not block you; the other settings on the form are unaffected by it.
+- **Route External Requests Over Tor** — send the handful of requests Mempool makes to the internet — fiat exchange rates, mining pool updates, and the external data server — through the **Tor** service on your server instead of over clearnet. Useful if your ISP or country blocks those endpoints, or if your server's own name resolution is unreliable, since a SOCKS proxy looks hostnames up at the proxy rather than locally. **Tor must be installed and running while this is on.** If it is not, Mempool keeps running but shows as unhealthy, and those requests go over clearnet until Tor is back. Turning the setting off puts everything back on clearnet deliberately. Nothing about Bitcoin, your indexer, or the database changes either way — those are always reached directly on your own network.
 - **Clear Backend Cache** — delete the backend's on-disk mempool/RBF cache. Use it if the backend is stuck failing to start with a "JavaScript heap out of memory" error while loading its cache. Stop Mempool first; the cache is rebuilt automatically on the next start (a short mempool resync — blocks, database, and settings are untouched). Mempool also does this on its own: if a start crashes before the API becomes healthy, the next start drops the cache and rebuilds from live data, so a boot loop self-heals without you touching anything.
+
+## If your server can't reach the internet
+
+Mempool needs almost nothing from the internet — Bitcoin, your indexer, and the database are all on your own network — so it starts and serves blocks even when your server is cut off. Two things do notice: fiat exchange rates go missing, and the web interface can fail to start, because it looks up one external address as it loads.
+
+If that happens, the service log says so in a line at the top of a start. The cause is usually the server rather than Mempool, and the fix is to set explicit DNS servers under **System → DNS**. Don't go by whether the list there looks populated — a VPN or StartTunnel gateway supplies its own resolver, which reaches nothing whenever the tunnel is down or blocked, and your services can be left with that one entry and no fallback while the server itself still resolves fine. If your network blocks the addresses rather than the lookups, **Route External Requests Over Tor** is the other way around it.
 
 ## First run and upgrades
 

@@ -3,8 +3,11 @@ import { sdk } from '../sdk'
 import {
   btcMountpoint,
   clnMountpoint,
+  EXTERNAL_RETRY,
   lndCertPath,
   lndMacaroonPath,
+  poolsJsonUrl,
+  poolsTreeUrl,
   PROFILES,
   DEFAULT_PROFILE,
 } from '../utils'
@@ -34,8 +37,10 @@ const mempoolSection = z.object({
   GOGGLES_INDEXING: z.boolean().catch(false),
   USE_SECOND_NODE_FOR_MINFEE: z.boolean().catch(false),
   EXTERNAL_ASSETS: z.array(z.string()).catch([]),
-  EXTERNAL_MAX_RETRY: z.number().catch(1),
-  EXTERNAL_RETRY_INTERVAL: z.number().catch(0),
+  EXTERNAL_MAX_RETRY: z.number().catch(EXTERNAL_RETRY.EXTERNAL_MAX_RETRY),
+  EXTERNAL_RETRY_INTERVAL: z
+    .number()
+    .catch(EXTERNAL_RETRY.EXTERNAL_RETRY_INTERVAL),
   USER_AGENT: z.string().catch('mempool'),
   // Upstream log priorities (backend/src/logger.ts); the wrapper supports the
   // debug/info/warn/err subset the Indexing and Performance action exposes and
@@ -46,16 +51,10 @@ const mempoolSection = z.object({
     .enum(['debug', 'info', 'warn', 'err'])
     .catch('info'),
   AUTOMATIC_POOLS_UPDATE: z.boolean().catch(false),
-  POOLS_JSON_URL: z
-    .string()
-    .catch(
-      'https://raw.githubusercontent.com/mempool/mining-pools/master/pools-v2.json',
-    ),
-  POOLS_JSON_TREE_URL: z
-    .string()
-    .catch(
-      'https://api.github.com/repos/mempool/mining-pools/git/trees/master',
-    ),
+  // enforced: the bundled snapshot is the only source, so a value left over from
+  // an older install is repaired by the next `merge` rather than migrated
+  POOLS_JSON_URL: z.literal(poolsJsonUrl).catch(poolsJsonUrl),
+  POOLS_JSON_TREE_URL: z.literal(poolsTreeUrl).catch(poolsTreeUrl),
   POOLS_UPDATE_DELAY: z.number().catch(604800),
   AUDIT: z.boolean().catch(false),
   RUST_GBT: z.boolean().catch(true),
@@ -155,13 +154,13 @@ const clightningSection = z.object({
 })
 
 const socks5ProxySection = z.object({
-  // SOCKS5 proxy for onion egress to external data servers. Dormant by default
-  // (ENABLED false) and not wired to a bridge address — tor's SOCKS is not
-  // bound on the LXC bridge and tor isn't a declared dependency — so HOST stays
-  // a loopback placeholder pending a follow-up that exposes tor SOCKS.
-  HOST: z.literal('127.0.0.1').catch('127.0.0.1'),
-  PORT: z.literal(9050).catch(9050),
-  // configurable
+  // Resolved to tor's LXC-bridge SOCKS address at runtime (see
+  // init/watchTorProxy); absent while the proxy is off or tor is uninstalled —
+  // no fake placeholder is written, since anonymizing traffic must never be
+  // dialed at an address that isn't tor. Whether the user wants the proxy is
+  // StartOS state kept in store.json, not here.
+  HOST: z.string().optional().catch(undefined),
+  PORT: z.number().optional().catch(undefined),
   ENABLED: z.boolean().catch(false),
   USE_ONION: z.boolean().catch(true),
   USERNAME: z.string().catch(''),

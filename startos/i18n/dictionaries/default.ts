@@ -63,6 +63,12 @@ const dict = {
   Error: 64,
   'Indexing is enabled. If a historical backfill is still incomplete it will resume now and may run for many hours. Intermittent 503 retry errors from Bitcoin during the backfill are expected and non-fatal. Avoid restarting the service — restarts interrupt the backfill and delay completion.': 65,
   'Backfill progress is logged at debug priority and is hidden at the current log level, so the log may appear idle while indexing runs. To watch per-block progress, set Log Level to Debug in the Indexing and Performance action.': 66,
+  'Use Tor for External Requests': 67,
+  'Sends every request Mempool makes to the internet — fiat exchange rates, the mining pool definitions, and the external data server — through the Tor service running on this server. Bitcoin, your Electrum indexer, and the database are reached directly and are unaffected.': 68,
+  'Route External Requests Over Tor': 69,
+  "Route Mempool's outbound internet requests through Tor. Useful where an ISP or national firewall blocks the endpoints Mempool reads from, and where the server's own name resolution is unreliable — a SOCKS proxy resolves hostnames at the proxy rather than locally.": 70,
+  'This requires the Tor service to be installed and running.': 71,
+  'This server could not resolve an external hostname. Mempool itself will still run — Bitcoin, the Electrum indexer, and the database are reached by address — but fiat exchange rates will be unavailable and the web interface may fail to start. Set explicit DNS servers under System > DNS on your server, and check any VPN or StartTunnel gateway you have configured: a gateway supplies its own resolver, which stops working whenever the tunnel does.': 72,
 } as const
 
 export type I18nKey = keyof typeof dict
