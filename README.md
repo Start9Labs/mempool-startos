@@ -121,6 +121,8 @@ Bitcoin's data directory is mounted read-only so the backend can read its RPC co
 
 One interface. The frontend serves it and reverse-proxies the API and websocket to the backend, so the backend's own port is not published.
 
+The image ships one external nginx upstream — `proxy_pass https://mempool.space` for the accelerator endpoint — and nginx resolves a literal hostname when it loads its config, with no `resolver` directive anywhere in the image. A failed lookup was therefore fatal to the whole UI. The package sets the image's own `PROXIED_SERVICES` pair to redirect that one line at the backend, so the frontend starts without needing to resolve anything and a call to the disabled accelerator gets a 404.
+
 | Interface | Id      | Type | Port | Description                  |
 | --------- | ------- | ---- | ---- | ---------------------------- |
 | Web UI    | `webui` | ui   | 8080 | The web interface of Mempool |
@@ -213,7 +215,7 @@ The database check reports `loading` rather than failing while it initialises, s
 
 An `api` failure after the grace period is most often the backend unable to reach Bitcoin, the indexer, or its own database — the service log names which. Failing repeatedly with a heap out-of-memory message while loading the cache is the case [Clear Backend Cache](#actions) exists for.
 
-**A name-resolution warning at the top of the log is about the server, not Mempool.** The service resolves one external hostname at every start and logs a warning if it cannot. Mempool keeps working — Bitcoin, the indexer, and the database are all reached by address — but fiat prices go missing and the frontend can fail to start, since its nginx config resolves a `mempool.space` upstream at load time. The fix is on the server: set explicit resolvers under System → DNS. A populated list is not evidence of a working one — a VPN gateway's `DNS =` line becomes the only upstream the container resolver has, and it dies with the tunnel (start-technologies#3603).
+**A name-resolution warning at the top of the log is about the server, not Mempool.** The service resolves one external hostname at every start and logs a warning if it cannot. Everything Mempool does keeps working — Bitcoin, the indexer, and the database are all reached by address, and the frontend no longer depends on an external lookup either — but fiat prices go missing. The fix is on the server: set explicit resolvers under System → DNS. A populated list is not evidence of a working one — a VPN gateway's `DNS =` line becomes the only upstream the container resolver has, and it dies with the tunnel (start-technologies#3603).
 
 ## Backups and Restore
 
@@ -230,7 +232,7 @@ Only configuration is backed up — `sdk.Backups.ofVolumes('config', 'startos')`
 3. **An Electrum indexer is required for address lookups**, and which one is a choice with no default until the install task is run.
 4. **Indexing is memory-hungry and slow**, and its progress is invisible at the default log level.
 5. **Telemetry and the maxmind, syslog, redis, replication, and stratum integrations are held off.**
-6. **Acceleration services are off by default.** The external data servers upstream ships go over clearnet unless the Tor proxy action is enabled.
+6. **Acceleration services are off by default**, and the frontend's accelerator upstream is redirected at the backend rather than `mempool.space`. The external data servers upstream ships go over clearnet unless the Tor proxy action is enabled.
 7. **The backend runs as root**, which the boot guard needs in order to clear a cache written by the daemon.
 8. **No riscv64 build.** x86_64 and aarch64 only.
 9. **Bundled mining pool data goes stale between releases.** The snapshot is imported once, on the first start of an unseeded database; after that upstream's `AUTOMATIC_POOLS_UPDATE` is off, so a newer snapshot in a later package release is logged as available and not applied — the same behaviour a GitHub-sourced install has always had.
@@ -266,6 +268,8 @@ startos_managed_env_vars:
   - MYSQL_DATABASE
   - MYSQL_USER
   - MYSQL_PASSWORD
+  - PROXIED_SERVICES # frontend; redirects the accelerator upstream off mempool.space
+  - PROXIED_SERVICES_HOST
   - LIGHTNING # frontend, only when a Lightning node is selected
 dependencies:
   - bitcoind # required, running
