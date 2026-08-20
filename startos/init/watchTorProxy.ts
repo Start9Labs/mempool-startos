@@ -1,7 +1,7 @@
 import { configJson } from '../file-models/mempool-config.json'
 import { storeJson } from '../file-models/store.json'
 import { sdk } from '../sdk'
-import { hostPort, poolsUrls, torSocksBridge } from '../utils'
+import { hostPort, poolsSource, torSocksBridge } from '../utils'
 
 /**
  * Points mempool-config's `SOCKS5PROXY` at tor's SOCKS bridge when the user has
@@ -21,11 +21,15 @@ export const watchTorProxy = sdk.setupOnInit(async (effects) => {
     .read((s) => s?.torProxy ?? false)
     .const(effects)
   const socks = torProxy ? await torSocksBridge(effects) : null
+  const pools = torProxy ? poolsSource.github : poolsSource.local
 
   await configJson.merge(
     effects,
     {
-      MEMPOOL: torProxy ? poolsUrls.github : poolsUrls.local,
+      MEMPOOL: {
+        POOLS_JSON_URL: pools.json,
+        POOLS_JSON_TREE_URL: pools.tree,
+      },
       SOCKS5PROXY: socks
         ? { ENABLED: true, ...hostPort(socks) }
         : { ENABLED: false, HOST: undefined, PORT: undefined },

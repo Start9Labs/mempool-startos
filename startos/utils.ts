@@ -48,23 +48,22 @@ export const EXTERNAL_RETRY = {
 }
 
 /**
- * Where the backend fetches `pools-v2.json` and its sha. Upstream treats a
- * missing sha as fatal — `index.ts` exits 1 rather than start without one — so
- * a fresh database plus an unreachable source is an unrecoverable boot loop.
- * `local` is the bundled snapshot served by the `pools` daemon, which needs no
- * network at all. Tor cannot reach loopback, so enabling the SOCKS proxy
- * switches these to `github`; init/watchTorProxy owns the choice.
+ * The two places the backend can fetch `pools-v2.json` and its sha from, as
+ * `MEMPOOL.POOLS_JSON_URL` / `POOLS_JSON_TREE_URL`. Upstream treats a missing
+ * sha as fatal — `index.ts` exits 1 rather than start without one — so a fresh
+ * database plus an unreachable source is an unrecoverable boot loop. `local` is
+ * the bundled snapshot served by the `pools` daemon, which needs no network at
+ * all. Tor cannot reach loopback, so enabling the SOCKS proxy switches to
+ * `github`; init/watchTorProxy owns the choice.
  */
-export const poolsUrls = {
+export const poolsSource = {
   local: {
-    POOLS_JSON_URL: `http://127.0.0.1:${poolsPort}/pools-v2.json`,
-    POOLS_JSON_TREE_URL: `http://127.0.0.1:${poolsPort}/tree`,
+    json: `http://127.0.0.1:${poolsPort}/pools-v2.json`,
+    tree: `http://127.0.0.1:${poolsPort}/tree`,
   },
   github: {
-    POOLS_JSON_URL:
-      'https://raw.githubusercontent.com/mempool/mining-pools/master/pools-v2.json',
-    POOLS_JSON_TREE_URL:
-      'https://api.github.com/repos/mempool/mining-pools/git/trees/master',
+    json: 'https://raw.githubusercontent.com/mempool/mining-pools/master/pools-v2.json',
+    tree: 'https://api.github.com/repos/mempool/mining-pools/git/trees/master',
   },
 }
 
