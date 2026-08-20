@@ -116,7 +116,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
   if (!resolves) {
     console.warn(
       i18n(
-        'This server could not resolve an external hostname. Mempool itself will still run — Bitcoin, the Electrum indexer, and the database are reached by address — but fiat exchange rates will be unavailable and the web interface may fail to start. Check System > DNS on your server: if no DNS servers are listed there, set them, and check any VPN or StartTunnel gateway you have configured.',
+        'This server could not resolve an external hostname. Mempool itself will still run — Bitcoin, the Electrum indexer, and the database are reached by address — but fiat exchange rates will be unavailable and the web interface may fail to start. Set explicit DNS servers under System > DNS on your server, and check any VPN or StartTunnel gateway you have configured: a gateway supplies its own resolver, which stops working whenever the tunnel does.',
       ),
     )
   }

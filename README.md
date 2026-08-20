@@ -213,7 +213,7 @@ The database check reports `loading` rather than failing while it initialises, s
 
 An `api` failure after the grace period is most often the backend unable to reach Bitcoin, the indexer, or its own database — the service log names which. Failing repeatedly with a heap out-of-memory message while loading the cache is the case [Clear Backend Cache](#actions) exists for.
 
-**A name-resolution warning at the top of the log is about the server, not Mempool.** The service resolves one external hostname at every start and logs a warning if it cannot. Mempool keeps working — Bitcoin, the indexer, and the database are all reached by address — but fiat prices go missing and the frontend can fail to start, since its nginx config resolves a `mempool.space` upstream at load time. The fix is on the server: System → DNS, and any VPN or StartTunnel gateway configured there.
+**A name-resolution warning at the top of the log is about the server, not Mempool.** The service resolves one external hostname at every start and logs a warning if it cannot. Mempool keeps working — Bitcoin, the indexer, and the database are all reached by address — but fiat prices go missing and the frontend can fail to start, since its nginx config resolves a `mempool.space` upstream at load time. The fix is on the server: set explicit resolvers under System → DNS. A populated list is not evidence of a working one — a VPN gateway's `DNS =` line becomes the only upstream the container resolver has, and it dies with the tunnel (start-technologies#3603).
 
 ## Backups and Restore
 
