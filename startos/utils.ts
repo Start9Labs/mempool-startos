@@ -105,6 +105,7 @@ export const torSocksBridge = (effects: T.Effects) =>
     .const()
 
 export type Indexer = 'electrs' | 'fulcrum'
+export type IndexerChoice = Indexer | 'none'
 
 // electrs and fulcrum are optional dependencies Mempool does not depend on at
 // the npm level, so their host ids are string literals rather than imported
@@ -124,15 +125,15 @@ const electrumPort = 50001
  */
 export async function selectedIndexer(
   effects: T.Effects,
-): Promise<Indexer | undefined> {
+): Promise<IndexerChoice | undefined> {
   return (await storeJson.read((s) => s.indexer).const(effects)) ?? undefined
 }
 
 /**
  * The selected indexer's plaintext (non-TLS) Electrum bridge address
  * (`<osIp>:50001`), replacing `<indexer>.startos:50001`. `null` while the
- * indexer is absent — the caller then omits `ELECTRUM.HOST`/`PORT` rather than
- * writing a fake address; the `.const()` heals when it reappears.
+ * indexer is absent — the caller then writes `MEMPOOL.BACKEND: 'none'` and omits
+ * `ELECTRUM.HOST`/`PORT`; the `.const()` heals when it reappears.
  */
 export const electrumBridge = (effects: T.Effects, indexer: Indexer) => {
   const { packageId, hostId } = INDEXER_HOSTS[indexer]

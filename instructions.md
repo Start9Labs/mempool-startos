@@ -8,7 +8,7 @@
 ## What you get on StartOS
 
 - A **Web UI** interface — the Mempool block explorer, visualizer, fee estimator, and REST/WebSocket API in one site.
-- Address lookup powered by a separate StartOS Electrum indexer (Fulcrum or Electrs).
+- Address lookup powered by a separate StartOS Electrum indexer (Fulcrum or Electrs), or left off.
 - An optional **Lightning** explorer that pulls network data from a local LND or Core Lightning node.
 - A bundled MariaDB sidecar; you do not configure a database.
 - Everything needed for a first start bundled in — Mempool never has to reach the internet to come up, and does not contact GitHub at all.
@@ -19,7 +19,7 @@ Mempool needs Bitcoin, an Electrum-style indexer, and (optionally) a Lightning n
 
 1. Install **Bitcoin** if you don't have it. Mempool posts a critical task on Bitcoin requiring `txindex` enabled and pruning disabled, with an autoconfig action attached — accept it. The task re-appears any time those conditions stop being met.
 2. Install **Fulcrum** (recommended) or **Electrs**.
-3. After installing Mempool, run the **Select Indexer** task that appears for Mempool and pick **Fulcrum** or **Electrs**.
+3. After installing Mempool, run the **Select Indexer** task that appears for Mempool and pick **Fulcrum**, **Electrs**, or **None**. Nothing is picked for you, and Mempool will not start until you answer.
 4. Optionally install **LND** or **Core Lightning**, then run **Enable Lightning** and pick the backend you want feeding the Lightning tab.
 5. Start Mempool. It will wait until Bitcoin, the selected indexer, and (if enabled) the Lightning backend are healthy and synced.
 
@@ -31,7 +31,7 @@ Open the **Web UI** interface to reach Mempool. The home page shows the live mem
 
 ### Actions
 
-- **Select Indexer** — switch the Electrum backend between Fulcrum and Electrs. Mempool's dependency set updates accordingly.
+- **Select Indexer** — choose the Electrum backend: Fulcrum, Electrs, or None. Mempool's dependency set updates accordingly, and None leaves address lookups off.
 - **Enable Lightning** — choose LND, Core Lightning, or none for the Lightning tab's data source. The selected node is mounted read-only. On a low-memory box the form carries a warning: the Lightning network sync is memory-hungry, and turning it on alongside Bitcoin and your indexer can tip such a box into out-of-memory crashes. You can still proceed.
 - **Indexing and Performance** — tune backend behavior on a single form:
   - **Performance Profile** — pick **Low-CPU** (default; polls bitcoind every 8s, projects 4 future blocks), **Balanced** (4s / 6 blocks), or **Responsive** (2s / 8 blocks; highest CPU). The Mempool backend rebuilds its block projection on every poll, so this is the main lever for CPU usage on low-power devices.

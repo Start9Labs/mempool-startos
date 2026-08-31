@@ -83,9 +83,9 @@ Two models: upstream's configuration file, and a small store for state that has 
 
 Within `mempool-config.json`:
 
-**Enforced** — rewritten to a fixed value whenever the package writes the file: the whole `DATABASE` section bar the password (the bundled MariaDB on loopback), `MEMPOOL.BACKEND`, the two `MEMPOOL.POOLS_JSON` URLs (the bundled snapshot on loopback), `CORE_RPC.COOKIE_PATH`, LND's certificate and macaroon paths, Core Lightning's socket path, and the `SYSLOG`, `MAXMIND`, `REDIS`, `REPLICATION`, and `STRATUM` sections, all held off.
+**Enforced** — rewritten to a fixed value whenever the package writes the file: the whole `DATABASE` section bar the password (the bundled MariaDB on loopback), the two `MEMPOOL.POOLS_JSON` URLs (the bundled snapshot on loopback), `CORE_RPC.COOKIE_PATH`, LND's certificate and macaroon paths, Core Lightning's socket path, and the `SYSLOG`, `MAXMIND`, `REDIS`, `REPLICATION`, and `STRATUM` sections, all held off.
 
-**Derived** — written from live addresses by init on every start: `CORE_RPC.HOST`/`PORT`, `ELECTRUM.HOST`/`PORT`, `LND.REST_API_URL`, and `SOCKS5PROXY.HOST`/`PORT`/`ENABLED`. Each is a reactive read of the dependency's address over the LXC bridge, so init re-runs and the backend restarts precisely when an address changes — an install, an uninstall, a port change — and not on a routine dependency update. **An absent dependency resolves to nothing and its key is omitted entirely** rather than written as a placeholder that would fail to connect; the write heals when the dependency returns.
+**Derived** — written from live addresses by init on every start: `CORE_RPC.HOST`/`PORT`, `ELECTRUM.HOST`/`PORT`, `LND.REST_API_URL`, and `SOCKS5PROXY.HOST`/`PORT`/`ENABLED`. Each is a reactive read of the dependency's address over the LXC bridge, so init re-runs and the backend restarts precisely when an address changes — an install, an uninstall, a port change — and not on a routine dependency update. **An absent dependency resolves to nothing and its key is omitted entirely** rather than written as a placeholder that would fail to connect; the write heals when the dependency returns. `MEMPOOL.BACKEND` is written alongside `ELECTRUM` — `electrum` when an indexer address resolved, `none` otherwise.
 
 **Seeded once** — `DATABASE.PASSWORD`, generated at install for the bundled database.
 
@@ -106,12 +106,12 @@ Two defaults depart from upstream's:
 
 Bitcoin is required; the rest are chosen, and each choice changes which dependency exists.
 
-| Dependency               | Kind      | Required                             | Health checks                       |
-| ------------------------ | --------- | ------------------------------------ | ----------------------------------- |
-| `bitcoind`               | `running` | Always                               | `bitcoind`, `sync-progress`         |
-| `fulcrum` _or_ `electrs` | `running` | Whichever the indexer action selects | The indexer's ready and sync checks |
-| `lnd` _or_ `c-lightning` | `running` | Only with Lightning enabled          | The node's ready and sync checks    |
-| `tor`                    | `running` | Only with the Tor proxy enabled      | `tor`                               |
+| Dependency               | Kind      | Required                                                 | Health checks                       |
+| ------------------------ | --------- | -------------------------------------------------------- | ----------------------------------- |
+| `bitcoind`               | `running` | Always                                                   | `bitcoind`, `sync-progress`         |
+| `fulcrum` _or_ `electrs` | `running` | Whichever the indexer action selects; none with **None** | The indexer's ready and sync checks |
+| `lnd` _or_ `c-lightning` | `running` | Only with Lightning enabled                              | The node's ready and sync checks    |
+| `tor`                    | `running` | Only with the Tor proxy enabled                          | `tor`                               |
 
 **Bitcoin must be archival with transaction indexing.** Mempool raises a `critical` task against Bitcoin asking for `prune=0` and `txindex=true`, and that task re-raises whenever the settings stop matching — it is not a one-time prompt. Address lookups additionally need an Electrum indexer, which is what the indexer selection is for.
 
@@ -141,11 +141,11 @@ Five actions, all user-facing.
 
 ### Select Indexer
 
-Chooses which Electrum server backs address lookups — Fulcrum or Electrs.
+Chooses which Electrum server backs address lookups — Fulcrum, Electrs, or **None**. Nothing is preselected; the form cannot be submitted until you pick one.
 
 - **What it changes:** `indexer` in `store.json`, and through it the package's optional dependency. The address itself is resolved by init on the next start.
 - **Cost:** seconds, then a restart.
-- **Repeat safety:** idempotent; switching indexers loses nothing, since neither stores Mempool's data.
+- **Repeat safety:** idempotent; switching indexers loses nothing, since neither stores Mempool's data. **None** turns address lookups off and drops the dependency.
 
 ### Enable Lightning
 
@@ -187,14 +187,14 @@ Deletes the backend's on-disk mempool and RBF cache.
 
 ## Tasks
 
-Two tasks, both raised at install and both `critical`.
+Two tasks, both `critical` — the service will not start while either is unresolved.
 
 | Task                     | On           | Raised when                                              | Cleared when             |
 | ------------------------ | ------------ | -------------------------------------------------------- | ------------------------ |
-| Select Indexer           | This package | At install                                               | The action runs          |
+| Select Indexer           | This package | No indexer choice has been made                          | The action runs          |
 | Bitcoin's Auto-Configure | `bitcoind`   | Bitcoin's settings are not `prune=0` with `txindex=true` | Bitcoin's settings match |
 
-Both are `critical` because Mempool is not functional without them: no indexer means no address lookups, and a pruned or unindexed node cannot answer the historical queries the explorer is built on.
+Both are `critical` because Mempool cannot do what it is installed for until they are answered: address lookups need an indexer, and a pruned or unindexed node cannot answer the historical queries the explorer is built on. Choosing **None** answers the first deliberately — Mempool then runs without address lookups.
 
 The Bitcoin task is the one to know about. It is registered with `once: false`, so it comes back if Bitcoin's configuration later stops matching — for example after restoring Bitcoin from a backup taken with pruning on.
 
@@ -229,7 +229,7 @@ Only configuration is backed up — `sdk.Backups.ofVolumes('config', 'startos')`
 
 1. **The database is not backed up.** A restore replays settings, not history; any enabled indexing backfills again from scratch.
 2. **Bitcoin must be archival with transaction indexing**, enforced by a re-raising `critical` task rather than merely recommended.
-3. **An Electrum indexer is required for address lookups**, and which one is a choice with no default until the install task is run.
+3. **An Electrum indexer is required for address lookups**, and which one is yours to choose — nothing is preselected, and **None** is a valid answer that leaves lookups off.
 4. **Indexing is memory-hungry and slow**, and its progress is invisible at the default log level.
 5. **Telemetry and the maxmind, syslog, redis, replication, and stratum integrations are held off.**
 6. **Acceleration services are off by default**, and the frontend's accelerator upstream is redirected at the backend rather than `mempool.space`. The external data servers upstream ships go over clearnet unless the Tor proxy action is enabled.
@@ -287,7 +287,7 @@ actions:
   - tor-proxy
   - clear-backend-cache # only-stopped
 tasks:
-  - { action: select-indexer, severity: critical }
+  - { action: select-indexer, severity: critical } # until a choice is made
   - { action: autoconfig, severity: critical } # on bitcoind; re-raises
 health_checks:
   - mariadb # hidden
