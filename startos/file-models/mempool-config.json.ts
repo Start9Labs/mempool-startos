@@ -14,7 +14,7 @@ import {
 
 const mempoolSection = z.object({
   // enforced
-  BACKEND: z.literal('electrum').catch('electrum'),
+  BACKEND: z.enum(['none', 'electrum']).catch('none'),
   // configurable
   OFFICIAL: z.boolean().catch(false),
   NETWORK: z.enum(['mainnet', 'testnet']).catch('mainnet'),

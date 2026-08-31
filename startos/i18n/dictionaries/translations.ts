@@ -70,6 +70,7 @@ export default {
     70: 'Enruta por Tor las solicitudes salientes de Mempool a internet. Util cuando un proveedor de internet o un cortafuegos nacional bloquea los puntos de acceso que Mempool consulta, y cuando la resolucion de nombres del propio servidor no es fiable — un proxy SOCKS resuelve los nombres en el proxy y no localmente.',
     71: 'Esto requiere que el servicio Tor este instalado y en ejecucion.',
     72: 'Este servidor no pudo resolver un nombre de host externo. Por lo demas Mempool no se ve afectado — Bitcoin, el indexador Electrum y la base de datos se alcanzan por direccion — pero los tipos de cambio fiat no estaran disponibles. Configure servidores DNS explicitos en Sistema > DNS de su servidor, y revise cualquier pasarela VPN o StartTunnel que tenga configurada: una pasarela aporta su propio resolutor, que deja de funcionar en cuanto el tunel deja de funcionar.',
+    73: 'Ninguno — busquedas de direcciones desactivadas',
   },
   de_DE: {
     0: 'Mempool wird gestartet',
@@ -140,6 +141,7 @@ export default {
     70: 'Leitet die ausgehenden Internetanfragen von Mempool ueber Tor. Nuetzlich, wenn ein Internetanbieter oder eine nationale Firewall die von Mempool abgefragten Endpunkte blockiert, und wenn die Namensaufloesung des Servers selbst unzuverlaessig ist — ein SOCKS-Proxy loest Hostnamen am Proxy auf statt lokal.',
     71: 'Dies setzt voraus, dass der Tor-Dienst installiert ist und laeuft.',
     72: 'Dieser Server konnte einen externen Hostnamen nicht aufloesen. Mempool ist davon ansonsten nicht betroffen — Bitcoin, der Electrum-Indexer und die Datenbank werden ueber die Adresse erreicht — aber Fiat-Wechselkurse sind nicht verfuegbar. Tragen Sie unter System > DNS auf Ihrem Server ausdrueckliche DNS-Server ein und pruefen Sie ein etwaiges VPN- oder StartTunnel-Gateway: ein Gateway liefert seinen eigenen Resolver, der ausfaellt, sobald der Tunnel ausfaellt.',
+    73: 'Keiner — Adressabfragen deaktiviert',
   },
   pl_PL: {
     0: 'Uruchamianie Mempool',
@@ -210,6 +212,7 @@ export default {
     70: 'Kieruje wychodzace zapytania internetowe Mempool przez Tora. Przydatne, gdy dostawca internetu lub krajowa zapora blokuje punkty koncowe, z ktorych Mempool korzysta, oraz gdy rozwiazywanie nazw na samym serwerze jest zawodne — proxy SOCKS rozwiazuje nazwy hostow po stronie proxy, a nie lokalnie.',
     71: 'Wymaga to zainstalowanej i dzialajacej uslugi Tor.',
     72: 'Ten serwer nie mogl rozwiazac zewnetrznej nazwy hosta. Poza tym Mempool dziala bez zmian — Bitcoin, indekser Electrum i baza danych sa osiagane po adresie — ale kursy walut fiat beda niedostepne. Ustaw jawne serwery DNS w System > DNS na swoim serwerze i sprawdz skonfigurowana brame VPN lub StartTunnel: brama dostarcza wlasny resolver, ktory przestaje dzialac, gdy tunel przestaje dzialac.',
+    73: 'Brak — wyszukiwanie adresow wylaczone',
   },
   fr_FR: {
     0: 'Demarrage de Mempool',
@@ -280,5 +283,6 @@ export default {
     70: "Achemine via Tor les requetes internet sortantes de Mempool. Utile lorsqu'un fournisseur d'acces ou un pare-feu national bloque les points d'acces que Mempool interroge, et lorsque la resolution de noms du serveur lui-meme n'est pas fiable — un proxy SOCKS resout les noms d'hotes au niveau du proxy et non localement.",
     71: "Cela necessite que le service Tor soit installe et en cours d'execution.",
     72: "Ce serveur n'a pas pu resoudre un nom d'hote externe. Mempool n'en est par ailleurs pas affecte — Bitcoin, l'indexeur Electrum et la base de donnees sont joints par adresse — mais les taux de change fiat seront indisponibles. Renseignez des serveurs DNS explicites dans Systeme > DNS sur votre serveur, et verifiez toute passerelle VPN ou StartTunnel configuree : une passerelle fournit son propre resolveur, qui cesse de fonctionner des que le tunnel cesse de fonctionner.",
+    73: "Aucun — recherches d'adresses desactivees",
   },
 } satisfies Record<string, LangDict>
