@@ -3,7 +3,7 @@ import { seedFiles } from './seedFiles'
 import { taskSelectIndexer } from './taskSelectIndexer'
 import { watchHosts } from './watchHosts'
 import { watchTorProxy } from './watchTorProxy'
-import { setDependencies } from '../dependencies'
+import { dependencies } from '../dependencies'
 import { setInterfaces } from '../interfaces'
 import { versionGraph } from '../versions'
 import { actions } from '../actions'
@@ -14,8 +14,8 @@ export const init = sdk.setupInit(
   versionGraph,
   seedFiles,
   setInterfaces,
-  setDependencies,
   actions,
+  dependencies,
   taskSelectIndexer,
   watchHosts,
   watchTorProxy,

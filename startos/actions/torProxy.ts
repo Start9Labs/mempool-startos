@@ -1,4 +1,4 @@
-import { storeJson } from '../file-models/store.json'
+import { storeJson } from '../fileModels/store.json'
 import { i18n } from '../i18n'
 import { sdk } from '../sdk'
 const { InputSpec, Value } = sdk

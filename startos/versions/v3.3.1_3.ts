@@ -1,7 +1,7 @@
 import { IMPOSSIBLE, VersionInfo, YAML } from '@start9labs/start-sdk'
 import { readFile, rm, writeFile } from 'fs/promises'
-import { configJson } from '../file-models/mempool-config.json'
-import { storeJson } from '../file-models/store.json'
+import { configJson } from '../fileModels/mempool-config.json'
+import { storeJson } from '../fileModels/store.json'
 
 export const v_3_3_1_3 = VersionInfo.of({
   version: '3.3.1:3',

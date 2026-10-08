@@ -1,6 +1,6 @@
 import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
-import { configJson } from '../file-models/mempool-config.json'
-import { storeJson } from '../file-models/store.json'
+import { configJson } from '../fileModels/mempool-config.json'
+import { storeJson } from '../fileModels/store.json'
 
 export const v_3_3_1_16 = VersionInfo.of({
   version: '3.3.1:16',

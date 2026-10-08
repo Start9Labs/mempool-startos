@@ -1,4 +1,4 @@
-import { configJson } from '../file-models/mempool-config.json'
+import { configJson } from '../fileModels/mempool-config.json'
 import { i18n } from '../i18n'
 import { sdk } from '../sdk'
 import {
@@ -19,7 +19,7 @@ const inputSpec = InputSpec.of({
   profile: Value.select({
     name: i18n('Performance Profile'),
     description: i18n(
-      'Low-CPU: poll bitcoind every 8s and project 4 future blocks — recommended for low-power devices. Balanced: poll every 4s, project 6 blocks. Responsive: poll every 2s, project 8 blocks — matches the upstream in-source default and uses the most CPU.',
+      '- Low-CPU: polls Bitcoin every 8 seconds and projects the next 4 blocks. Uses the least CPU.\n- Balanced: polls every 4 seconds and projects the next 6 blocks.\n- Responsive: polls every 2 seconds and projects the next 8 blocks, as upstream Mempool does by default. Uses the most CPU.',
     ),
     default: DEFAULT_PROFILE,
     values: {
@@ -31,7 +31,7 @@ const inputSpec = InputSpec.of({
   STATISTICS_ENABLED: Value.toggle({
     name: i18n('Enable Statistics'),
     description: i18n(
-      'Collects mempool statistics (transactions per second, vbytes per second) for the dashboard charts. Disabling stops the 1 Hz sampler and the periodic statistics writes to MariaDB, reducing background CPU and disk I/O on low-power devices.',
+      "Records mempool statistics, such as transactions and vbytes per second, in the database for Mempool's charts. Turning it off stops those periodic database writes, and the statistics charts have no data.",
     ),
     default: true,
   }),
@@ -66,7 +66,7 @@ const inputSpec = InputSpec.of({
   STDOUT_LOG_MIN_PRIORITY: Value.select({
     name: i18n('Log Level'),
     description: i18n(
-      'Minimum priority written to the service log. Info (the default) shows normal operation but hides per-block indexing backfill progress, which upstream logs at debug priority. Set to Debug to watch backfill progress live; switch back to Info afterward to reduce log noise.',
+      '- Debug: everything, including the per-block progress of an indexing backfill. Very noisy; switch back to Info once you have what you need.\n- Info: normal operation. Backfill progress is hidden, so the log can look idle while a backfill runs.\n- Warning: only warnings and errors.\n- Error: only errors.',
     ),
     default: 'info',
     values: {

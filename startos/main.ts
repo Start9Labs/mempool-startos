@@ -3,7 +3,7 @@ import { totalmem } from 'os'
 import { manifest as bitcoinManifest } from 'bitcoin-core-startos/startos/manifest'
 import { manifest as clnManifest } from 'cln-startos/startos/manifest'
 import { manifest as lndManifest } from 'lnd-startos/startos/manifest'
-import { configJson } from './file-models/mempool-config.json'
+import { configJson } from './fileModels/mempool-config.json'
 import { i18n } from './i18n'
 import { sdk } from './sdk'
 import {
@@ -152,7 +152,6 @@ export const main = sdk.setupMain(async ({ effects }) => {
           subpath: null,
           mountpoint: lndMountpoint,
           readonly: true,
-          type: 'directory',
         })
         break
       case 'cln':
@@ -162,7 +161,6 @@ export const main = sdk.setupMain(async ({ effects }) => {
           subpath: 'bitcoin',
           mountpoint: clnMountpoint,
           readonly: true,
-          type: 'directory',
         })
         break
       default:

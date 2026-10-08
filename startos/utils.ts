@@ -3,7 +3,7 @@ import { totalmem } from 'os'
 import { rpcHostId, rpcPort } from 'bitcoin-core-startos/startos/utils'
 import { controlHostId, restPort } from 'lnd-startos/startos/interfaces'
 import { socksHostId, socksPort } from 'tor-startos/startos/utils'
-import { storeJson } from './file-models/store.json'
+import { storeJson } from './fileModels/store.json'
 import { sdk } from './sdk'
 
 export const randomPassword = {

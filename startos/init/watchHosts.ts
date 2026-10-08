@@ -1,4 +1,4 @@
-import { configJson } from '../file-models/mempool-config.json'
+import { configJson } from '../fileModels/mempool-config.json'
 import { sdk } from '../sdk'
 import {
   bitcoindRpcBridge,

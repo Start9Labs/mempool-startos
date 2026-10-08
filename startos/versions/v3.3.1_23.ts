@@ -1,5 +1,5 @@
 import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
-import { configJson } from '../file-models/mempool-config.json'
+import { configJson } from '../fileModels/mempool-config.json'
 import { sdk } from '../sdk'
 import { EXTERNAL_RETRY } from '../utils'
 
