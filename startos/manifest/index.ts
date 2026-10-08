@@ -1,14 +1,5 @@
 import { setupManifest } from '@start9labs/start-sdk'
-import {
-  bitcoindDescription,
-  clnDescription,
-  electrsDescription,
-  fulcrumDescription,
-  lndDescription,
-  long,
-  short,
-  torDescription,
-} from './i18n'
+import { long, short } from './i18n'
 
 export const manifest = setupManifest({
   id: 'mempool',
@@ -26,68 +17,21 @@ export const manifest = setupManifest({
         dockerTag: 'mempool/frontend:v3.3.1',
       },
       arch: ['x86_64', 'aarch64'],
+      emulateMissing: false,
     },
     backend: {
       source: {
         dockerTag: 'mempool/backend:v3.3.1',
       },
       arch: ['x86_64', 'aarch64'],
+      emulateMissing: false,
     },
     mariadb: {
       source: {
         dockerTag: 'mariadb:10.4.34',
       },
       arch: ['x86_64', 'aarch64'],
-    },
-  },
-  dependencies: {
-    bitcoind: {
-      description: bitcoindDescription,
-      optional: false,
-      metadata: {
-        title: 'Bitcoin',
-        icon: 'https://raw.githubusercontent.com/Start9Labs/bitcoin-core-startos/refs/heads/30.x/dep-icon.svg',
-      },
-    },
-    electrs: {
-      description: electrsDescription,
-      optional: true,
-      metadata: {
-        title: 'Electrs',
-        icon: 'https://raw.githubusercontent.com/Start9Labs/electrs-startos/refs/heads/master/icon.svg',
-      },
-    },
-    fulcrum: {
-      description: fulcrumDescription,
-      optional: true,
-      metadata: {
-        title: 'Fulcrum',
-        icon: 'https://raw.githubusercontent.com/Start9Labs/fulcrum-startos/master/icon.png',
-      },
-    },
-    'c-lightning': {
-      description: clnDescription,
-      optional: true,
-      metadata: {
-        title: 'Core Lightning',
-        icon: 'https://raw.githubusercontent.com/Start9Labs/cln-startos/refs/heads/master/icon.svg',
-      },
-    },
-    lnd: {
-      description: lndDescription,
-      optional: true,
-      metadata: {
-        title: 'LND',
-        icon: 'https://raw.githubusercontent.com/Start9Labs/lnd-startos/refs/heads/master/icon.svg',
-      },
-    },
-    tor: {
-      description: torDescription,
-      optional: true,
-      metadata: {
-        title: 'Tor',
-        icon: 'https://raw.githubusercontent.com/Start9Labs/tor-startos/65faea17febc739d910e8c26ff4e61f6333487a8/icon.svg',
-      },
+      emulateMissing: false,
     },
   },
 })

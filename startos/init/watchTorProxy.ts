@@ -1,5 +1,5 @@
-import { configJson } from '../file-models/mempool-config.json'
-import { storeJson } from '../file-models/store.json'
+import { configJson } from '../fileModels/mempool-config.json'
+import { storeJson } from '../fileModels/store.json'
 import { sdk } from '../sdk'
 import { hostPort, torSocksBridge } from '../utils'
 

@@ -12,7 +12,7 @@ import {
   DEFAULT_PROFILE,
 } from '../utils'
 
-const mempoolSection = z.object({
+const mempoolSection = z.looseObject({
   // enforced
   BACKEND: z.enum(['none', 'electrum']).catch('none'),
   // configurable
@@ -68,7 +68,7 @@ const mempoolSection = z.object({
   UNIX_SOCKET_PATH: z.string().catch(''),
 })
 
-const coreRpcSection = z.object({
+const coreRpcSection = z.looseObject({
   // Resolved to bitcoind's LXC-bridge address at runtime (see init/watchHosts);
   // absent until bitcoind resolves — no fake placeholder is written.
   HOST: z.string().optional().catch(undefined),
@@ -84,7 +84,7 @@ const coreRpcSection = z.object({
   DEBUG_LOG_PATH: z.string().catch(''),
 })
 
-const electrumSection = z.object({
+const electrumSection = z.looseObject({
   // The selected indexer's LXC-bridge address, resolved at runtime (see
   // init/watchHosts); absent until the indexer resolves — no fake placeholder
   // is written. Which indexer is selected is StartOS state kept in store.json,
@@ -94,7 +94,7 @@ const electrumSection = z.object({
   TLS_ENABLED: z.boolean().optional().catch(false),
 })
 
-const databaseSection = z.object({
+const databaseSection = z.looseObject({
   // enforced
   ENABLED: z.literal(true).catch(true),
   HOST: z.literal('127.0.0.1').catch('127.0.0.1'),
@@ -108,23 +108,23 @@ const databaseSection = z.object({
   PID_DIR: z.string().catch(''),
 })
 
-const syslogSection = z.object({
+const syslogSection = z.looseObject({
   // enforced
   ENABLED: z.literal(false).catch(false),
 })
 
-const statisticsSection = z.object({
+const statisticsSection = z.looseObject({
   // configurable
   ENABLED: z.boolean().catch(true),
   TX_PER_SECOND_SAMPLE_PERIOD: z.number().catch(150),
 })
 
-const maxmindSection = z.object({
+const maxmindSection = z.looseObject({
   // enforced
   ENABLED: z.literal(false).catch(false),
 })
 
-const lightningSection = z.object({
+const lightningSection = z.looseObject({
   // configurable
   ENABLED: z.boolean().catch(false),
   BACKEND: z.enum(['lnd', 'cln']).catch('lnd'),
@@ -135,7 +135,7 @@ const lightningSection = z.object({
   FORENSICS_RATE_LIMIT: z.number().catch(20),
 })
 
-const lndSection = z.object({
+const lndSection = z.looseObject({
   // enforced
   TLS_CERT_PATH: z.literal(lndCertPath).catch(lndCertPath),
   MACAROON_PATH: z.literal(lndMacaroonPath).catch(lndMacaroonPath),
@@ -146,14 +146,14 @@ const lndSection = z.object({
   TIMEOUT: z.number().catch(10000),
 })
 
-const clightningSection = z.object({
+const clightningSection = z.looseObject({
   // enforced
   SOCKET: z
     .literal(`${clnMountpoint}/lightning-rpc`)
     .catch(`${clnMountpoint}/lightning-rpc`),
 })
 
-const socks5ProxySection = z.object({
+const socks5ProxySection = z.looseObject({
   // Resolved to tor's LXC-bridge SOCKS address at runtime (see
   // init/watchTorProxy); absent while the proxy is off or tor is uninstalled —
   // no fake placeholder is written, since anonymizing traffic must never be
@@ -167,7 +167,7 @@ const socks5ProxySection = z.object({
   PASSWORD: z.string().catch(''),
 })
 
-const externalDataServerSection = z.object({
+const externalDataServerSection = z.looseObject({
   // configurable
   MEMPOOL_API: z.string().catch('https://mempool.space/api/v1'),
   MEMPOOL_ONION: z
@@ -183,17 +183,17 @@ const externalDataServerSection = z.object({
     ),
 })
 
-const redisSection = z.object({
+const redisSection = z.looseObject({
   // enforced
   ENABLED: z.literal(false).catch(false),
 })
 
-const replicationSection = z.object({
+const replicationSection = z.looseObject({
   // enforced
   ENABLED: z.literal(false).catch(false),
 })
 
-const mempoolServicesSection = z.object({
+const mempoolServicesSection = z.looseObject({
   // enforced
   API: z
     .literal('https://mempool.space/api/v1/services')
@@ -202,19 +202,19 @@ const mempoolServicesSection = z.object({
   ACCELERATIONS: z.boolean().catch(false),
 })
 
-const stratumSection = z.object({
+const stratumSection = z.looseObject({
   // enforced
   ENABLED: z.literal(false).catch(false),
 })
 
-const fiatPriceSection = z.object({
+const fiatPriceSection = z.looseObject({
   // configurable
   ENABLED: z.boolean().catch(true),
   PAID: z.boolean().catch(false),
   API_KEY: z.string().catch(''),
 })
 
-const shape = z.object({
+const shape = z.looseObject({
   MEMPOOL: mempoolSection.catch(() => mempoolSection.parse({})),
   CORE_RPC: coreRpcSection.catch(() => coreRpcSection.parse({})),
   ELECTRUM: electrumSection.catch(() => electrumSection.parse({})),

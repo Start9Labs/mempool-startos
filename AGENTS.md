@@ -18,15 +18,23 @@ Freshly scaffolded? Work the
 guide page, not a file in this repo — read it, don't copy it in.
 
 Keep `README.md` (technical reference for an AI support or administering agent) and
-`instructions.md` (end-user docs) in sync with your changes.
+`instructions.md` (end-user docs) in sync with your changes. This file restates neither:
+whoever changes the package has both, so it carries only what they don't — repo mechanics,
+a change that looks right and is not, where the next thing gets added, a naming trap, a
+build or test invocation particular to this repo.
 
-**Bugs and feature requests are GitHub issues on this repo** — file them as you find them.
+**Fix a defect you spot rather than reporting it** — you have the package open and the
+context to be sure. File **a GitHub issue on this repo** only when the call isn't yours to
+make: you can't pin the cause down, two defensible fixes exist, or it's too large to ride on
+the work in hand. An open issue is a report, not a queue — implement one when you're asked
+to or when it's labelled `Approved`, then close it with `Closes #<n>`.
+
 Don't record work in the repo instead: no `TODO.md`, no `NOTES.md`, no `PLAN.md`. What you
 verified, tried, and decided belongs in the commit message and the PR body.
 
 ## This repo
 
-- **The indexer selection is StartOS state in `store.json`, never a key in `mempool-config.json`.** `ELECTRUM.HOST` resolves to the same bridge IP whichever indexer is chosen, so it cannot carry the choice — that is why the separate store exists. Installs predating it stored the selector as `<indexer>.startos` in `ELECTRUM.HOST` and are seeded once by the `3.3.1:16` migration; don't add a runtime fallback for it.
-- **`electrs` and `fulcrum` host ids are string literals on purpose.** They aren't npm dependencies of this package, so `electrs`→`electrum` and `fulcrum`→`main`, plus the plaintext Electrum port, are hard-coded in `startos/utils.ts` rather than imported. Check them against those packages when either changes its interfaces.
-- **The boot sentinel is only cleared once the API is actually healthy, and the clear retries on failure.** A sentinel left behind by a successful start would make the next clean restart wipe the cache; a sentinel wrongly removed would let an OOM boot loop continue forever. Both halves matter.
-- **The `main` volume is retained solely for the `3.3.1:3` migration path**, which cleans up an old install's `start9/` directory. Don't reuse it for new data, and don't drop it from the manifest.
+- **Keep the indexer choice in `store.json`, never in `mempool-config.json`.** `ELECTRUM.HOST` is the same bridge IP whichever indexer is chosen, so it cannot carry the choice. Don't add a runtime fallback for the old `<indexer>.startos` value; the `3.3.1:16` migration seeds it once.
+- **The `electrs` and `fulcrum` host ids and the plaintext Electrum port are literals in `startos/utils.ts`**, because neither package is an npm dependency. Recheck them whenever either changes its interfaces.
+- **Clear the boot sentinel only once the API is healthy, and retry the clear when it fails.** A sentinel left by a good start makes the next clean restart wipe the cache; one removed too early lets an OOM boot loop run forever.
+- **Don't reuse or drop the `main` volume.** It exists only for the `3.3.1:3` migration, which cleans an old install's `start9/` directory.
