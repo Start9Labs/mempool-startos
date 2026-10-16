@@ -209,7 +209,7 @@ Four checks, one per daemon, and their ordering carries meaning.
 | `api`     | "API"           | Port 8999 is listening           | 45 s  |
 | `webui`   | "Web Interface" | Port 8080 is listening           | —     |
 
-The database check reports `loading` rather than failing while it initialises, so a first start looks like progress. It is not displayed, because a user has nothing to do about it.
+The database check reports `starting` while it initialises and retries every second until it is ready. It is not displayed, because a user has nothing to do about it.
 
 **`webui` is gated on `api`**, which makes it a truthful "Mempool is usable" signal rather than a report that a web server is running: the frontend proxies everything to the backend and is useless without it. StartOS holds the frontend while the API is unhealthy and brings it back when the API recovers, and dependent packages rely on that.
 
