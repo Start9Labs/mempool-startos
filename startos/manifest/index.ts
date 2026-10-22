@@ -14,14 +14,14 @@ export const manifest = setupManifest({
   images: {
     frontend: {
       source: {
-        dockerTag: 'mempool/frontend:v3.3.1',
+        dockerTag: 'mempool/frontend:v3.3.2',
       },
       arch: ['x86_64', 'aarch64'],
       emulateMissing: false,
     },
     backend: {
       source: {
-        dockerBuild: { buildArgs: { IMAGE: 'mempool/backend:v3.3.1' } },
+        dockerTag: 'mempool/backend:v3.3.2',
       },
       arch: ['x86_64', 'aarch64'],
       emulateMissing: false,

@@ -278,7 +278,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
         command: BOOT_GUARD_CMD,
         user: 'root',
         env: {
-          NODE_OPTIONS: `--max-old-space-size=${backendMaxOldSpaceMB} --use-openssl-ca`,
+          NODE_OPTIONS: `--max-old-space-size=${backendMaxOldSpaceMB}`,
         },
       },
       ready: {
