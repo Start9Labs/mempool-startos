@@ -35,7 +35,7 @@
 
 ## Image and Container Runtime
 
-Three upstream images run as four daemons in a fixed order. `mempool/backend` is built through the root `Dockerfile`, which upgrades its CA store, and the backend runs with `--use-openssl-ca` so Node verifies against that store; both are temporary and come out once upstream ships an image built on a fixed store. The other two images are unmodified.
+Three unmodified upstream images run as four daemons in a fixed order.
 
 | Property      | Value                                            |
 | ------------- | ------------------------------------------------ |
@@ -263,7 +263,7 @@ file_models:
   - mempool-config.json
   - store.json
 startos_managed_env_vars:
-  - NODE_OPTIONS # backend heap ceiling, computed per start, plus --use-openssl-ca
+  - NODE_OPTIONS # backend heap ceiling, computed per start
   - MARIADB_RANDOM_ROOT_PASSWORD
   - MYSQL_DATABASE
   - MYSQL_USER

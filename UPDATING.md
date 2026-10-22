@@ -6,10 +6,18 @@ Mempool ships as two upstream containers (frontend and backend) that share a rel
 
 ### Mempool (frontend + backend)
 
-Both Mempool images are built from a single source repo — [`mempool/mempool`](https://github.com/mempool/mempool) — and are tagged together. Check the latest GitHub release:
+Both Mempool images are built from a single source repo — [`mempool/mempool`](https://github.com/mempool/mempool) — and are tagged together. Find the newest stable tag; GitHub releases can lag behind tags and published images:
 
 ```sh
-gh release view -R mempool/mempool --json tagName -q .tagName
+gh api repos/mempool/mempool/tags --paginate --jq '.[].name' \
+  | grep -E '^v[0-9]+(\.[0-9]+)*$' | sort -Vr | head -n 1
+```
+
+Confirm both exact image tags resolve through Docker Hub's tag API before bumping:
+
+```sh
+curl -fsSL "https://hub.docker.com/v2/repositories/mempool/frontend/tags/v<new version>"
+curl -fsSL "https://hub.docker.com/v2/repositories/mempool/backend/tags/v<new version>"
 ```
 
 The current pins live in `startos/manifest/index.ts` at `images.frontend.source.dockerTag` and `images.backend.source.dockerTag`. They are always the same tag and are bumped in lockstep.
