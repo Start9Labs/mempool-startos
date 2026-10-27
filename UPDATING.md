@@ -43,6 +43,8 @@ In `startos/manifest/index.ts`, set both tags to the new Mempool release (same v
 
 Then [refresh the bundled mining pool snapshot](#refreshing-the-bundled-mining-pool-snapshot) — nothing derives it from the image tags, so it moves only when someone moves it.
 
+**Recheck the frontend settings that keep the browser off `mempool.space`.** `docker/frontend/entrypoint.sh` must still read `SERVICES_API` and `ACCELERATOR_BUTTON`; a rename sends the browser back to `mempool.space` without failing anything. Grep `frontend/src` for `SERVICES_API` too: a consumer that parses it with `new URL()` throws on the relative path. `getSimpleProofs$` already does, reached only from custom-dashboard widgets this package doesn't configure.
+
 ### MariaDB
 
 In `startos/manifest/index.ts`, set:
