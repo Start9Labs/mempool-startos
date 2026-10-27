@@ -325,6 +325,9 @@ export const main = sdk.setupMain(async ({ effects }) => {
           // with a 404 rather than a hang.
           PROXIED_SERVICES: 'true',
           PROXIED_SERVICES_HOST: `http://127.0.0.1:${apiPort}`,
+          // The viewer's browser fetches this; keep it same-origin.
+          SERVICES_API: '/api/v1/services',
+          ACCELERATOR_BUTTON: 'false',
           ...(config.LIGHTNING.ENABLED && { LIGHTNING: 'true' }),
         },
       },
