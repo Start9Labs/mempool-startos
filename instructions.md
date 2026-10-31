@@ -23,6 +23,10 @@ Mempool needs Bitcoin, an Electrum-style indexer, and (optionally) a Lightning n
 4. Optionally install **LND** or **Core Lightning**, then run **Enable Lightning** and pick the backend you want feeding the Lightning tab.
 5. Start Mempool. It will wait until Bitcoin, the selected indexer, and (if enabled) the Lightning backend are healthy and synced.
 
+## Run it only while you use it
+
+Mempool drives your CPU up in short, heavy bursts the whole time it is running, whether or not anyone has it open, and often enough that the fan never spins down and the temperature stays high. It is built for public block explorers on dedicated hardware, not for a home server shared with other services, and on most servers it is the reason for a loud fan, a high CPU temperature, or other services slowing down. Start Mempool when you want to look something up, and stop it again when you are done. The **Low-CPU** performance profile (the default) reduces the load but does not remove it, and every indexing toggle adds to it.
+
 ## Using Mempool
 
 ### Web UI
