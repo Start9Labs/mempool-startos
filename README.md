@@ -238,6 +238,7 @@ Only configuration is backed up — `sdk.Backups.ofVolumes('config', 'startos')`
 7. **The backend runs as root**, which the boot guard needs in order to clear a cache written by the daemon.
 8. **No riscv64 build.** x86_64 and aarch64 only.
 9. **Bundled mining pool data goes stale between releases.** The snapshot is imported once, on the first start of an unseeded database; after that upstream's `AUTOMATIC_POOLS_UPDATE` is off, so a newer snapshot in a later package release is logged as available and not applied — the same behaviour a GitHub-sourced install has always had.
+10. **The backend drives the CPU up in short, heavy bursts for as long as it runs**, idle or not, even on the Low-CPU profile — often enough that the fan never spins down and the temperature stays high. It is the usual cause of a loud fan or a high CPU temperature on a server running it, and users are told to run Mempool only while they are using it.
 
 ---
 
