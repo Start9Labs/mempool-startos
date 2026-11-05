@@ -1,18 +1,18 @@
 import { IMPOSSIBLE, VersionInfo } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '3.3.2:2',
+  version: '3.3.2:3',
   releaseNotes: {
     en_US:
-      'Mempool keeps the CPU busy enough to hold the fan on and the temperature high. Run it only while you are using it, and stop it afterwards.',
+      'Requires StartOS 0.4.1 or later. Fixes memory use growing while the service runs.',
     es_ES:
-      'Mempool mantiene la CPU lo bastante ocupada como para que el ventilador no se detenga y la temperatura siga alta. Ejecútelo solo mientras lo usa y deténgalo después.',
+      'Requiere StartOS 0.4.1 o posterior. Corrige el aumento del uso de memoria mientras el servicio está en ejecución.',
     de_DE:
-      'Mempool lastet die CPU so stark aus, dass der Lüfter nicht abschaltet und die Temperatur hoch bleibt. Lassen Sie es nur laufen, während Sie es nutzen, und stoppen Sie es danach.',
+      'Erfordert StartOS 0.4.1 oder neuer. Behebt einen während der Laufzeit des Dienstes ansteigenden Speicherverbrauch.',
     pl_PL:
-      'Mempool obciąża procesor na tyle, że wentylator nie przestaje pracować, a temperatura pozostaje wysoka. Uruchamiaj go tylko na czas korzystania i zatrzymuj po zakończeniu.',
+      'Wymaga StartOS 0.4.1 lub nowszego. Naprawia wzrost zużycia pamięci podczas działania usługi.',
     fr_FR:
-      "Mempool sollicite suffisamment le processeur pour que le ventilateur ne s'arrête pas et que la température reste élevée. Ne l'exécutez que pendant que vous l'utilisez, puis arrêtez-le.",
+      "Nécessite StartOS 0.4.1 ou une version ultérieure. Corrige l'augmentation de la consommation de mémoire pendant le fonctionnement du service.",
   },
   migrations: {
     down: IMPOSSIBLE,
