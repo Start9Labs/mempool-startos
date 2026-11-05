@@ -261,14 +261,11 @@ export const main = sdk.setupMain(async ({ effects }) => {
       },
       ready: {
         display: null,
-        fn: async () => {
-          const { result } = await sdk.healthCheck.checkPortListening(
-            effects,
-            poolsPort,
-            { successMessage: '', errorMessage: '' },
-          )
-          return { result, message: null }
-        },
+        fn: () =>
+          sdk.healthCheck.checkPortListening(effects, poolsPort, {
+            successMessage: '',
+            errorMessage: '',
+          }),
       },
       requires: [],
     })
