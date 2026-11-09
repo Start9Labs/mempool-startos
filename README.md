@@ -115,7 +115,7 @@ Bitcoin is required; the rest are chosen, and each choice changes which dependen
 
 **Bitcoin must be archival with transaction indexing.** Mempool raises a `critical` task against Bitcoin asking for `prune=0` and `txindex=true`, and that task re-raises whenever the settings stop matching — it is not a one-time prompt. Address lookups additionally need an Electrum indexer, which is what the indexer selection is for.
 
-Bitcoin's data directory is mounted read-only so the backend can read its RPC cookie; the chosen Lightning node's is mounted read-only for LND's macaroon and certificate, or Core Lightning's RPC socket. No credential is stored in this package.
+Bitcoin's data directory is mounted read-only so the backend can read its RPC cookie; for the chosen Lightning node, only the read-only `public` tier holding the credential is mounted — LND's `readonly/` (`readonly.macaroon`, `tls.cert`) at `/mnt/lnd`, or Core Lightning's `rpc/` (the `lightning-rpc` socket) at `/mnt/cln`. No credential is stored in this package.
 
 ## Network Access and Interfaces
 

@@ -27,7 +27,7 @@ export const lndMountpoint = '/mnt/lnd'
 export const clnMountpoint = '/mnt/cln'
 
 export const lndCertPath = `${lndMountpoint}/tls.cert`
-export const lndMacaroonPath = `${lndMountpoint}/data/chain/bitcoin/mainnet/readonly.macaroon`
+export const lndMacaroonPath = `${lndMountpoint}/readonly.macaroon`
 
 /** A bridge address is always `<ipv4>:<port>`; split it into a HOST/PORT pair. */
 export const hostPort = (addr: string) => {
