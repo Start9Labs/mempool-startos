@@ -148,8 +148,8 @@ export const main = sdk.setupMain(async ({ effects }) => {
       case 'lnd':
         backendMounts = backendMounts.mountDependency<typeof lndManifest>({
           dependencyId: 'lnd',
-          volumeId: 'main',
-          subpath: null,
+          volumeId: 'public',
+          subpath: 'readonly',
           mountpoint: lndMountpoint,
           readonly: true,
         })
@@ -157,8 +157,8 @@ export const main = sdk.setupMain(async ({ effects }) => {
       case 'cln':
         backendMounts = backendMounts.mountDependency<typeof clnManifest>({
           dependencyId: 'c-lightning',
-          volumeId: 'main',
-          subpath: 'bitcoin',
+          volumeId: 'public',
+          subpath: 'rpc',
           mountpoint: clnMountpoint,
           readonly: true,
         })
