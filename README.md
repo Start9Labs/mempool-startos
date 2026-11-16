@@ -76,16 +76,18 @@ Two models: upstream's configuration file, and a small store for state that has 
 
 | File                  | Volume    | Format | Modelled                | Written by                             |
 | --------------------- | --------- | ------ | ----------------------- | -------------------------------------- |
-| `mempool-config.json` | `config`  | JSON   | Yes — `FileHelper.json` | Install, every init, and three actions |
-| `store.json`          | `startos` | JSON   | Yes — `FileHelper.json` | The Select Indexer and Tor actions     |
+| `mempool-config.json` | `config`  | JSON   | Yes — `FileHelper.json` | Install, every init, and four actions           |
+| `store.json`          | `startos` | JSON   | Yes — `FileHelper.json` | The Bitcoin Node, Select Indexer and Tor actions |
 
-`store.json` holds which Electrum indexer you selected and whether external requests should go over Tor. Both are StartOS state — intent, and the discriminator that decides which optional dependencies exist — and deliberately not part of upstream's file. The addresses that intent resolves to are written into `mempool-config.json` instead, which is what lets the Tor proxy be switched off when Tor is uninstalled without forgetting that you asked for it.
+`store.json` holds which Bitcoin node Mempool reads from (the Bitcoin service on this server, or an external node), which Electrum indexer you selected and whether external requests should go over Tor. All three are StartOS state — intent, and the discriminator that decides which optional dependencies exist — and deliberately not part of upstream's file. The addresses that intent resolves to are written into `mempool-config.json` instead, which is what lets the Tor proxy be switched off when Tor is uninstalled without forgetting that you asked for it.
 
 Within `mempool-config.json`:
 
 **Enforced** — rewritten to a fixed value whenever the package writes the file: the whole `DATABASE` section bar the password (the bundled MariaDB on loopback), the two `MEMPOOL.POOLS_JSON` URLs (the bundled snapshot on loopback), `CORE_RPC.COOKIE_PATH`, LND's certificate and macaroon paths, Core Lightning's socket path, and the `SYSLOG`, `MAXMIND`, `REDIS`, `REPLICATION`, and `STRATUM` sections, all held off.
 
-**Derived** — written from live addresses by init on every start: `CORE_RPC.HOST`/`PORT`, `ELECTRUM.HOST`/`PORT`, `LND.REST_API_URL`, and `SOCKS5PROXY.HOST`/`PORT`/`ENABLED`. Each is a reactive read of the dependency's address over the LXC bridge, so init re-runs and the backend restarts precisely when an address changes — an install, an uninstall, a port change — and not on a routine dependency update. **An absent dependency resolves to nothing and its key is omitted entirely** rather than written as a placeholder that would fail to connect; the write heals when the dependency returns. `MEMPOOL.BACKEND` is written alongside `ELECTRUM` — `electrum` when an indexer address resolved, `none` otherwise.
+**Derived** — written from live addresses by init on every start: `CORE_RPC.HOST`/`PORT` (while the node is the Bitcoin service on this server), `ELECTRUM.HOST`/`PORT` (while the indexer is one on this server), `LND.REST_API_URL`, and `SOCKS5PROXY.HOST`/`PORT`/`ENABLED`. Each is a reactive read of the dependency's address over the LXC bridge, so init re-runs and the backend restarts precisely when an address changes — an install, an uninstall, a port change — and not on a routine dependency update. **An absent dependency resolves to nothing and its key is omitted entirely** rather than written as a placeholder that would fail to connect; the write heals when the dependency returns. `MEMPOOL.BACKEND` is written alongside `ELECTRUM` — `electrum` when an indexer address resolved, `none` otherwise.
+
+**Entered** — written by the action that collected them and left alone by init: for an external node, `CORE_RPC.HOST`/`PORT`/`USERNAME`/`PASSWORD` with `COOKIE: false`; for an external Electrum server, `ELECTRUM.HOST`/`PORT`/`TLS_ENABLED`. Choosing this server's Bitcoin again clears the credentials and restores cookie auth.
 
 **Seeded once** — `DATABASE.PASSWORD`, generated at install for the bundled database.
 
@@ -104,18 +106,18 @@ Two defaults depart from upstream's:
 
 ## Dependencies
 
-Bitcoin is required; the rest are chosen, and each choice changes which dependency exists.
+Every dependency is a choice, Bitcoin included, and each choice changes which dependency exists. Mempool cannot run without a Bitcoin node, but that node need not be on this server.
 
 | Dependency               | Kind      | Required                                                 | Health checks                       |
 | ------------------------ | --------- | -------------------------------------------------------- | ----------------------------------- |
-| `bitcoind`               | `running` | Always                                                   | `bitcoind`, `sync-progress`         |
+| `bitcoind`               | `running` | While Bitcoin Node selects Bitcoin on this server (the default); none with an external node | `bitcoind`, `sync-progress`         |
 | `fulcrum` _or_ `electrs` | `running` | Whichever the indexer action selects; none with **None** | The indexer's ready and sync checks |
 | `lnd` _or_ `c-lightning` | `running` | Only with Lightning enabled                              | The node's ready and sync checks    |
 | `tor`                    | `running` | Only with the Tor proxy enabled                          | `tor`                               |
 
-**Bitcoin must be archival with transaction indexing.** Mempool raises a `critical` task against Bitcoin asking for `prune=0` and `txindex=true`, and that task re-raises whenever the settings stop matching — it is not a one-time prompt. Address lookups additionally need an Electrum indexer, which is what the indexer selection is for.
+**Bitcoin must be archival with transaction indexing.** For the Bitcoin service on this server, Mempool raises a `critical` task asking for `prune=0` and `txindex=true`, and that task re-raises whenever the settings stop matching — it is not a one-time prompt. Address lookups additionally need an Electrum indexer, which is what the indexer selection is for.
 
-Bitcoin's data directory is mounted read-only so the backend can read its RPC cookie; for the chosen Lightning node, only the read-only `public` tier holding the credential is mounted — LND's `readonly/` (`readonly.macaroon`, `tls.cert`) at `/mnt/lnd`, or Core Lightning's `rpc/` (the `lightning-rpc` socket) at `/mnt/cln`. No credential is stored in this package.
+While it is the node in use, Bitcoin's data directory is mounted read-only so the backend can read its RPC cookie — an external node is reached with the entered credentials and nothing of it is mounted; for the chosen Lightning node, only the read-only `public` tier holding the credential is mounted — LND's `readonly/` (`readonly.macaroon`, `tls.cert`) at `/mnt/lnd`, or Core Lightning's `rpc/` (the `lightning-rpc` socket) at `/mnt/cln`. No credential is stored in this package.
 
 ## Network Access and Interfaces
 
@@ -133,21 +135,29 @@ The port is bound on the `main` MultiHost and is not masked. Other packages reso
 
 ## Installation and First-Run Flow
 
-Install generates the database password and raises two `critical` tasks: choose an indexer, and configure Bitcoin for archival mode with transaction indexing. Nothing else is required, and no credential is shown — Mempool has no accounts.
+Install generates the database password and raises two `critical` tasks: choose an indexer, and configure Bitcoin for archival mode with transaction indexing (the latter only while the Bitcoin service on this server is the node in use). Nothing else is required, and no credential is shown — Mempool has no accounts.
 
 The order that matters: Bitcoin must be synced, and the indexer must have finished its own initial index, before Mempool shows a complete picture. Until then the API is up but blocks and addresses are missing. Mempool itself has no separate sync of its own to wait for unless you enable indexing.
 
 ## Actions
 
-Five actions, all user-facing.
+Six actions, all user-facing.
+
+### Bitcoin Node
+
+Chooses the Bitcoin node Mempool reads from — **Bitcoin on this server** (the default; every install before the choice existed behaves as if it had chosen it) or an **External node**: the host, RPC port, username and password of a Bitcoin Core node on another machine. Cookie auth is not offered for an external node, since the cookie is a local file.
+
+- **What it changes:** `node` in `store.json`, and through it whether `bitcoind` is a dependency and whether its data directory is mounted; for an external node, `CORE_RPC` directly. Init resolves this server's Bitcoin on the next start and leaves an external node's address alone.
+- **Cost:** seconds, then a restart.
+- **Repeat safety:** idempotent for the same node. The form warns before a change: the database and cache were built from the node read before, so a node on another network or chain needs **Clear Backend Cache** first and a re-index after. The external node is not checked for `prune=0`/`txindex=1`; that is the operator's responsibility, and the backend's errors are the signal when it is wrong.
 
 ### Select Indexer
 
-Chooses which Electrum server backs address lookups — Fulcrum, Electrs, or **None**. Nothing is preselected; the form cannot be submitted until you pick one.
+Chooses which Electrum server backs address lookups — Fulcrum, Electrs, an **External Electrum server** (host, port, TLS), or **None**. Nothing is preselected; the form cannot be submitted until you pick one.
 
-- **What it changes:** `indexer` in `store.json`, and through it the package's optional dependency. The address itself is resolved by init on the next start.
+- **What it changes:** `indexer` in `store.json`, and through it the package's optional dependency. An indexer on this server has its address resolved by init on the next start; an external server's host, port and TLS setting go into `ELECTRUM` directly, and `MEMPOOL.BACKEND` is `electrum` either way.
 - **Cost:** seconds, then a restart.
-- **Repeat safety:** idempotent; switching indexers loses nothing, since neither stores Mempool's data. **None** turns address lookups off and drops the dependency.
+- **Repeat safety:** idempotent; switching indexers loses nothing, since none of them stores Mempool's data. **None** turns address lookups off and drops the dependency. An external server must index the same chain as the node Mempool reads from; nothing checks that.
 
 ### Enable Lightning
 
@@ -230,7 +240,7 @@ Only configuration is backed up — `sdk.Backups.ofVolumes('config', 'startos')`
 ## Limitations and Differences
 
 1. **The database is not backed up.** A restore replays settings, not history; any enabled indexing backfills again from scratch.
-2. **Bitcoin must be archival with transaction indexing**, enforced by a re-raising `critical` task rather than merely recommended.
+2. **Bitcoin must be archival with transaction indexing**, enforced by a re-raising `critical` task rather than merely recommended — for the Bitcoin service on this server; an external node is taken on trust.
 3. **An Electrum indexer is required for address lookups**, and which one is yours to choose — nothing is preselected, and **None** is a valid answer that leaves lookups off.
 4. **Indexing is memory-hungry and slow**, and its progress is invisible at the default log level.
 5. **Telemetry and the maxmind, syslog, redis, replication, and stratum integrations are held off.**

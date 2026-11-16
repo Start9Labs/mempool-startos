@@ -12,14 +12,17 @@ import {
   torDescription,
 } from './manifest/i18n'
 import { sdk } from './sdk'
-import { selectedIndexer } from './utils'
+import { selectedIndexer, selectedNode } from './utils'
 
 const lightningBackend = async (effects: T.Effects) => {
   const lightning = await configJson.read((c) => c.LIGHTNING).const(effects)
   return lightning?.ENABLED ? lightning.BACKEND : null
 }
 
-const bitcoind = sdk.Dependency.required('bitcoind', {
+// Required in effect: Mempool cannot run without a node. Declared optional so
+// the Bitcoin Node action can swap in a node reached over RPC, at which point
+// the Bitcoin service on this server is not needed and must not be demanded.
+const bitcoind = sdk.Dependency.optional('bitcoind', {
   description: bitcoindDescription,
   metadata: {
     title: 'Bitcoin',
@@ -29,6 +32,7 @@ const bitcoind = sdk.Dependency.required('bitcoind', {
     '(>=28.4:29 && <29) || (>=29.4:16 && <30) || (>=30.3:16 && <31) || >=31.1:16 || >=#knotsprerdts:29.3:29',
   kind: 'running',
   healthChecks: ['bitcoind', 'sync-progress'],
+  enabled: async ({ effects }) => (await selectedNode(effects)) === 'bitcoind',
 }).withInit(async (effects) => {
   await sdk.action.createTask(effects, 'bitcoind', autoconfig, 'critical', {
     input: {

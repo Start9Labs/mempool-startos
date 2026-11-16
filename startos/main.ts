@@ -12,6 +12,7 @@ import {
   clnMountpoint,
   lndMountpoint,
   poolsPort,
+  selectedNode,
   uiPort,
 } from './utils'
 
@@ -51,6 +52,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
 
   const config = await configJson.read().const(effects)
   if (!config) throw new Error('Config file not found')
+  const node = await selectedNode(effects)
 
   // V8 old-space heap ceiling for the mempool backend, scaled to the RAM
   // StartOS grants service containers (host MemTotal less its own 1 GiB reserve).
@@ -135,13 +137,19 @@ export const main = sdk.setupMain(async ({ effects }) => {
       readonly: true,
       type: 'file',
     })
-    .mountDependency<typeof bitcoinManifest>({
+
+  // The cookie is how the backend authenticates to the Bitcoin service on this
+  // server. An external node is reached with the username and password the
+  // Bitcoin Node action collected, and is not a dependency to mount.
+  if (node === 'bitcoind') {
+    backendMounts = backendMounts.mountDependency<typeof bitcoinManifest>({
       dependencyId: 'bitcoind',
       volumeId: 'main',
       subpath: null,
       mountpoint: btcMountpoint,
       readonly: true,
     })
+  }
 
   if (config.LIGHTNING.ENABLED) {
     switch (config.LIGHTNING.BACKEND) {
