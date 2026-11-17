@@ -12,7 +12,7 @@ const nodeInputSpec = InputSpec.of({
       '- Bitcoin on this server: the Bitcoin service installed on this server, reached through its RPC cookie.\n- External node: a Bitcoin Core node on another machine, reached over RPC with a username and password.\nEither node must be archival (prune=0) with transaction indexing (txindex=1).',
     ),
     warning: i18n(
-      "Mempool's database and cache were built from the node it read before. Point it at a node on a different network or chain only after running Clear Backend Cache, and expect a re-index.",
+      'Mempool keeps its network setting, database and cache when changing nodes. A different network or chain needs a fresh installation configured for that network. Clear Backend Cache does not erase the database.',
     ),
     default: 'bitcoind',
     variants: Variants.of({
@@ -26,7 +26,7 @@ const nodeInputSpec = InputSpec.of({
           host: Value.text({
             name: i18n('Host'),
             description: i18n(
-              'The address of the node as this server reaches it: an IP address or hostname, without a scheme or port.',
+              'The address of the node as this server reaches it: an IP address or hostname, without a scheme or port. Mempool talks to it over plain HTTP, so the RPC password and every response cross the network unencrypted: use a node on the same local network, never a public address.',
             ),
             default: null,
             required: true,

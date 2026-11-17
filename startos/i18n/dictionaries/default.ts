@@ -65,11 +65,11 @@ const dict = {
   'None — address lookups disabled': 73,
   'Bitcoin Node': 74,
   '- Bitcoin on this server: the Bitcoin service installed on this server, reached through its RPC cookie.\n- External node: a Bitcoin Core node on another machine, reached over RPC with a username and password.\nEither node must be archival (prune=0) with transaction indexing (txindex=1).': 75,
-  "Mempool's database and cache were built from the node it read before. Point it at a node on a different network or chain only after running Clear Backend Cache, and expect a re-index.": 76,
+  'Mempool keeps its network setting, database and cache when changing nodes. A different network or chain needs a fresh installation configured for that network. Clear Backend Cache does not erase the database.': 76,
   'Bitcoin on this server (recommended)': 77,
   'External node': 78,
   Host: 79,
-  'The address of the node as this server reaches it: an IP address or hostname, without a scheme or port.': 80,
+  'The address of the node as this server reaches it: an IP address or hostname, without a scheme or port. Mempool talks to it over plain HTTP, so the RPC password and every response cross the network unencrypted: use a node on the same local network, never a public address.': 80,
   'RPC Port': 81,
   "The port of the node's JSON-RPC interface (8332 on mainnet by default).": 82,
   'RPC Username': 83,
@@ -84,6 +84,14 @@ const dict = {
   'The TCP port of the Electrum server (by convention 50001 plain, 50002 with TLS).': 92,
   TLS: 93,
   'Connect with TLS. Needed when the server only offers an encrypted port.': 94,
+  'The node rejected the RPC username or password.': 96,
+  'The node answered with an error': 97,
+  "Cannot reach the node. Check the host and port, and that the node's rpcbind and rpcallowip admit this server.": 98,
+  'The node is pruned. Mempool needs an archival node (prune=0).': 99,
+  'The node is still syncing': 100,
+  'The node has no transaction index. Enable txindex=1 and let it build.': 101,
+  'The node is building its transaction index': 102,
+  'Connected to the node at height': 103,
 } as const
 
 export type I18nKey = keyof typeof dict

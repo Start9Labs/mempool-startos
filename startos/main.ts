@@ -4,6 +4,7 @@ import { manifest as bitcoinManifest } from 'bitcoin-core-startos/startos/manife
 import { manifest as clnManifest } from 'cln-startos/startos/manifest'
 import { manifest as lndManifest } from 'lnd-startos/startos/manifest'
 import { configJson } from './fileModels/mempool-config.json'
+import { checkExternalNode } from './externalNode'
 import { i18n } from './i18n'
 import { sdk } from './sdk'
 import {
@@ -225,130 +226,151 @@ export const main = sdk.setupMain(async ({ effects }) => {
   // the one-time removal of the boot sentinel (see the api daemon below).
   let bootSentinelCleared = false
 
-  return sdk.Daemons.of(effects)
-    .addDaemon('mariadb', {
-      subcontainer: mariaSub,
-      exec: {
-        command: sdk.useEntrypoint(['--bind-address=127.0.0.1']),
-        env: {
-          MARIADB_RANDOM_ROOT_PASSWORD: '1',
-          MYSQL_DATABASE: config.DATABASE.DATABASE,
-          MYSQL_USER: config.DATABASE.USERNAME,
-          MYSQL_PASSWORD: config.DATABASE.PASSWORD,
+  return (
+    sdk.Daemons.of(effects)
+      .addDaemon('mariadb', {
+        subcontainer: mariaSub,
+        exec: {
+          command: sdk.useEntrypoint(['--bind-address=127.0.0.1']),
+          env: {
+            MARIADB_RANDOM_ROOT_PASSWORD: '1',
+            MYSQL_DATABASE: config.DATABASE.DATABASE,
+            MYSQL_USER: config.DATABASE.USERNAME,
+            MYSQL_PASSWORD: config.DATABASE.PASSWORD,
+          },
         },
-      },
-      ready: {
-        gracePeriod: 120_000,
-        display: null,
-        fn: async () => {
-          const res = await mariaSub.exec([
-            'healthcheck.sh',
-            '--connect',
-            '--innodb_initialized',
-          ])
+        ready: {
+          gracePeriod: 120_000,
+          display: null,
+          fn: async () => {
+            const res = await mariaSub.exec([
+              'healthcheck.sh',
+              '--connect',
+              '--innodb_initialized',
+            ])
 
-          if (res.exitCode !== 0) {
+            if (res.exitCode !== 0) {
+              return {
+                result: 'starting',
+                message: null,
+              }
+            }
             return {
-              result: 'starting',
+              result: 'success',
               message: null,
             }
-          }
-          return {
-            result: 'success',
-            message: null,
-          }
+          },
         },
-      },
-      requires: [],
-    })
-    .addDaemon('pools', {
-      subcontainer: poolsSub,
-      exec: {
-        command: ['node', '/assets/pools-server.cjs'],
-        env: { PORT: String(poolsPort) },
-      },
-      ready: {
-        display: null,
-        fn: () =>
-          sdk.healthCheck.checkPortListening(effects, poolsPort, {
-            successMessage: '',
-            errorMessage: '',
-          }),
-      },
-      requires: [],
-    })
-    .addDaemon('api', {
-      subcontainer: backendSub,
-      exec: {
-        command: BOOT_GUARD_CMD,
-        user: 'root',
-        env: {
-          NODE_OPTIONS: `--max-old-space-size=${backendMaxOldSpaceMB}`,
+        requires: [],
+      })
+      .addDaemon('pools', {
+        subcontainer: poolsSub,
+        exec: {
+          command: ['node', '/assets/pools-server.cjs'],
+          env: { PORT: String(poolsPort) },
         },
-      },
-      ready: {
-        gracePeriod: 45_000,
-        display: i18n('API'),
-        fn: async () => {
-          const res = await sdk.healthCheck.checkPortListening(
-            effects,
-            apiPort,
-            {
-              successMessage: i18n('The API is ready'),
-              errorMessage: i18n('The API is not ready'),
-            },
-          )
-          // On the first healthy report, clear the boot sentinel so a later
-          // clean restart is not mistaken for a failed boot. If the backend
-          // never reaches this point (e.g. an OOM boot loop), the sentinel
-          // persists and the guard drops the cache on the next start.
-          if (res.result === 'success' && !bootSentinelCleared) {
-            bootSentinelCleared = true
-            const rm = await backendSub
-              .exec(['rm', '-f', BOOT_SENTINEL], { user: 'root' })
-              .catch(() => null)
-            // Retry on the next poll if the removal did not land, so a stale
-            // sentinel can't make a later clean restart drop the cache.
-            if (!rm || rm.exitCode !== 0) bootSentinelCleared = false
-          }
-          return res
+        ready: {
+          display: null,
+          fn: () =>
+            sdk.healthCheck.checkPortListening(effects, poolsPort, {
+              successMessage: '',
+              errorMessage: '',
+            }),
         },
-      },
-      requires: ['mariadb', 'pools'],
-    })
-    .addDaemon('webui', {
-      subcontainer: frontendSub,
-      exec: {
-        command: sdk.useEntrypoint(),
-        env: {
-          // nginx resolves a literal hostname in `proxy_pass` when it loads its
-          // config, and the image ships no `resolver` directive, so its one
-          // external upstream — the mempool.space accelerator — made the entire
-          // UI refuse to start whenever a lookup failed (issue #69). The image's
-          // own PROXIED_SERVICES rewrites that line; pointing it at our backend
-          // needs no name resolution and answers a call to a disabled feature
-          // with a 404 rather than a hang.
-          PROXIED_SERVICES: 'true',
-          PROXIED_SERVICES_HOST: `http://127.0.0.1:${apiPort}`,
-          // The viewer's browser fetches this; keep it same-origin.
-          SERVICES_API: '/api/v1/services',
-          ACCELERATOR_BUTTON: 'false',
-          ...(config.LIGHTNING.ENABLED && { LIGHTNING: 'true' }),
+        requires: [],
+      })
+      .addDaemon('api', {
+        subcontainer: backendSub,
+        exec: {
+          command: BOOT_GUARD_CMD,
+          user: 'root',
+          env: {
+            NODE_OPTIONS: `--max-old-space-size=${backendMaxOldSpaceMB}`,
+          },
         },
-      },
-      ready: {
-        display: i18n('Web Interface'),
-        fn: () =>
-          sdk.healthCheck.checkPortListening(effects, uiPort, {
-            successMessage: i18n('The web interface is ready'),
-            errorMessage: i18n('The web interface is not ready'),
-          }),
-      },
-      // The frontend reverse-proxies the API/websocket to the backend and is
-      // non-functional without it. Gating on 'api' makes the 'webui' health a
-      // truthful "Mempool is usable" signal — StartOS holds/stops webui while
-      // api isn't healthy and restarts it when api recovers — which dependents
-      // (e.g. Am I Exposed) rely on.
-      requires: ['api'],
-    })
+        ready: {
+          gracePeriod: 45_000,
+          display: i18n('API'),
+          fn: async () => {
+            const res = await sdk.healthCheck.checkPortListening(
+              effects,
+              apiPort,
+              {
+                successMessage: i18n('The API is ready'),
+                errorMessage: i18n('The API is not ready'),
+              },
+            )
+            // On the first healthy report, clear the boot sentinel so a later
+            // clean restart is not mistaken for a failed boot. If the backend
+            // never reaches this point (e.g. an OOM boot loop), the sentinel
+            // persists and the guard drops the cache on the next start.
+            if (res.result === 'success' && !bootSentinelCleared) {
+              bootSentinelCleared = true
+              const rm = await backendSub
+                .exec(['rm', '-f', BOOT_SENTINEL], { user: 'root' })
+                .catch(() => null)
+              // Retry on the next poll if the removal did not land, so a stale
+              // sentinel can't make a later clean restart drop the cache.
+              if (!rm || rm.exitCode !== 0) bootSentinelCleared = false
+            }
+            return res
+          },
+        },
+        requires: ['mariadb', 'pools'],
+      })
+      .addDaemon('webui', {
+        subcontainer: frontendSub,
+        exec: {
+          command: sdk.useEntrypoint(),
+          env: {
+            // nginx resolves a literal hostname in `proxy_pass` when it loads its
+            // config, and the image ships no `resolver` directive, so its one
+            // external upstream — the mempool.space accelerator — made the entire
+            // UI refuse to start whenever a lookup failed (issue #69). The image's
+            // own PROXIED_SERVICES rewrites that line; pointing it at our backend
+            // needs no name resolution and answers a call to a disabled feature
+            // with a 404 rather than a hang.
+            PROXIED_SERVICES: 'true',
+            PROXIED_SERVICES_HOST: `http://127.0.0.1:${apiPort}`,
+            // The viewer's browser fetches this; keep it same-origin.
+            SERVICES_API: '/api/v1/services',
+            ACCELERATOR_BUTTON: 'false',
+            ...(config.LIGHTNING.ENABLED && { LIGHTNING: 'true' }),
+          },
+        },
+        ready: {
+          display: i18n('Web Interface'),
+          fn: () =>
+            sdk.healthCheck.checkPortListening(effects, uiPort, {
+              successMessage: i18n('The web interface is ready'),
+              errorMessage: i18n('The web interface is not ready'),
+            }),
+        },
+        // The frontend reverse-proxies the API/websocket to the backend and is
+        // non-functional without it. Gating on 'api' makes the 'webui' health a
+        // truthful "Mempool is usable" signal — StartOS holds/stops webui while
+        // api isn't healthy and restarts it when api recovers — which dependents
+        // (e.g. Am I Exposed) rely on.
+        requires: ['api'],
+      })
+      // With Bitcoin on this server, the dependency's own `bitcoind` and
+      // `sync-progress` checks say whether the node is usable. An external node
+      // has no dependency, so this check asks it directly over the configured
+      // RPC: unreachable, bad credentials, pruned, no txindex and still-syncing
+      // each get their own message instead of an api daemon that merely looks
+      // alive. The factory returns null when the node is local, so the check does
+      // not exist at all then.
+      .addHealthCheck('external-node', () =>
+        node === 'external'
+          ? {
+              ready: {
+                display: i18n('External node'),
+                gracePeriod: 30_000,
+                fn: () => checkExternalNode(config.CORE_RPC),
+              },
+              requires: [],
+            }
+          : null,
+      )
+  )
 })
