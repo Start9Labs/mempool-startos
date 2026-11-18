@@ -21,7 +21,10 @@ export const manifest = setupManifest({
     },
     backend: {
       source: {
-        dockerTag: 'mempool/backend:v3.3.2',
+        dockerBuild: {
+          dockerfile: './backend.Dockerfile',
+          buildArgs: { IMAGE: 'mempool/backend:v3.3.2' },
+        },
       },
       arch: ['x86_64', 'aarch64'],
       emulateMissing: false,

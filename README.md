@@ -35,12 +35,12 @@
 
 ## Image and Container Runtime
 
-Three unmodified upstream images run as four daemons in a fixed order.
+Three upstream images run as four daemons in a fixed order. `mempool/backend` is built through `backend.Dockerfile`, a temporary layer that replaces its Node.js 26.12.1 with the official 26.13.1 build, which carries the November 2026 Node.js security fixes; it comes out once upstream's backend image runs a fixed Node. The other two run unmodified.
 
-| Property      | Value                                            |
-| ------------- | ------------------------------------------------ |
-| Images        | `mempool/frontend`, `mempool/backend`, `mariadb` |
-| Architectures | x86_64, aarch64                                  |
+| Property      | Value                                                                   |
+| ------------- | ----------------------------------------------------------------------- |
+| Images        | `mempool/frontend`, `mempool/backend` + `backend.Dockerfile`, `mariadb` |
+| Architectures | x86_64, aarch64                                                         |
 
 | Subcontainer          | Daemon    | Starts after       | Purpose                                       |
 | --------------------- | --------- | ------------------ | --------------------------------------------- |
