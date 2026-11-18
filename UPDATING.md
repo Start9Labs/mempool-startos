@@ -20,7 +20,7 @@ curl -fsSL "https://hub.docker.com/v2/repositories/mempool/frontend/tags/v<new v
 curl -fsSL "https://hub.docker.com/v2/repositories/mempool/backend/tags/v<new version>"
 ```
 
-The current pins live in `startos/manifest/index.ts` at `images.frontend.source.dockerTag` and `images.backend.source.dockerTag`. They are always the same tag and are bumped in lockstep.
+The current pins live in `startos/manifest/index.ts` at `images.frontend.source.dockerTag` and `images.backend.source.dockerBuild.buildArgs.IMAGE` (the base `backend.Dockerfile` builds on). They are always the same tag and are bumped in lockstep.
 
 ### MariaDB
 
@@ -39,7 +39,9 @@ The current pin lives in `startos/manifest/index.ts` at `images.mariadb.source.d
 In `startos/manifest/index.ts`, set both tags to the new Mempool release (same value in both places):
 
 - `images.frontend.source.dockerTag` → `mempool/frontend:v<new version>`
-- `images.backend.source.dockerTag` → `mempool/backend:v<new version>`
+- `images.backend.source.dockerBuild.buildArgs.IMAGE` → `mempool/backend:v<new version>`
+
+**Check the backend image's Node.js.** `backend.Dockerfile` replaces upstream's nodesource Node with `node:26.13.1-bookworm-slim`, and its build fails unless `node --version` matches. Read the `nodejs=` pin in `docker/backend/Dockerfile` at the new tag: once it is 26.13.1 or later (or the November 2026 release or later of a newer line), delete `backend.Dockerfile`, put `source: { dockerTag: 'mempool/backend:v<new version>' }` back in the manifest, and remove the README's layer sentence and table entry. Until then, keep the layer; if upstream moves to a different Node major that is still unpatched, retarget the `node` stage to that major's patched release instead.
 
 Then [refresh the bundled mining pool snapshot](#refreshing-the-bundled-mining-pool-snapshot) — nothing derives it from the image tags, so it moves only when someone moves it.
 
