@@ -117,7 +117,7 @@ Every dependency is a choice, Bitcoin included, and each choice changes which de
 
 **Bitcoin must be archival with transaction indexing.** For the Bitcoin service on this server, Mempool raises a `critical` task asking for `prune=0` and `txindex=true`, and that task re-raises whenever the settings stop matching — it is not a one-time prompt. Address lookups additionally need an Electrum indexer, which is what the indexer selection is for.
 
-While it is the node in use, Bitcoin's data directory is mounted read-only so the backend can read its RPC cookie — an external node is reached with the entered credentials and nothing of it is mounted; for the chosen Lightning node, only the read-only `public` tier holding the credential is mounted — LND's `readonly/` (`readonly.macaroon`, `tls.cert`) at `/mnt/lnd`, or Core Lightning's `rpc/` (the `lightning-rpc` socket) at `/mnt/cln`. Lightning credentials stay in the node's public volume. External Bitcoin RPC credentials are stored in `mempool-config.json` on the `config` volume and included in configuration backups.
+While it is the node in use, only Bitcoin's `public` volume, which holds a copy of its RPC cookie, is mounted read-only at `/mnt/bitcoind`, never its data directory or wallets; an external node is reached with the entered credentials and nothing of it is mounted; for the chosen Lightning node, only the read-only `public` tier holding the credential is mounted — LND's `readonly/` (`readonly.macaroon`, `tls.cert`) at `/mnt/lnd`, or Core Lightning's `rpc/` (the `lightning-rpc` socket) at `/mnt/cln`. Lightning credentials stay in the node's public volume. External Bitcoin RPC credentials are stored in `mempool-config.json` on the `config` volume and included in configuration backups.
 
 ## Network Access and Interfaces
 
@@ -147,7 +147,7 @@ Six actions, all user-facing.
 
 Chooses the Bitcoin node Mempool reads from — **Bitcoin on this server** (the default; every install before the choice existed behaves as if it had chosen it) or an **External node**: the host, RPC port, username and password of a Bitcoin Core node on another machine. Cookie auth is not offered for an external node, since the cookie is a local file.
 
-- **What it changes:** `node` in `store.json`, and through it whether `bitcoind` is a dependency and whether its data directory is mounted; for an external node, `CORE_RPC` directly. Init resolves this server's Bitcoin on the next start and leaves an external node's address alone.
+- **What it changes:** `node` in `store.json`, and through it whether `bitcoind` is a dependency and whether its `public` volume is mounted; for an external node, `CORE_RPC` directly. Init resolves this server's Bitcoin on the next start and leaves an external node's address alone.
 - **Cost:** seconds, then a restart.
 - **Repeat safety:** idempotent for the same node. This changes only the RPC connection: `MEMPOOL.NETWORK`, the frontend's network configuration, the database and the cache are preserved. A different network or chain needs a fresh installation configured for that network. **Clear Backend Cache** deletes only mempool/RBF cache files, not the historical MariaDB database. The external-node health check verifies archival mode and transaction indexing without changing the node's settings.
 - **Plain HTTP, local network only.** Upstream's backend has no TLS option for `CORE_RPC` (its config has no SSL field and its JSON-RPC client is never given one), so the RPC password and every response cross the network unencrypted, even when the node also offers an https endpoint. The form says so on the host field: use a node on the same local network, never a public address.
@@ -292,7 +292,7 @@ startos_managed_env_vars:
   - ACCELERATOR_BUTTON # frontend; false, so no Accelerate button
   - LIGHTNING # frontend, only when a Lightning node is selected
 dependencies:
-  - bitcoind # running; only while Bitcoin on this server is selected
+  - bitcoind # running; only while Bitcoin on this server is selected; its public volume mounted read-only
   - fulcrum # or electrs; whichever the indexer action selects
   - electrs
   - lnd # or c-lightning; only with Lightning enabled

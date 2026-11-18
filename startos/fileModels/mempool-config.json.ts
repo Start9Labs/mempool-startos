@@ -1,4 +1,5 @@
 import { FileHelper, z } from '@start9labs/start-sdk'
+import { rpcCookieName } from 'bitcoin-core-startos/startos/utils'
 import { sdk } from '../sdk'
 import {
   btcMountpoint,
@@ -74,8 +75,8 @@ const coreRpcSection = z.looseObject({
   HOST: z.string().optional().catch(undefined),
   PORT: z.number().catch(8332),
   COOKIE_PATH: z
-    .literal(`${btcMountpoint}/.cookie`)
-    .catch(`${btcMountpoint}/.cookie`),
+    .literal(`${btcMountpoint}/${rpcCookieName}`)
+    .catch(`${btcMountpoint}/${rpcCookieName}`),
   // configurable
   USERNAME: z.string().catch(''),
   PASSWORD: z.string().catch(''),
