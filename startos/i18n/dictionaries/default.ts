@@ -92,6 +92,7 @@ const dict = {
   'The node has no transaction index. Enable txindex=1 and let it build.': 101,
   'The node is building its transaction index': 102,
   'Connected to the node at height': 103,
+  "The node denied RPC access. Check rpcallowip and the user's rpcwhitelist permissions.": 104,
 } as const
 
 export type I18nKey = keyof typeof dict

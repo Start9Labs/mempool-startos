@@ -1,6 +1,6 @@
+import { isIP } from 'net'
 import { i18n } from './i18n'
 
-/** The `CORE_RPC` fields the check needs; the password never leaves this process. */
 export type ExternalRpc = {
   HOST?: string
   PORT: number
@@ -19,7 +19,8 @@ type RpcOutcome =
 
 async function call(rpc: ExternalRpc, method: string): Promise<RpcOutcome> {
   const auth = Buffer.from(`${rpc.USERNAME}:${rpc.PASSWORD}`).toString('base64')
-  const res = await fetch(`http://${rpc.HOST}:${rpc.PORT}/`, {
+  const host = isIP(rpc.HOST ?? '') === 6 ? `[${rpc.HOST}]` : rpc.HOST
+  const res = await fetch(`http://${host}:${rpc.PORT}/`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -43,6 +44,27 @@ async function call(rpc: ExternalRpc, method: string): Promise<RpcOutcome> {
   return { ok: true, result: body.result }
 }
 
+function rpcFailure(r: Extract<RpcOutcome, { ok: false }>): Health {
+  if (r.status === 401) {
+    return {
+      result: 'failure',
+      message: i18n('The node rejected the RPC username or password.'),
+    }
+  }
+  if (r.status === 403) {
+    return {
+      result: 'failure',
+      message: i18n(
+        "The node denied RPC access. Check rpcallowip and the user's rpcwhitelist permissions.",
+      ),
+    }
+  }
+  return {
+    result: 'failure',
+    message: `${i18n('The node answered with an error')}: ${r.error ?? `HTTP ${r.status}`}`,
+  }
+}
+
 /**
  * Health of an external Bitcoin node, standing in for what the local
  * `bitcoind` dependency's `bitcoind` and `sync-progress` checks report:
@@ -51,22 +73,52 @@ async function call(rpc: ExternalRpc, method: string): Promise<RpcOutcome> {
  * node nothing else on this server can.
  */
 export async function checkExternalNode(rpc: ExternalRpc): Promise<Health> {
-  let chain: any
   try {
-    const r = await call(rpc, 'getblockchaininfo')
-    if (!r.ok) {
-      if (r.status === 401 || r.status === 403) {
-        return {
-          result: 'failure',
-          message: i18n('The node rejected the RPC username or password.'),
-        }
-      }
+    const chainResult = await call(rpc, 'getblockchaininfo')
+    if (!chainResult.ok) return rpcFailure(chainResult)
+    const chain = chainResult.result
+
+    if (chain?.pruned) {
       return {
         result: 'failure',
-        message: `${i18n('The node answered with an error')}: ${r.error ?? `HTTP ${r.status}`}`,
+        message: i18n(
+          'The node is pruned. Mempool needs an archival node (prune=0).',
+        ),
       }
     }
-    chain = r.result
+
+    const indexResult = await call(rpc, 'getindexinfo')
+    if (!indexResult.ok) return rpcFailure(indexResult)
+    const txindex = indexResult.result?.txindex
+    // Missing txindex is a configuration failure, even during initial block download.
+    if (!txindex) {
+      return {
+        result: 'failure',
+        message: i18n(
+          'The node has no transaction index. Enable txindex=1 and let it build.',
+        ),
+      }
+    }
+    if (
+      chain?.initialblockdownload ||
+      (chain?.verificationprogress ?? 1) < 0.9999
+    ) {
+      const pct = ((chain?.verificationprogress ?? 0) * 100).toFixed(2)
+      return {
+        result: 'loading',
+        message: `${i18n('The node is still syncing')}: ${pct} % (${chain?.blocks} / ${chain?.headers})`,
+      }
+    }
+    if (!txindex.synced) {
+      return {
+        result: 'loading',
+        message: `${i18n('The node is building its transaction index')}: ${txindex.best_block_height} / ${chain?.blocks}`,
+      }
+    }
+    return {
+      result: 'success',
+      message: `${i18n('Connected to the node at height')} ${chain?.blocks}`,
+    }
   } catch {
     return {
       result: 'failure',
@@ -74,62 +126,5 @@ export async function checkExternalNode(rpc: ExternalRpc): Promise<Health> {
         "Cannot reach the node. Check the host and port, and that the node's rpcbind and rpcallowip admit this server.",
       ),
     }
-  }
-
-  if (chain?.pruned) {
-    return {
-      result: 'failure',
-      message: i18n(
-        'The node is pruned. Mempool needs an archival node (prune=0).',
-      ),
-    }
-  }
-  if (
-    chain?.initialblockdownload ||
-    (chain?.verificationprogress ?? 1) < 0.9999
-  ) {
-    const pct = ((chain?.verificationprogress ?? 0) * 100).toFixed(2)
-    return {
-      result: 'loading',
-      message: `${i18n('The node is still syncing')}: ${pct} % (${chain?.blocks} / ${chain?.headers})`,
-    }
-  }
-
-  let index: any
-  try {
-    const r = await call(rpc, 'getindexinfo')
-    if (!r.ok) {
-      return {
-        result: 'failure',
-        message: `${i18n('The node answered with an error')}: ${r.error ?? `HTTP ${r.status}`}`,
-      }
-    }
-    index = r.result
-  } catch {
-    return {
-      result: 'failure',
-      message: i18n(
-        "Cannot reach the node. Check the host and port, and that the node's rpcbind and rpcallowip admit this server.",
-      ),
-    }
-  }
-  const txindex = index?.txindex
-  if (!txindex) {
-    return {
-      result: 'failure',
-      message: i18n(
-        'The node has no transaction index. Enable txindex=1 and let it build.',
-      ),
-    }
-  }
-  if (!txindex.synced) {
-    return {
-      result: 'loading',
-      message: `${i18n('The node is building its transaction index')}: ${txindex.best_block_height} / ${chain?.blocks}`,
-    }
-  }
-  return {
-    result: 'success',
-    message: `${i18n('Connected to the node at height')} ${chain?.blocks}`,
   }
 }

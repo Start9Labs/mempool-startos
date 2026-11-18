@@ -74,9 +74,9 @@ Five volumes are declared and four carry data.
 
 Two models: upstream's configuration file, and a small store for state that has no place in it.
 
-| File                  | Volume    | Format | Modelled                | Written by                             |
-| --------------------- | --------- | ------ | ----------------------- | -------------------------------------- |
-| `mempool-config.json` | `config`  | JSON   | Yes — `FileHelper.json` | Install, every init, and four actions           |
+| File                  | Volume    | Format | Modelled                | Written by                                       |
+| --------------------- | --------- | ------ | ----------------------- | ------------------------------------------------ |
+| `mempool-config.json` | `config`  | JSON   | Yes — `FileHelper.json` | Install, every init, and four actions            |
 | `store.json`          | `startos` | JSON   | Yes — `FileHelper.json` | The Bitcoin Node, Select Indexer and Tor actions |
 
 `store.json` holds which Bitcoin node Mempool reads from (the Bitcoin service on this server, or an external node), which Electrum indexer you selected and whether external requests should go over Tor. All three are StartOS state — intent, and the discriminator that decides which optional dependencies exist — and deliberately not part of upstream's file. The addresses that intent resolves to are written into `mempool-config.json` instead, which is what lets the Tor proxy be switched off when Tor is uninstalled without forgetting that you asked for it.
@@ -108,12 +108,12 @@ Two defaults depart from upstream's:
 
 Every dependency is a choice, Bitcoin included, and each choice changes which dependency exists. Mempool cannot run without a Bitcoin node, but that node need not be on this server.
 
-| Dependency               | Kind      | Required                                                 | Health checks                       |
-| ------------------------ | --------- | -------------------------------------------------------- | ----------------------------------- |
+| Dependency               | Kind      | Required                                                                                    | Health checks                       |
+| ------------------------ | --------- | ------------------------------------------------------------------------------------------- | ----------------------------------- |
 | `bitcoind`               | `running` | While Bitcoin Node selects Bitcoin on this server (the default); none with an external node | `bitcoind`, `sync-progress`         |
-| `fulcrum` _or_ `electrs` | `running` | Whichever local indexer the action selects; none with **None** or an external server | The indexer's ready and sync checks |
-| `lnd` _or_ `c-lightning` | `running` | Only with Lightning enabled                              | The node's ready and sync checks    |
-| `tor`                    | `running` | Only with the Tor proxy enabled                          | `tor`                               |
+| `fulcrum` _or_ `electrs` | `running` | Whichever local indexer the action selects; none with **None** or an external server        | The indexer's ready and sync checks |
+| `lnd` _or_ `c-lightning` | `running` | Only with Lightning enabled                                                                 | The node's ready and sync checks    |
+| `tor`                    | `running` | Only with the Tor proxy enabled                                                             | `tor`                               |
 
 **Bitcoin must be archival with transaction indexing.** For the Bitcoin service on this server, Mempool raises a `critical` task asking for `prune=0` and `txindex=true`, and that task re-raises whenever the settings stop matching — it is not a one-time prompt. Address lookups additionally need an Electrum indexer, which is what the indexer selection is for.
 
@@ -149,7 +149,7 @@ Chooses the Bitcoin node Mempool reads from — **Bitcoin on this server** (the 
 
 - **What it changes:** `node` in `store.json`, and through it whether `bitcoind` is a dependency and whether its data directory is mounted; for an external node, `CORE_RPC` directly. Init resolves this server's Bitcoin on the next start and leaves an external node's address alone.
 - **Cost:** seconds, then a restart.
-- **Repeat safety:** idempotent for the same node. This changes only the RPC connection: `MEMPOOL.NETWORK`, the frontend's network configuration, the database and the cache are preserved. A different network or chain needs a fresh installation configured for that network. **Clear Backend Cache** deletes only mempool/RBF cache files, not the historical MariaDB database. The external node is not checked for `prune=0`/`txindex=1`; that is the operator's responsibility, and the backend's errors are the signal when it is wrong.
+- **Repeat safety:** idempotent for the same node. This changes only the RPC connection: `MEMPOOL.NETWORK`, the frontend's network configuration, the database and the cache are preserved. A different network or chain needs a fresh installation configured for that network. **Clear Backend Cache** deletes only mempool/RBF cache files, not the historical MariaDB database. The external-node health check verifies archival mode and transaction indexing without changing the node's settings.
 - **Plain HTTP, local network only.** Upstream's backend has no TLS option for `CORE_RPC` (its config has no SSL field and its JSON-RPC client is never given one), so the RPC password and every response cross the network unencrypted, even when the node also offers an https endpoint. The form says so on the host field: use a node on the same local network, never a public address.
 - **Health:** while external, the `external-node` check (see [Health Checks](#health-checks)) replaces what the local dependency's checks would report.
 
@@ -216,15 +216,15 @@ The Bitcoin task is the one to know about. It is registered with `once: false`, 
 
 Four checks, one per daemon, and their ordering carries meaning; a fifth exists only while an external node is selected.
 
-| Check           | Displayed       | Method                                                                 | Grace |
-| --------------- | --------------- | ---------------------------------------------------------------------- | ----- |
-| `mariadb`       | Hidden          | The image's own `healthcheck.sh`                                       | 2 min |
-| `pools`         | Hidden          | Port 8998 is listening                                                 | —     |
-| `api`           | "API"           | Port 8999 is listening                                                 | 45 s  |
-| `webui`         | "Web Interface" | Port 8080 is listening                                                 | —     |
+| Check           | Displayed       | Method                                                                | Grace |
+| --------------- | --------------- | --------------------------------------------------------------------- | ----- |
+| `mariadb`       | Hidden          | The image's own `healthcheck.sh`                                      | 2 min |
+| `pools`         | Hidden          | Port 8998 is listening                                                | —     |
+| `api`           | "API"           | Port 8999 is listening                                                | 45 s  |
+| `webui`         | "Web Interface" | Port 8080 is listening                                                | —     |
 | `external-node` | "External node" | `getblockchaininfo` and `getindexinfo` over the configured `CORE_RPC` | 30 s  |
 
-**`external-node` stands in for the local dependency's checks.** With Bitcoin on this server, StartOS reports the node through the `bitcoind` dependency's `bitcoind` and `sync-progress` checks. An external node has no dependency, so `startos/externalNode.ts` asks it directly with the entered credentials and names the cause when something is wrong: unreachable (host, port, `rpcbind`, `rpcallowip`), credentials rejected, pruned, no `txindex`, index still building (with its height), chain still syncing (with the percentage). Only then does it report success, with the node's height. The check is created by a factory that returns `null` when the node is local, so it does not appear at all then.
+**`external-node` stands in for the local dependency's checks.** With Bitcoin on this server, StartOS reports the node through the `bitcoind` dependency's `bitcoind` and `sync-progress` checks. An external node has no dependency, so `startos/externalNode.ts` asks it directly with the entered credentials and names the cause when something is wrong: unreachable (host, port, `rpcbind`), credentials rejected (HTTP 401), access denied (HTTP 403: `rpcallowip` or `rpcwhitelist`), pruned, no `txindex`, index still building (with its height), chain still syncing (with the percentage). A missing `txindex` is a configuration failure even during initial block download; sync progress is shown only after the required index exists. Only a synced node with a built transaction index reports success, with the node's height. The check is created by a factory that returns `null` when the node is local, so it does not appear at all then.
 
 The database check reports `starting` while it initialises and retries every second until it is ready. It is not displayed, because a user has nothing to do about it.
 

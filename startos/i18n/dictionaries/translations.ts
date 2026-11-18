@@ -93,6 +93,7 @@ export default {
     101: 'El nodo no tiene índice de transacciones. Active txindex=1 y deje que se construya.',
     102: 'El nodo está construyendo su índice de transacciones',
     103: 'Conectado al nodo en la altura',
+    104: 'El nodo denegó el acceso RPC. Compruebe rpcallowip y los permisos rpcwhitelist del usuario.',
   },
   de_DE: {
     0: 'Mempool wird gestartet',
@@ -186,6 +187,7 @@ export default {
     101: 'Der Knoten hat keinen Transaktionsindex. Aktivieren Sie txindex=1 und lassen Sie ihn aufbauen.',
     102: 'Der Knoten baut seinen Transaktionsindex auf',
     103: 'Mit dem Knoten verbunden, Höhe',
+    104: 'Der Knoten hat den RPC-Zugriff verweigert. Prüfen Sie rpcallowip und die rpcwhitelist-Berechtigungen des Benutzers.',
   },
   pl_PL: {
     0: 'Uruchamianie Mempool',
@@ -279,6 +281,7 @@ export default {
     101: 'Węzeł nie ma indeksu transakcji. Włącz txindex=1 i pozwól mu się zbudować.',
     102: 'Węzeł buduje swój indeks transakcji',
     103: 'Połączono z węzłem na wysokości',
+    104: 'Węzeł odmówił dostępu RPC. Sprawdź rpcallowip oraz uprawnienia rpcwhitelist użytkownika.',
   },
   fr_FR: {
     0: 'Démarrage de Mempool',
@@ -372,5 +375,6 @@ export default {
     101: "Le nœud n'a pas d'index des transactions. Activez txindex=1 et laissez-le se construire.",
     102: 'Le nœud construit son index des transactions',
     103: 'Connecté au nœud à la hauteur',
+    104: "Le nœud a refusé l'accès RPC. Vérifiez rpcallowip et les permissions rpcwhitelist de l'utilisateur.",
   },
 } satisfies Record<string, LangDict>
