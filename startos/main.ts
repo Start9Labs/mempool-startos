@@ -1,6 +1,7 @@
 import { lookup } from 'dns/promises'
 import { totalmem } from 'os'
 import { manifest as bitcoinManifest } from 'bitcoin-core-startos/startos/manifest'
+import { rpcVolumeId } from 'bitcoin-core-startos/startos/utils'
 import { manifest as clnManifest } from 'cln-startos/startos/manifest'
 import { manifest as lndManifest } from 'lnd-startos/startos/manifest'
 import { configJson } from './fileModels/mempool-config.json'
@@ -145,7 +146,7 @@ export const main = sdk.setupMain(async ({ effects }) => {
   if (node === 'bitcoind') {
     backendMounts = backendMounts.mountDependency<typeof bitcoinManifest>({
       dependencyId: 'bitcoind',
-      volumeId: 'main',
+      volumeId: rpcVolumeId,
       subpath: null,
       mountpoint: btcMountpoint,
       readonly: true,
