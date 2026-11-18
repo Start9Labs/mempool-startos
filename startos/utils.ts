@@ -104,8 +104,19 @@ export const torSocksBridge = (effects: T.Effects) =>
     })
     .const()
 
+export type NodeChoice = 'bitcoind' | 'external'
+
+/**
+ * Which Bitcoin node Mempool reads from, StartOS state held in store.json.
+ * Absent means the Bitcoin service on this server: that is what every install
+ * used before the choice existed, so no migration seeds it.
+ */
+export async function selectedNode(effects: T.Effects): Promise<NodeChoice> {
+  return (await storeJson.read((s) => s.node).const(effects)) ?? 'bitcoind'
+}
+
 export type Indexer = 'electrs' | 'fulcrum'
-export type IndexerChoice = Indexer | 'none'
+export type IndexerChoice = Indexer | 'none' | 'external'
 
 // electrs and fulcrum are optional dependencies Mempool does not depend on at
 // the npm level, so their host ids are string literals rather than imported
@@ -121,7 +132,9 @@ const electrumPort = 50001
  * The user's selected Electrum indexer, StartOS state held in store.json (not in
  * the upstream mempool-config.json). Installs predating store.json are seeded
  * from the legacy `<indexer>.startos` value in ELECTRUM.HOST by the 3.3.1:16
- * migration, so no runtime fallback is needed here.
+ * migration, so no runtime fallback is needed here. 'external' means an
+ * Electrum server reached over the network, whose address the Select Indexer
+ * action wrote into ELECTRUM itself.
  */
 export async function selectedIndexer(
   effects: T.Effects,
