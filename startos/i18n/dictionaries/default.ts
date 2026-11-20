@@ -93,6 +93,7 @@ const dict = {
   'The node is building its transaction index': 102,
   'Connected to the node at height': 103,
   "The node denied RPC access. Check rpcallowip and the user's rpcwhitelist permissions.": 104,
+  "Choosing Core Lightning gives Mempool full control of your Core Lightning node, including its funds, because Mempool connects to it over the node's unrestricted RPC. Choosing LND gives Mempool read-only access.": 105,
 } as const
 
 export type I18nKey = keyof typeof dict

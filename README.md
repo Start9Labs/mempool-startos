@@ -117,7 +117,7 @@ Every dependency is a choice, Bitcoin included, and each choice changes which de
 
 **Bitcoin must be archival with transaction indexing.** For the Bitcoin service on this server, Mempool raises a `critical` task asking for `prune=0` and `txindex=true`, and that task re-raises whenever the settings stop matching — it is not a one-time prompt. Address lookups additionally need an Electrum indexer, which is what the indexer selection is for.
 
-While it is the node in use, only Bitcoin's `public` volume, which holds a copy of its RPC cookie, is mounted read-only at `/mnt/bitcoind`, never its data directory or wallets; an external node is reached with the entered credentials and nothing of it is mounted; for the chosen Lightning node, only the read-only `public` tier holding the credential is mounted — LND's `readonly/` (`readonly.macaroon`, `tls.cert`) at `/mnt/lnd`, or Core Lightning's `rpc/` (the `lightning-rpc` socket) at `/mnt/cln`. Lightning credentials stay in the node's public volume. External Bitcoin RPC credentials are stored in `mempool-config.json` on the `config` volume and included in configuration backups.
+While it is the node in use, only Bitcoin's `public` volume, which holds a copy of its RPC cookie, is mounted read-only at `/mnt/bitcoind`, never its data directory or wallets; an external node is reached with the entered credentials and nothing of it is mounted; for the chosen Lightning node, only the read-only `public` tier holding the credential is mounted — LND's `readonly/` (`readonly.macaroon`, `tls.cert`) at `/mnt/lnd`, or Core Lightning's `rpc/` (the `lightning-rpc` socket) at `/mnt/cln`. The read-only mount does not restrict a socket: `lightning-rpc` is Core Lightning's full RPC, so with it selected the backend can call any method, spending included. Lightning credentials stay in the node's public volume. External Bitcoin RPC credentials are stored in `mempool-config.json` on the `config` volume and included in configuration backups.
 
 ## Network Access and Interfaces
 
@@ -168,6 +168,7 @@ Selects the Lightning node whose network data fills the Lightning tab, or turns 
 - **What it changes:** the `LIGHTNING` section, plus the paths for whichever node was picked; the frontend also gets `LIGHTNING=true`.
 - **Cost:** seconds, then a restart.
 - **Repeat safety:** idempotent, and nothing is deleted when it is switched off.
+- **Core Lightning means full access.** The form always warns that choosing it gives Mempool full control of the node and its funds; LND gets only its read-only macaroon.
 - **This is the memory-hungry option.** Lightning graph data is large; on a device under 12 GiB the form warns before you commit.
 
 ### Indexing and Performance

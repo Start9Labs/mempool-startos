@@ -10,6 +10,10 @@ const lowRamWarning = isLowRam()
     )
   : null
 
+const clnWarning = i18n(
+  "Choosing Core Lightning gives Mempool full control of your Core Lightning node, including its funds, because Mempool connects to it over the node's unrestricted RPC. Choosing LND gives Mempool read-only access.",
+)
+
 export const lightningInputSpec = InputSpec.of({
   lightning: Value.select({
     name: i18n('Lightning Node'),
@@ -36,7 +40,7 @@ export const enableLightning = sdk.Action.withInput(
     description: i18n(
       'Use this setting to select the Lightning node used to serve network data to the Lightning tab in Mempool',
     ),
-    warning: lowRamWarning,
+    warning: lowRamWarning ? `${clnWarning} ${lowRamWarning}` : clnWarning,
     allowedStatuses: 'any',
     group: null,
     visibility: 'enabled',
