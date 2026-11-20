@@ -94,6 +94,7 @@ export default {
     102: 'El nodo está construyendo su índice de transacciones',
     103: 'Conectado al nodo en la altura',
     104: 'El nodo denegó el acceso RPC. Compruebe rpcallowip y los permisos rpcwhitelist del usuario.',
+    105: 'Elegir Core Lightning da a Mempool el control total de su nodo Core Lightning, incluidos sus fondos, porque Mempool se conecta a él mediante el RPC sin restricciones del nodo. Elegir LND da a Mempool acceso de solo lectura.',
   },
   de_DE: {
     0: 'Mempool wird gestartet',
@@ -188,6 +189,7 @@ export default {
     102: 'Der Knoten baut seinen Transaktionsindex auf',
     103: 'Mit dem Knoten verbunden, Höhe',
     104: 'Der Knoten hat den RPC-Zugriff verweigert. Prüfen Sie rpcallowip und die rpcwhitelist-Berechtigungen des Benutzers.',
+    105: 'Wenn Sie Core Lightning wählen, erhält Mempool die volle Kontrolle über Ihren Core-Lightning-Knoten, einschließlich seiner Guthaben, da Mempool sich über den uneingeschränkten RPC des Knotens verbindet. Wenn Sie LND wählen, erhält Mempool nur Lesezugriff.',
   },
   pl_PL: {
     0: 'Uruchamianie Mempool',
@@ -282,6 +284,7 @@ export default {
     102: 'Węzeł buduje swój indeks transakcji',
     103: 'Połączono z węzłem na wysokości',
     104: 'Węzeł odmówił dostępu RPC. Sprawdź rpcallowip oraz uprawnienia rpcwhitelist użytkownika.',
+    105: 'Wybranie Core Lightning daje Mempool pełną kontrolę nad węzłem Core Lightning, łącznie z jego środkami, ponieważ Mempool łączy się z nim przez nieograniczone RPC węzła. Wybranie LND daje Mempool dostęp tylko do odczytu.',
   },
   fr_FR: {
     0: 'Démarrage de Mempool',
@@ -376,5 +379,6 @@ export default {
     102: 'Le nœud construit son index des transactions',
     103: 'Connecté au nœud à la hauteur',
     104: "Le nœud a refusé l'accès RPC. Vérifiez rpcallowip et les permissions rpcwhitelist de l'utilisateur.",
+    105: "Choisir Core Lightning donne à Mempool le contrôle total de votre nœud Core Lightning, y compris de ses fonds, car Mempool s'y connecte via le RPC sans restriction du nœud. Choisir LND donne à Mempool un accès en lecture seule.",
   },
 } satisfies Record<string, LangDict>
