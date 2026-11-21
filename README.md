@@ -35,7 +35,7 @@
 
 ## Image and Container Runtime
 
-Three upstream images run as four daemons in a fixed order. `mempool/backend` is built through `backend.Dockerfile`, a temporary layer that replaces its Node.js 26.12.1 with the official 26.13.1 build, which carries the November 2026 Node.js security fixes, and its `ws` 8.19.0 with 8.21.3, which fixes a memory-exhaustion DoS in the WebSocket server every visitor connects to; it comes out once upstream's backend image ships both. The other two run unmodified.
+Three upstream images run as four daemons in a fixed order. `mempool/backend` is built through `backend.Dockerfile`, a temporary layer that replaces its Node.js 26.12.1 with the official 26.13.1 build, which carries the November 2026 Node.js security fixes, and its `ws` 8.19.0 with 8.23.0, which fixes memory-exhaustion DoSes in the WebSocket server every visitor connects to; it comes out once upstream's backend image ships both. The other two run unmodified.
 
 | Property      | Value                                                                   |
 | ------------- | ----------------------------------------------------------------------- |
