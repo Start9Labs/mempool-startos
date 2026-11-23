@@ -14,12 +14,16 @@ import { sdk } from '../sdk'
 // Mempool that was pointed elsewhere.
 const shape = z.looseObject({
   // Absent means the Bitcoin service on this server, as every install before
-  // the choice existed; 'external' is a node reached over RPC with credentials.
-  node: z.enum(['bitcoind', 'external']).optional().catch(undefined),
+  // the choice existed; 'rbitcoin' is the rbitcoin service on this server;
+  // 'external' is a node reached over RPC with credentials.
+  node: z
+    .enum(['bitcoind', 'rbitcoin', 'external'])
+    .optional()
+    .catch(undefined),
   // Absent means the choice is unmade; 'none' is the user declining an indexer;
   // 'external' is an Electrum server reached over the network.
   indexer: z
-    .enum(['electrs', 'fulcrum', 'none', 'external'])
+    .enum(['electrs', 'fulcrum', 'rbitcoin', 'none', 'external'])
     .optional()
     .catch(undefined),
   torProxy: z.boolean().catch(false),

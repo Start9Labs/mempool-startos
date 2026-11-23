@@ -9,7 +9,7 @@ const nodeInputSpec = InputSpec.of({
   node: Value.union({
     name: i18n('Bitcoin Node'),
     description: i18n(
-      '- Bitcoin on this server: the Bitcoin service installed on this server, reached through its RPC cookie.\n- External node: a Bitcoin Core node on another machine, reached over RPC with a username and password.\nEither node must be archival (prune=0) with transaction indexing (txindex=1).',
+      '- Bitcoin on this server: the Bitcoin service installed on this server, reached through its RPC cookie.\n- rbitcoin on this server: the rbitcoin service installed on this server, reached through its RPC cookie. It must not be pruned.\n- External node: a Bitcoin Core node on another machine, reached over RPC with a username and password.\nA Bitcoin Core node must be archival (prune=0) with transaction indexing (txindex=1).',
     ),
     warning: i18n(
       'Mempool keeps its network setting, database and cache when changing nodes. A different network or chain needs a fresh installation configured for that network. Clear Backend Cache does not erase the database.',
@@ -18,6 +18,10 @@ const nodeInputSpec = InputSpec.of({
     variants: Variants.of({
       bitcoind: {
         name: i18n('Bitcoin on this server (recommended)'),
+        spec: InputSpec.of({}),
+      },
+      rbitcoin: {
+        name: i18n('rbitcoin on this server'),
         spec: InputSpec.of({}),
       },
       external: {
@@ -70,7 +74,7 @@ export const selectNode = sdk.Action.withInput(
   {
     name: i18n('Bitcoin Node'),
     description: i18n(
-      'Choose the Bitcoin node Mempool reads blocks, transactions and the mempool from: the Bitcoin service on this server, or a node you run elsewhere.',
+      'Choose the Bitcoin node Mempool reads blocks, transactions and the mempool from: the Bitcoin or rbitcoin service on this server, or a node you run elsewhere.',
     ),
     warning: null,
     allowedStatuses: 'any',
@@ -85,7 +89,7 @@ export const selectNode = sdk.Action.withInput(
   // credentials from where the backend reads them
   async ({ effects }) => {
     const node = await selectedNode(effects)
-    if (node !== 'external') return { node: { selection: 'bitcoind' as const } }
+    if (node !== 'external') return { node: { selection: node } }
     const rpc = await configJson.read((c) => c.CORE_RPC).const(effects)
     return {
       node: {
@@ -102,8 +106,12 @@ export const selectNode = sdk.Action.withInput(
 
   // the execution function. The choice is StartOS state; an external node's
   // address and credentials go straight into CORE_RPC, which init/watchHosts
-  // then leaves alone. Choosing this server's Bitcoin clears the credentials
-  // and restores cookie auth; watchHosts resolves the bridge address.
+  // then leaves alone. Choosing a node on this server clears the credentials
+  // and restores cookie auth; watchHosts resolves the bridge address. The old
+  // address goes in the same write, before the choice changes, so a cookie is
+  // never sent to the node Mempool is leaving: until watchHosts writes the new
+  // address the backend falls back to loopback. Re-saving the current node
+  // keeps its address, because watchHosts would not run to restore it.
   async ({ effects, input }) => {
     if (input.node.selection === 'external') {
       const { host, port, username, password } = input.node.value
@@ -118,10 +126,23 @@ export const selectNode = sdk.Action.withInput(
       })
       await storeJson.merge(effects, { node: 'external' })
     } else {
-      await storeJson.merge(effects, { node: 'bitcoind' })
-      await configJson.merge(effects, {
-        CORE_RPC: { USERNAME: '', PASSWORD: '', COOKIE: true },
-      })
+      const next = input.node.selection
+      const current = (await storeJson.read((s) => s.node).once()) ?? 'bitcoind'
+      await configJson.update(
+        effects,
+        async (config) =>
+          config && {
+            ...config,
+            CORE_RPC: {
+              ...config.CORE_RPC,
+              ...(current !== next && { HOST: undefined }),
+              USERNAME: '',
+              PASSWORD: '',
+              COOKIE: true,
+            },
+          },
+      )
+      await storeJson.merge(effects, { node: next })
     }
   },
 )

@@ -2,6 +2,7 @@ import { T, utils } from '@start9labs/start-sdk'
 import { totalmem } from 'os'
 import { rpcHostId, rpcPort } from 'bitcoin-core-startos/startos/utils'
 import { controlHostId, restPort } from 'lnd-startos/startos/interfaces'
+import { ports as rbitcoinPorts } from 'rbitcoin-startos/startos/utils'
 import { socksHostId, socksPort } from 'tor-startos/startos/utils'
 import { storeJson } from './fileModels/store.json'
 import { sdk } from './sdk'
@@ -57,20 +58,29 @@ export const EXTERNAL_RETRY = {
 export const poolsJsonUrl = `http://127.0.0.1:${poolsPort}/pools-v2.json`
 export const poolsTreeUrl = `http://127.0.0.1:${poolsPort}/tree`
 
+export type LocalNode = 'bitcoind' | 'rbitcoin'
+
+const LOCAL_NODE_RPC: Record<
+  LocalNode,
+  { packageId: string; hostId: string; internalPort: number }
+> = {
+  bitcoind: { packageId: 'bitcoind', hostId: rpcHostId, internalPort: rpcPort },
+  rbitcoin: {
+    packageId: 'rbitcoin',
+    hostId: 'rpc',
+    internalPort: rbitcoinPorts.rpc,
+  },
+}
+
 /**
- * bitcoind's RPC bridge address (`<osIp>:8332`) for mempool-config's `CORE_RPC`,
- * replacing `bitcoind.startos:8332`. `null` while bitcoind is absent — the
- * caller then omits `CORE_RPC` rather than writing a fake address; the
- * `.const()` heals with the real address when bitcoind reappears.
+ * The selected local node's RPC bridge address (`<osIp>:8332`) for
+ * mempool-config's `CORE_RPC`, replacing `bitcoind.startos:8332`. `null` while
+ * that node is absent — the caller then omits `CORE_RPC` rather than writing a
+ * fake address; the `.const()` heals with the real address when it reappears.
  */
-export const bitcoindRpcBridge = (effects: T.Effects) =>
+export const localNodeRpcBridge = (effects: T.Effects, node: LocalNode) =>
   sdk.host
-    .getBridgeAddress(effects, {
-      packageId: 'bitcoind',
-      hostId: rpcHostId,
-      internalPort: rpcPort,
-      ssl: false,
-    })
+    .getBridgeAddress(effects, { ...LOCAL_NODE_RPC[node], ssl: false })
     .const()
 
 /**
@@ -104,7 +114,7 @@ export const torSocksBridge = (effects: T.Effects) =>
     })
     .const()
 
-export type NodeChoice = 'bitcoind' | 'external'
+export type NodeChoice = LocalNode | 'external'
 
 /**
  * Which Bitcoin node Mempool reads from, StartOS state held in store.json.
@@ -115,16 +125,17 @@ export async function selectedNode(effects: T.Effects): Promise<NodeChoice> {
   return (await storeJson.read((s) => s.node).const(effects)) ?? 'bitcoind'
 }
 
-export type Indexer = 'electrs' | 'fulcrum'
+export type Indexer = 'electrs' | 'fulcrum' | 'rbitcoin'
 export type IndexerChoice = Indexer | 'none' | 'external'
 
 // electrs and fulcrum are optional dependencies Mempool does not depend on at
 // the npm level, so their host ids are string literals rather than imported
-// constants. Both bind the plaintext Electrum port 50001; electrs groups it
-// under host `electrum`, fulcrum under host `main`.
+// constants. All three bind the plaintext Electrum port 50001; electrs and
+// rbitcoin group it under host `electrum`, fulcrum under host `main`.
 const INDEXER_HOSTS: Record<Indexer, { packageId: string; hostId: string }> = {
   electrs: { packageId: 'electrs', hostId: 'electrum' },
   fulcrum: { packageId: 'fulcrum', hostId: 'main' },
+  rbitcoin: { packageId: 'rbitcoin', hostId: 'electrum' },
 }
 const electrumPort = 50001
 

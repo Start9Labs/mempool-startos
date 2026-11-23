@@ -1,5 +1,6 @@
 import { sdk } from '../sdk'
 import { seedFiles } from './seedFiles'
+import { taskRbitcoin } from './taskRbitcoin'
 import { taskSelectIndexer } from './taskSelectIndexer'
 import { watchHosts } from './watchHosts'
 import { watchTorProxy } from './watchTorProxy'
@@ -17,6 +18,7 @@ export const init = sdk.setupInit(
   actions,
   dependencies,
   taskSelectIndexer,
+  taskRbitcoin,
   watchHosts,
   watchTorProxy,
 )

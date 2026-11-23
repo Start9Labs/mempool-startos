@@ -79,15 +79,15 @@ Two models: upstream's configuration file, and a small store for state that has 
 | `mempool-config.json` | `config`  | JSON   | Yes — `FileHelper.json` | Install, every init, and four actions            |
 | `store.json`          | `startos` | JSON   | Yes — `FileHelper.json` | The Bitcoin Node, Select Indexer and Tor actions |
 
-`store.json` holds which Bitcoin node Mempool reads from (the Bitcoin service on this server, or an external node), which Electrum indexer you selected and whether external requests should go over Tor. All three are StartOS state — intent, and the discriminator that decides which optional dependencies exist — and deliberately not part of upstream's file. The addresses that intent resolves to are written into `mempool-config.json` instead, which is what lets the Tor proxy be switched off when Tor is uninstalled without forgetting that you asked for it.
+`store.json` holds which Bitcoin node Mempool reads from (the Bitcoin or rbitcoin service on this server, or an external node), which Electrum indexer you selected and whether external requests should go over Tor. All three are StartOS state — intent, and the discriminator that decides which optional dependencies exist — and deliberately not part of upstream's file. The addresses that intent resolves to are written into `mempool-config.json` instead, which is what lets the Tor proxy be switched off when Tor is uninstalled without forgetting that you asked for it.
 
 Within `mempool-config.json`:
 
 **Enforced** — rewritten to a fixed value whenever the package writes the file: the whole `DATABASE` section bar the password (the bundled MariaDB on loopback), the two `MEMPOOL.POOLS_JSON` URLs (the bundled snapshot on loopback), `CORE_RPC.COOKIE_PATH`, LND's certificate and macaroon paths, Core Lightning's socket path, and the `SYSLOG`, `MAXMIND`, `REDIS`, `REPLICATION`, and `STRATUM` sections, all held off.
 
-**Derived** — written from live addresses by init on every start: `CORE_RPC.HOST`/`PORT` (while the node is the Bitcoin service on this server), `ELECTRUM.HOST`/`PORT` (while the indexer is one on this server), `LND.REST_API_URL`, and `SOCKS5PROXY.HOST`/`PORT`/`ENABLED`. Each is a reactive read of the dependency's address over the LXC bridge, so init re-runs and the backend restarts precisely when an address changes — an install, an uninstall, a port change — and not on a routine dependency update. **An absent dependency resolves to nothing and its key is omitted entirely** rather than written as a placeholder that would fail to connect; the write heals when the dependency returns. `MEMPOOL.BACKEND` is written alongside `ELECTRUM` — `electrum` when a local indexer address resolved or an external indexer is selected, `none` otherwise.
+**Derived** — written from live addresses by init on every start: `CORE_RPC.HOST`/`PORT` (while the node is a service on this server), `ELECTRUM.HOST`/`PORT` (while the indexer is one on this server), `LND.REST_API_URL`, and `SOCKS5PROXY.HOST`/`PORT`/`ENABLED`. Each is a reactive read of the dependency's address over the LXC bridge, so init re-runs and the backend restarts precisely when an address changes — an install, an uninstall, a port change — and not on a routine dependency update. **An absent dependency resolves to nothing and its key is omitted entirely** rather than written as a placeholder that would fail to connect; the write heals when the dependency returns. `MEMPOOL.BACKEND` is written alongside `ELECTRUM` — `electrum` when a local indexer address resolved or an external indexer is selected, `none` otherwise.
 
-**Entered** — written by the action that collected them and left alone by init: for an external node, `CORE_RPC.HOST`/`PORT`/`USERNAME`/`PASSWORD` with `COOKIE: false`; for an external Electrum server, `ELECTRUM.HOST`/`PORT`/`TLS_ENABLED`. Choosing this server's Bitcoin again clears the credentials and restores cookie auth.
+**Entered** — written by the action that collected them and left alone by init: for an external node, `CORE_RPC.HOST`/`PORT`/`USERNAME`/`PASSWORD` with `COOKIE: false`; for an external Electrum server, `ELECTRUM.HOST`/`PORT`/`TLS_ENABLED`. Switching to a node on this server clears the credentials and the previous address and restores cookie auth. Until init writes the new address the backend falls back to upstream's loopback default, so a local cookie is never sent to the node being left.
 
 **Seeded once** — `DATABASE.PASSWORD`, generated at install for the bundled database.
 
@@ -108,16 +108,19 @@ Two defaults depart from upstream's:
 
 Every dependency is a choice, Bitcoin included, and each choice changes which dependency exists. Mempool cannot run without a Bitcoin node, but that node need not be on this server.
 
-| Dependency               | Kind      | Required                                                                                    | Health checks                       |
-| ------------------------ | --------- | ------------------------------------------------------------------------------------------- | ----------------------------------- |
-| `bitcoind`               | `running` | While Bitcoin Node selects Bitcoin on this server (the default); none with an external node | `bitcoind`, `sync-progress`         |
-| `fulcrum` _or_ `electrs` | `running` | Whichever local indexer the action selects; none with **None** or an external server        | The indexer's ready and sync checks |
-| `lnd` _or_ `c-lightning` | `running` | Only with Lightning enabled                                                                 | The node's ready and sync checks    |
-| `tor`                    | `running` | Only with the Tor proxy enabled                                                             | `tor`                               |
+| Dependency               | Kind      | Required                                                                                    | Health checks                                                           |
+| ------------------------ | --------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `bitcoind`               | `running` | While Bitcoin Node selects Bitcoin on this server (the default); none with an external node | `bitcoind`, `sync-progress`                                             |
+| `rbitcoin`               | `running` | While Bitcoin Node or Select Indexer selects it                                             | `synchronization`, plus `rpc` as the node and `electrum` as the indexer |
+| `fulcrum` _or_ `electrs` | `running` | Whichever local indexer the action selects; none with **None** or an external server        | The indexer's ready and sync checks                                     |
+| `lnd` _or_ `c-lightning` | `running` | Only with Lightning enabled                                                                 | The node's ready and sync checks                                        |
+| `tor`                    | `running` | Only with the Tor proxy enabled                                                             | `tor`                                                                   |
 
 **Bitcoin must be archival with transaction indexing.** For the Bitcoin service on this server, Mempool raises a `critical` task asking for `prune=0` and `txindex=true`, and that task re-raises whenever the settings stop matching — it is not a one-time prompt. Address lookups additionally need an Electrum indexer, which is what the indexer selection is for.
 
-While it is the node in use, only Bitcoin's `public` volume, which holds a copy of its RPC cookie, is mounted read-only at `/mnt/bitcoind`, never its data directory or wallets; an external node is reached with the entered credentials and nothing of it is mounted; for the chosen Lightning node, only the read-only `public` tier holding the credential is mounted — LND's `readonly/` (`readonly.macaroon`, `tls.cert`) at `/mnt/lnd`, or Core Lightning's `rpc/` (the `lightning-rpc` socket) at `/mnt/cln`. The read-only mount does not restrict a socket: `lightning-rpc` is Core Lightning's full RPC, so with it selected the backend can call any method, spending included. Lightning credentials stay in the node's public volume. External Bitcoin RPC credentials are stored in `mempool-config.json` on the `config` volume and included in configuration backups.
+**rbitcoin is an opt-in alternative; Bitcoin stays the default.** It can be the node, the Electrum source, or both. It always serves a transaction index, so Mempool's tasks on it ask for what the selection needs: RPC as the node, Electrum and the address index as the indexer, and pruning off for either. rbitcoin has no `gettxoutsetinfo`; upstream calls it only when `coinstatsindex` is ready, which rbitcoin never reports, so the coin-statistics fields stay empty. Versions from `0.9.2:1` publish the `public` volume this needs.
+
+While it is the node in use, only the local node's `public` volume, which holds a copy of its RPC cookie, is mounted read-only at `/mnt/bitcoind`, never its data directory or wallets. rbitcoin's cookie is its full RPC credential. With rbitcoin as the indexer only, nothing of it is mounted. An external node is reached with the entered credentials and nothing of it is mounted; for the chosen Lightning node, only the read-only `public` tier holding the credential is mounted — LND's `readonly/` (`readonly.macaroon`, `tls.cert`) at `/mnt/lnd`, or Core Lightning's `rpc/` (the `lightning-rpc` socket) at `/mnt/cln`. The read-only mount does not restrict a socket: `lightning-rpc` is Core Lightning's full RPC, so with it selected the backend can call any method, spending included. Lightning credentials stay in the node's public volume. External Bitcoin RPC credentials are stored in `mempool-config.json` on the `config` volume and included in configuration backups.
 
 ## Network Access and Interfaces
 
@@ -145,9 +148,9 @@ Six actions, all user-facing.
 
 ### Bitcoin Node
 
-Chooses the Bitcoin node Mempool reads from — **Bitcoin on this server** (the default; every install before the choice existed behaves as if it had chosen it) or an **External node**: the host, RPC port, username and password of a Bitcoin Core node on another machine. Cookie auth is not offered for an external node, since the cookie is a local file.
+Chooses the Bitcoin node Mempool reads from — **Bitcoin on this server** (the default; every install before the choice existed behaves as if it had chosen it), **rbitcoin on this server**, or an **External node**: the host, RPC port, username and password of a Bitcoin Core node on another machine. Cookie auth is not offered for an external node, since the cookie is a local file.
 
-- **What it changes:** `node` in `store.json`, and through it whether `bitcoind` is a dependency and whether its `public` volume is mounted; for an external node, `CORE_RPC` directly. Init resolves this server's Bitcoin on the next start and leaves an external node's address alone.
+- **What it changes:** `node` in `store.json`, and through it whether `bitcoind` or `rbitcoin` is a dependency and whose `public` volume is mounted; for an external node, `CORE_RPC` directly. Init resolves a node on this server on the next start and leaves an external node's address alone.
 - **Cost:** seconds, then a restart.
 - **Repeat safety:** idempotent for the same node. This changes only the RPC connection: `MEMPOOL.NETWORK`, the frontend's network configuration, the database and the cache are preserved. A different network or chain needs a fresh installation configured for that network. **Clear Backend Cache** deletes only mempool/RBF cache files, not the historical MariaDB database. The external-node health check verifies archival mode and transaction indexing without changing the node's settings.
 - **Plain HTTP, local network only.** Upstream's backend has no TLS option for `CORE_RPC` (its config has no SSL field and its JSON-RPC client is never given one), so the RPC password and every response cross the network unencrypted, even when the node also offers an https endpoint. The form says so on the host field: use a node on the same local network, never a public address.
@@ -155,7 +158,7 @@ Chooses the Bitcoin node Mempool reads from — **Bitcoin on this server** (the 
 
 ### Select Indexer
 
-Chooses which Electrum server backs address lookups — Fulcrum, Electrs, an **External Electrum server** (host, port, TLS), or **None**. Nothing is preselected; the form cannot be submitted until you pick one.
+Chooses which Electrum server backs address lookups — Fulcrum, Electrs, **rbitcoin on this server**, an **External Electrum server** (host, port, TLS), or **None**. Nothing is preselected; the form cannot be submitted until you pick one.
 
 - **What it changes:** `indexer` in `store.json`, and through it the package's optional dependency. An indexer on this server has its address resolved by init on the next start; an external server's host, port and TLS setting go into `ELECTRUM` directly, and `MEMPOOL.BACKEND` is `electrum` either way.
 - **Cost:** seconds, then a restart.
@@ -202,28 +205,36 @@ Deletes the backend's on-disk mempool and RBF cache.
 
 ## Tasks
 
-Two tasks, both `critical` — the service will not start while either is unresolved.
+Two tasks, both `critical` — the service will not start while either is unresolved — and up to three more on rbitcoin while it is selected.
 
-| Task                     | On           | Raised when                                              | Cleared when             |
-| ------------------------ | ------------ | -------------------------------------------------------- | ------------------------ |
-| Select Indexer           | This package | No indexer choice has been made                          | The action runs          |
-| Bitcoin's Auto-Configure | `bitcoind`   | Bitcoin's settings are not `prune=0` with `txindex=true` | Bitcoin's settings match |
+| Task                     | On           | Raised when                                              | Cleared when                                          |
+| ------------------------ | ------------ | -------------------------------------------------------- | ----------------------------------------------------- |
+| Select Indexer           | This package | No indexer choice has been made                          | The action runs                                       |
+| Bitcoin's Auto-Configure | `bitcoind`   | Bitcoin's settings are not `prune=0` with `txindex=true` | Bitcoin's settings match                              |
+| rbitcoin's Client APIs   | `rbitcoin`   | RPC (as the node) or Electrum (as the indexer) is off    | Those APIs are on, or rbitcoin is no longer selected  |
+| rbitcoin's Storage       | `rbitcoin`   | Pruning is on                                            | Pruning is off, or rbitcoin is no longer selected     |
+| rbitcoin's Indexes       | `rbitcoin`   | As the indexer, the address index is off                 | The index is on, or rbitcoin is no longer the indexer |
 
-Both are `critical` because Mempool cannot do what it is installed for until they are answered: address lookups need an indexer, and a pruned or unindexed node cannot answer the historical queries the explorer is built on. Choosing **None** answers the first deliberately — Mempool then runs without address lookups.
+An rbitcoin store that has already pruned cannot turn pruning off, so its Storage task stays open until you choose another node or resync rbitcoin.
+
+The first two are `critical` because Mempool cannot do what it is installed for until they are answered: address lookups need an indexer, and a pruned or unindexed node cannot answer the historical queries the explorer is built on. Choosing **None** answers the first deliberately — Mempool then runs without address lookups.
 
 The Bitcoin task is the one to know about. It is registered with `once: false`, so it comes back if Bitcoin's configuration later stops matching — for example after restoring Bitcoin from a backup taken with pruning on.
 
 ## Health Checks
 
-Four checks, one per daemon, and their ordering carries meaning; a fifth exists only while an external node is selected.
+Four checks, one per daemon, and their ordering carries meaning; one more exists only while an external node or rbitcoin is the node.
 
-| Check           | Displayed       | Method                                                                | Grace |
-| --------------- | --------------- | --------------------------------------------------------------------- | ----- |
-| `mariadb`       | Hidden          | The image's own `healthcheck.sh`                                      | 2 min |
-| `pools`         | Hidden          | Port 8998 is listening                                                | —     |
-| `api`           | "API"           | Port 8999 is listening                                                | 45 s  |
-| `webui`         | "Web Interface" | Port 8080 is listening                                                | —     |
-| `external-node` | "External node" | `getblockchaininfo` and `getindexinfo` over the configured `CORE_RPC` | 30 s  |
+| Check              | Displayed          | Method                                                                | Grace |
+| ------------------ | ------------------ | --------------------------------------------------------------------- | ----- |
+| `mariadb`          | Hidden             | The image's own `healthcheck.sh`                                      | 2 min |
+| `pools`            | Hidden             | Port 8998 is listening                                                | —     |
+| `api`              | "API"              | Port 8999 is listening                                                | 45 s  |
+| `webui`            | "Web Interface"    | Port 8080 is listening                                                | —     |
+| `external-node`    | "External node"    | `getblockchaininfo` and `getindexinfo` over the configured `CORE_RPC` | 30 s  |
+| `rbitcoin-archive` | "rbitcoin archive" | The `prune` marker on rbitcoin's `public` volume is `0`               | —     |
+
+**`rbitcoin-archive` catches a store that has already pruned.** A setting cannot bring that data back, so the check fails with what to do. A missing marker reports as loading, never as success.
 
 **`external-node` stands in for the local dependency's checks.** With Bitcoin on this server, StartOS reports the node through the `bitcoind` dependency's `bitcoind` and `sync-progress` checks. An external node has no dependency, so `startos/externalNode.ts` asks it directly with the entered credentials and names the cause when something is wrong: unreachable (host, port, `rpcbind`), credentials rejected (HTTP 401), access denied (HTTP 403: `rpcallowip` or `rpcwhitelist`), pruned, no `txindex`, index still building (with its height), chain still syncing (with the percentage). A missing `txindex` is a configuration failure even during initial block download; sync progress is shown only after the required index exists. Only a synced node with a built transaction index reports success, with the node's height. The check is created by a factory that returns `null` when the node is local, so it does not appear at all then.
 
@@ -246,7 +257,7 @@ Only configuration is backed up — `sdk.Backups.ofVolumes('config', 'startos')`
 ## Limitations and Differences
 
 1. **The database is not backed up.** A restore replays settings, not history; any enabled indexing backfills again from scratch.
-2. **Bitcoin must be archival with transaction indexing**, enforced by a re-raising `critical` task rather than merely recommended — for the Bitcoin service on this server; an external node is taken on trust.
+2. **Bitcoin must be archival with transaction indexing**, enforced by a re-raising `critical` task rather than merely recommended — for the Bitcoin or rbitcoin service on this server; an external node is taken on trust.
 3. **An Electrum indexer is required for address lookups**, and which one is yours to choose — nothing is preselected, and **None** is a valid answer that leaves lookups off.
 4. **Indexing is memory-hungry and slow**, and its progress is invisible at the default log level.
 5. **Telemetry and the maxmind, syslog, redis, replication, and stratum integrations are held off.**
@@ -294,6 +305,7 @@ startos_managed_env_vars:
   - LIGHTNING # frontend, only when a Lightning node is selected
 dependencies:
   - bitcoind # running; only while Bitcoin on this server is selected; its public volume mounted read-only
+  - rbitcoin # running; only while selected as node or indexer; public volume mounted read-only as the node
   - fulcrum # or electrs; whichever the indexer action selects
   - electrs
   - lnd # or c-lightning; only with Lightning enabled
@@ -311,9 +323,14 @@ actions:
 tasks:
   - { action: select-indexer, severity: critical } # until a choice is made
   - { action: autoconfig, severity: critical } # on bitcoind; re-raises
+  - { action: apis, severity: critical } # on rbitcoin, while selected; re-raises
+  - { action: storage, severity: critical } # on rbitcoin, while selected; re-raises
+  - { action: indexes, severity: critical } # on rbitcoin, as the indexer; re-raises
 health_checks:
   - mariadb # hidden
   - pools # hidden
   - api # displayed "API"
   - webui # displayed "Web Interface"; gated on api
+  - external-node # only with an external node
+  - rbitcoin-archive # only with rbitcoin as the node
 ```

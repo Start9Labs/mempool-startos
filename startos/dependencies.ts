@@ -9,6 +9,7 @@ import {
   electrsDescription,
   fulcrumDescription,
   lndDescription,
+  rbitcoinDescription,
   torDescription,
 } from './manifest/i18n'
 import { sdk } from './sdk'
@@ -44,6 +45,29 @@ const bitcoind = sdk.Dependency.optional('bitcoind', {
     reason: i18n('Mempool requires an archival node and transaction indexing'),
   })
 })
+
+// One service, two independent choices: it can be the node, the Electrum source
+// or both. Its tasks live in init/taskRbitcoin, because they must also be
+// cleared when neither choice applies and a dependency's init stops running
+// then. 0.9.2:1 is the first version with the `public` volume.
+const rbitcoin = sdk.Dependency.optional('rbitcoin', {
+  description: rbitcoinDescription,
+  metadata: {
+    title: 'rbitcoin',
+    icon: 'https://raw.githubusercontent.com/remcoros/rbitcoin-startos/refs/heads/main/icon.png',
+  },
+  versionRange: '>=0.9.2:1 && <0.10.0:0',
+  kind: 'running',
+  healthChecks: ['synchronization'],
+  enabled: async ({ effects }) =>
+    (await selectedNode(effects)) === 'rbitcoin' ||
+    (await selectedIndexer(effects)) === 'rbitcoin',
+}).withDynamicNarrowing(async ({ effects }) => ({
+  healthChecks: [
+    ...((await selectedNode(effects)) === 'rbitcoin' ? ['rpc'] : []),
+    ...((await selectedIndexer(effects)) === 'rbitcoin' ? ['electrum'] : []),
+  ],
+}))
 
 const electrs = sdk.Dependency.optional('electrs', {
   description: electrsDescription,
@@ -110,6 +134,7 @@ const tor = sdk.Dependency.optional('tor', {
 
 export const dependencies = sdk.Dependencies.of()
   .addDependency(bitcoind)
+  .addDependency(rbitcoin)
   .addDependency(electrs)
   .addDependency(fulcrum)
   .addDependency(cln)
