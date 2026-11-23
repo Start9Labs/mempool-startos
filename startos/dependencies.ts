@@ -47,9 +47,9 @@ const bitcoind = sdk.Dependency.optional('bitcoind', {
 })
 
 // One service, two independent choices: it can be the node, the Electrum source
-// or both. Its tasks live in init/taskRbitcoin, because they must also be
-// cleared when neither choice applies and a dependency's init stops running
-// then. 0.9.2:1 is the first version with the `public` volume.
+// or both. Its tasks live in init/taskRbitcoin, because they follow each choice
+// and must also be cleared, which a dependency's init cannot do once it stops
+// running. 0.9.2:1 is the first version with the `public` volume.
 const rbitcoin = sdk.Dependency.optional('rbitcoin', {
   description: rbitcoinDescription,
   metadata: {

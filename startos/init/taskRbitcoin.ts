@@ -12,8 +12,8 @@ const storageTask = `rbitcoin:${storage.id}`
 /**
  * What Mempool needs from rbitcoin depends on which choices point at it: RPC as
  * the node, Electrum and the address index as the indexer, full history for
- * either. Tasks that no longer apply are cleared here, so one left unanswered
- * cannot hold back a Mempool that stopped reading from rbitcoin.
+ * either. A task for a choice that was dropped is cleared here: while rbitcoin
+ * is still a dependency through the other choice, it would keep blocking start.
  */
 export const taskRbitcoin = sdk.setupOnInit(async (effects) => {
   const asNode = (await selectedNode(effects)) === 'rbitcoin'
