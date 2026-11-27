@@ -4,9 +4,15 @@ import { manifest as bitcoinManifest } from 'bitcoin-core-startos/startos/manife
 import { rpcVolumeId } from 'bitcoin-core-startos/startos/utils'
 import { manifest as clnManifest } from 'cln-startos/startos/manifest'
 import { manifest as lndManifest } from 'lnd-startos/startos/manifest'
+import { manifest as rbitcoinManifest } from 'rbitcoin-startos/startos/manifest'
+import {
+  rpcPruneName,
+  rpcVolumeId as rbitcoinRpcVolumeId,
+} from 'rbitcoin-startos/startos/utils'
 import { configJson } from './fileModels/mempool-config.json'
 import { checkExternalNode } from './externalNode'
 import { i18n } from './i18n'
+import { rbitcoinArchiveHealth } from './rbitcoinArchive'
 import { sdk } from './sdk'
 import {
   apiPort,
@@ -140,13 +146,22 @@ export const main = sdk.setupMain(async ({ effects }) => {
       type: 'file',
     })
 
-  // The cookie is how the backend authenticates to the Bitcoin service on this
-  // server. An external node is reached with the username and password the
-  // Bitcoin Node action collected, and is not a dependency to mount.
+  // The cookie is how the backend authenticates to a node on this server. Both
+  // publish it as `.cookie` on their `public` volume, so CORE_RPC's cookie path
+  // is the same for either. An external node is reached with the username and
+  // password the Bitcoin Node action collected, and is not a dependency to mount.
   if (node === 'bitcoind') {
     backendMounts = backendMounts.mountDependency<typeof bitcoinManifest>({
       dependencyId: 'bitcoind',
       volumeId: rpcVolumeId,
+      subpath: null,
+      mountpoint: btcMountpoint,
+      readonly: true,
+    })
+  } else if (node === 'rbitcoin') {
+    backendMounts = backendMounts.mountDependency<typeof rbitcoinManifest>({
+      dependencyId: 'rbitcoin',
+      volumeId: rbitcoinRpcVolumeId,
       subpath: null,
       mountpoint: btcMountpoint,
       readonly: true,
@@ -368,6 +383,26 @@ export const main = sdk.setupMain(async ({ effects }) => {
                 display: i18n('External node'),
                 gracePeriod: 30_000,
                 fn: () => checkExternalNode(config.CORE_RPC),
+              },
+              requires: [],
+            }
+          : null,
+      )
+      // rbitcoin's storage task asks for pruning to stay off, but pruned data
+      // cannot be restored by a setting. rbitcoin publishes whether it dropped
+      // old script and witness data; anything but an explicit `0` is not ready.
+      .addHealthCheck('rbitcoin-archive', () =>
+        node === 'rbitcoin'
+          ? {
+              ready: {
+                display: i18n('rbitcoin archive'),
+                fn: async () =>
+                  rbitcoinArchiveHealth(
+                    await backendSub.exec(
+                      ['cat', `${btcMountpoint}/${rpcPruneName}`],
+                      { user: 'root' },
+                    ),
+                  ),
               },
               requires: [],
             }

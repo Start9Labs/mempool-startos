@@ -9,7 +9,7 @@ const indexerInputSpec = InputSpec.of({
   indexer: Value.union({
     name: i18n('Select Indexer'),
     description: i18n(
-      '- Fulcrum: Fulcrum on this server answers address lookups.\n- Electrs: Electrs on this server answers address lookups.\n- External Electrum server: an Electrs or Fulcrum you run elsewhere, reached over the network.\n- None: address search is turned off; the rest of Mempool keeps working.\nAn indexer on this server must be installed and running; an external one must index the same chain as the Bitcoin node Mempool reads from.',
+      '- Fulcrum: Fulcrum on this server answers address lookups.\n- Electrs: Electrs on this server answers address lookups.\n- rbitcoin: the rbitcoin service on this server answers address lookups with its built-in Electrum server.\n- External Electrum server: an Electrs or Fulcrum you run elsewhere, reached over the network.\n- None: address search is turned off; the rest of Mempool keeps working.\nAn indexer on this server must be installed and running; an external one must index the same chain as the Bitcoin node Mempool reads from.',
     ),
     default: null,
     variants: Variants.of({
@@ -19,6 +19,10 @@ const indexerInputSpec = InputSpec.of({
       },
       electrs: {
         name: i18n('Electrs'),
+        spec: InputSpec.of({}),
+      },
+      rbitcoin: {
+        name: i18n('rbitcoin on this server'),
         spec: InputSpec.of({}),
       },
       external: {

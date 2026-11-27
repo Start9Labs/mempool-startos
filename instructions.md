@@ -8,8 +8,8 @@
 ## What you get on StartOS
 
 - A **Web UI** interface — the Mempool block explorer, visualizer, fee estimator, and REST/WebSocket API in one site.
-- Blocks, transactions and the mempool read from the Bitcoin service on this server, or from a Bitcoin Core node you run on another machine.
-- Address lookup powered by a separate StartOS Electrum indexer (Fulcrum or Electrs), by an Electrum server elsewhere on your network, or left off.
+- Blocks, transactions and the mempool read from the Bitcoin or rbitcoin service on this server, or from a Bitcoin Core node you run on another machine.
+- Address lookup powered by a separate StartOS Electrum indexer (Fulcrum or Electrs), by rbitcoin's built-in Electrum server, by an Electrum server elsewhere on your network, or left off.
 - An optional **Lightning** explorer that pulls network data from a local LND or Core Lightning node.
 - A bundled MariaDB sidecar; you do not configure a database.
 - Everything needed for a first start bundled in — Mempool never has to reach the internet to come up, and does not contact GitHub at all.
@@ -20,8 +20,9 @@ Mempool needs a Bitcoin node, an Electrum-style indexer, and (optionally) a Ligh
 
 1. Install **Bitcoin** if you don't have it. Mempool posts a critical task on Bitcoin requiring `txindex` enabled and pruning disabled, with an autoconfig action attached — accept it. The task re-appears any time those conditions stop being met.
    If your archival node runs on another machine instead, skip this step: after installing Mempool, run **Bitcoin Node** and enter that node's host, RPC port, username and password (see Actions). It must be archival with `txindex` enabled, and its `bitcoin.conf` must admit this server with `rpcbind`, `rpcallowip` and an `rpcauth` line. Keep that node on the same local network as this server: Mempool speaks to it over plain HTTP, so the password and the data are not encrypted on the way, and a public address would expose both.
-2. Install **Fulcrum** (recommended) or **Electrs**, unless you run one elsewhere.
-3. After installing Mempool, run the **Select Indexer** task that appears for Mempool and pick **Fulcrum**, **Electrs**, **External Electrum server** (enter its host, port and whether it needs TLS), or **None**. Nothing is picked for you, and Mempool will not start until you answer.
+   To use **rbitcoin** instead, install it, then run **Bitcoin Node** and pick **rbitcoin on this server**. Accept the tasks Mempool posts on rbitcoin. rbitcoin must not be pruned; a store that has already pruned has to be resynced before Mempool can use it.
+2. Install **Fulcrum** (recommended) or **Electrs**, unless you run one elsewhere or use rbitcoin's built-in Electrum server.
+3. After installing Mempool, run the **Select Indexer** task that appears for Mempool and pick **Fulcrum**, **Electrs**, **rbitcoin on this server**, **External Electrum server** (enter its host, port and whether it needs TLS), or **None**. Nothing is picked for you, and Mempool will not start until you answer.
 4. Optionally install **LND** or **Core Lightning**, then run **Enable Lightning** and pick the backend you want feeding the Lightning tab.
 5. Start Mempool once your Bitcoin node, selected indexer and optional Lightning backend are synced and reachable.
 
@@ -37,8 +38,8 @@ Open the **Web UI** interface to reach Mempool. The home page shows the live mem
 
 ### Actions
 
-- **Bitcoin Node** — read from the Bitcoin service on this server (default) or from a Bitcoin Core node on another machine, given its host, RPC port, username and password. With an external node, the Bitcoin service is no longer a dependency. This changes the RPC connection, not Mempool's network setting, and preserves the database and cache. A different network or chain needs a fresh installation configured for that network; **Clear Backend Cache** does not erase the database. The connection is plain HTTP, so use a node on your local network, never a public address. While an external node is selected, an **External node** health check tells you if it is unreachable, rejects the credentials, denies RPC access, is pruned, lacks `txindex`, or is still syncing.
-- **Select Indexer** — choose the Electrum backend: Fulcrum, Electrs, an External Electrum server (host, port, TLS), or None. Mempool's dependency set updates accordingly, and None leaves address lookups off. An external server must index the same chain as the node Mempool reads from.
+- **Bitcoin Node** — read from the Bitcoin service on this server (default), from the rbitcoin service on this server, or from a Bitcoin Core node on another machine, given its host, RPC port, username and password. With rbitcoin or an external node, the Bitcoin service is no longer a dependency. This changes the RPC connection, not Mempool's network setting, and preserves the database and cache. A different network or chain needs a fresh installation configured for that network; **Clear Backend Cache** does not erase the database. The connection is plain HTTP, so use a node on your local network, never a public address. While an external node is selected, an **External node** health check tells you if it is unreachable, rejects the credentials, denies RPC access, is pruned, lacks `txindex`, or is still syncing. While rbitcoin is the node, an **rbitcoin archive** health check tells you if it is pruned.
+- **Select Indexer** — choose the Electrum backend: Fulcrum, Electrs, rbitcoin on this server, an External Electrum server (host, port, TLS), or None. Mempool's dependency set updates accordingly, and None leaves address lookups off. An external server must index the same chain as the node Mempool reads from.
 - **Enable Lightning** — choose LND, Core Lightning, or none for the Lightning tab's data source. LND gives Mempool read-only access; Core Lightning gives it full control of the node, including its funds, and the form warns about this. On a low-memory box the form also warns that the Lightning network sync is memory-hungry, and turning it on alongside Bitcoin and your indexer can tip such a box into out-of-memory crashes. You can still proceed.
 - **Indexing and Performance** — tune backend behavior on a single form:
   - **Performance Profile** — pick **Low-CPU** (default; polls bitcoind every 8s, projects 4 future blocks), **Balanced** (4s / 6 blocks), or **Responsive** (2s / 8 blocks; highest CPU). The Mempool backend rebuilds its block projection on every poll, so this is the main lever for CPU usage on low-power devices.

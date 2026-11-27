@@ -1,10 +1,10 @@
 import { configJson } from '../fileModels/mempool-config.json'
 import { sdk } from '../sdk'
 import {
-  bitcoindRpcBridge,
   electrumBridge,
   hostPort,
   lndRestBridge,
+  localNodeRpcBridge,
   selectedIndexer,
   selectedNode,
 } from '../utils'
@@ -34,11 +34,12 @@ export const watchHosts = sdk.setupOnInit(async (effects, _) => {
   const lightning = await configJson.read((c) => c.LIGHTNING).const(effects)
   const lndEnabled = lightning?.ENABLED && lightning.BACKEND === 'lnd'
 
-  // Subscribe to bitcoind's reactive address only while it is the node in use;
-  // the indexer/LND reads stay gated on selection. A `null` means the
+  // Subscribe only to the local node in use, never to one Mempool does not read
+  // from; the indexer/LND reads stay gated on selection. A `null` means the
   // dependency is absent — omit its section rather than write an unreachable
   // address.
-  const bitcoind = node === 'bitcoind' ? await bitcoindRpcBridge(effects) : null
+  const localNode =
+    node === 'external' ? null : await localNodeRpcBridge(effects, node)
   const electrum =
     indexer && indexer !== 'none' && indexer !== 'external'
       ? await electrumBridge(effects, indexer)
@@ -49,7 +50,7 @@ export const watchHosts = sdk.setupOnInit(async (effects, _) => {
   await configJson.merge(
     effects,
     {
-      ...(bitcoind && { CORE_RPC: hostPort(bitcoind) }),
+      ...(localNode && { CORE_RPC: hostPort(localNode) }),
       MEMPOOL: { BACKEND: electrumInPlace ? 'electrum' : 'none' },
       ...(electrum && {
         ELECTRUM: { ...hostPort(electrum), TLS_ENABLED: false },

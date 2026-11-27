@@ -31,6 +31,19 @@ export const bitcoindDescription = {
     'Fournit les blocs, les transactions et le mempool que Mempool affiche.',
 }
 
+export const rbitcoinDescription = {
+  en_US:
+    'An alternative Bitcoin node that can supply blocks, transactions, the mempool and address lookups.',
+  es_ES:
+    'Un nodo Bitcoin alternativo que puede proporcionar bloques, transacciones, el mempool y búsquedas de direcciones.',
+  de_DE:
+    'Ein alternativer Bitcoin-Knoten, der Blöcke, Transaktionen, den Mempool und Adressabfragen liefern kann.',
+  pl_PL:
+    'Alternatywny węzeł Bitcoin, który może dostarczać bloki, transakcje, mempool i wyszukiwanie adresów.',
+  fr_FR:
+    "Un nœud Bitcoin alternatif qui peut fournir les blocs, les transactions, le mempool et les recherches d'adresses.",
+}
+
 export const electrsDescription = {
   en_US: 'Provides an index for address lookups',
   es_ES: 'Proporciona un índice para búsquedas de direcciones',

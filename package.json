@@ -5,6 +5,7 @@
     "bitcoin-core-startos": "github:Start9Labs/bitcoin-core-startos#next/32.x",
     "cln-startos": "github:Start9Labs/cln-startos#next",
     "lnd-startos": "github:Start9Labs/lnd-startos#next",
+    "rbitcoin-startos": "github:remcoros/rbitcoin-startos#01c0ae4606d55efc826af5847f4845061ab728b7",
     "tor-startos": "github:Start9Labs/tor-startos#next"
   },
   "overrides": {
